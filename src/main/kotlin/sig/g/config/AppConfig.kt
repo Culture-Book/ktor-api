@@ -8,22 +8,22 @@ sealed interface AppConfig {
     }
 
     object DatabaseUser : AppConfig {
-        override val propertyKey: String = "ktor.database.url"
-    }
-
-    object DatabasePassword : AppConfig {
         override val propertyKey: String = "ktor.database.user"
     }
 
-    object DatabaseUrl : AppConfig {
+    object DatabasePassword : AppConfig {
         override val propertyKey: String = "ktor.database.password"
     }
 
+    object DatabaseUrl : AppConfig {
+        override val propertyKey: String = "ktor.database.url"
+    }
+
     object AppHost : AppConfig {
-        override val propertyKey: String = "ktor.database.app_host"
+        override val propertyKey: String = "ktor.application.app_host"
     }
 
     object AppPort : AppConfig {
-        override val propertyKey: String = "ktor.database.app_port"
+        override val propertyKey: String = "ktor.application.app_port"
     }
 }
