@@ -12,4 +12,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: ./gradlew test
+      - name: Run Gradle Tests
+        run: ./gradlew test
+        env:
+          DB_DATABASE: ${{ env.DB_DATABASE }}
+          DB_HOST: ${{ env.DB_HOST }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
+          DB_PORT: ${{ env.DB_PORT }}
+          DB_USER: ${{ env.DB_USER }}
