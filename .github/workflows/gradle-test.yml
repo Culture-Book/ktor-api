@@ -13,7 +13,3 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: ./gradlew test
-        env:
-          DB_DATABASE: 'postgres'
-          DB_HOST: 'db.mdrokateajssmkzwljii.supabase.co'
-          DB_PORT: '5432'
