@@ -8,7 +8,7 @@ import sig.g.data_access.databaseConnection
 import sig.g.plugins.*
 
 fun main() {
-    embeddedServer(Netty, port = AppConfig.AppPort.getProperty().toInt(), host = AppConfig.AppHost.getProperty()) {
+    embeddedServer(Netty, port = AppConfig.AppPort.getProperty().toInt(), host = "0.0.0.0") {
         databaseConnection()
         configureSockets()
         configureSerialization()
