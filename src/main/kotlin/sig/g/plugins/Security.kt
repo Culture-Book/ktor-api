@@ -8,13 +8,15 @@ import io.ktor.server.auth.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
+import sig.g.config.AppConfig
+import sig.g.config.getProperty
 import kotlin.collections.set
 
 fun Application.configureSecurity() {
 
     authentication {
         oauth("auth-oauth-google") {
-            urlProvider = { "http://localhost:8080/callback" }
+            urlProvider = { AppConfig.AppHost.getProperty() }
             providerLookup = {
                 OAuthServerSettings.OAuth2ServerSettings(
                     name = "google",
