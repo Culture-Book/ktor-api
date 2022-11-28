@@ -16,7 +16,7 @@ fun Application.configureSecurity() {
 
     authentication {
         oauth("auth-oauth-google") {
-            urlProvider = { AppConfig.AppHost.getProperty() }
+            urlProvider = { "${AppConfig.AppHost.getProperty()}/callback" }
             providerLookup = {
                 OAuthServerSettings.OAuth2ServerSettings(
                     name = "google",
@@ -40,7 +40,7 @@ fun Application.configureSecurity() {
 
     routing {
         authenticate("auth-oauth-google") {
-            get("login") {
+            get("glogin") {
                 call.respondRedirect("/callback")
             }
 
