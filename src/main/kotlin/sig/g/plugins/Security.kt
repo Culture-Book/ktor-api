@@ -8,7 +8,6 @@ import io.ktor.server.auth.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
-import kotlin.collections.listOf
 import kotlin.collections.set
 
 fun Application.configureSecurity() {
@@ -20,7 +19,7 @@ fun Application.configureSecurity() {
                 OAuthServerSettings.OAuth2ServerSettings(
                     name = "google",
                     authorizeUrl = "https://accounts.google.com/o/oauth2/auth",
-                    accessTokenUrl = "https://accounts.google.com/o/oauth2/token",
+                    accessTokenUrl = "https://oauth2.googleapis.com/token",
                     requestMethod = HttpMethod.Post,
                     clientId = System.getenv("GOOGLE_CLIENT_ID"),
                     clientSecret = System.getenv("GOOGLE_CLIENT_SECRET"),
@@ -30,9 +29,9 @@ fun Application.configureSecurity() {
             client = HttpClient(Apache)
         }
     }
-    data class MySession(val count: Int = 0)
+
     install(Sessions) {
-        cookie<MySession>("MY_SESSION") {
+        cookie<UserSession>("UserSession") {
             cookie.extensions["SameSite"] = "lax"
         }
     }
@@ -46,15 +45,10 @@ fun Application.configureSecurity() {
             get("/callback") {
                 val principal: OAuthAccessTokenResponse.OAuth2? = call.authentication.principal()
                 call.sessions.set(UserSession(principal?.accessToken.toString()))
-                call.respondRedirect("/hello")
+                call.respondRedirect("/")
             }
-        }
-        get("/session/increment") {
-            val session = call.sessions.get<MySession>() ?: MySession()
-            call.sessions.set(session.copy(count = session.count + 1))
-            call.respondText("Counter is ${session.count}. Refresh to increment.")
         }
     }
 }
 
-class UserSession(accessToken: String)
+data class UserSession(val accessToken: String)
