@@ -26,4 +26,12 @@ sealed interface AppConfig {
     object AppPort : AppConfig {
         override val propertyKey: String = "ktor.application.app_port"
     }
+
+    object DatabaseIdleTimeout : AppConfig {
+        override val propertyKey: String = "ktor.database.timeout"
+    }
+
+    object DatabasePoolSize : AppConfig {
+        override val propertyKey: String = "ktor.database.pool"
+    }
 }
