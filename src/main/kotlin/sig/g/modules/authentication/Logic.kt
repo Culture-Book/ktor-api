@@ -5,27 +5,31 @@ import io.ktor.client.engine.apache.*
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
 import io.ktor.server.routing.*
-import io.ktor.server.sessions.*
 import sig.g.config.AppConfig
+import sig.g.config.getListProperty
 import sig.g.config.getProperty
-import kotlin.collections.set
 
 private val googleProvider =
     OAuthServerSettings.OAuth2ServerSettings(
-        name = "google",
-        authorizeUrl = "https://accounts.google.com/o/oauth2/auth",
-        accessTokenUrl = "https://oauth2.googleapis.com/token",
+        name = AppConfig.GoogleSignIn.Name.getProperty(),
+        authorizeUrl = AppConfig.GoogleSignIn.AuthorizeUrl.getProperty(),
+        accessTokenUrl = AppConfig.GoogleSignIn.AccessTokenUrl.getProperty(),
         requestMethod = HttpMethod.Post,
-        clientId = System.getenv("GOOGLE_CLIENT_ID"),
-        clientSecret = System.getenv("GOOGLE_CLIENT_SECRET"),
-        defaultScopes = listOf("https://www.googleapis.com/auth/userinfo.profile")
+        clientId = AppConfig.GoogleSignIn.CLientId.getProperty(),
+        clientSecret = AppConfig.GoogleSignIn.ClientSecret.getProperty(),
+        defaultScopes = AppConfig.GoogleSignIn.DefaultScopes.getListProperty()
     )
 
 fun Application.configureSecurity() {
     // JWT validation and origin registration/login
 
     authentication {
+        jwt {
+
+        }
+
         oauth("auth-oauth-google") {
             urlProvider = { "${AppConfig.AppHost.getProperty()}/callback" }
             providerLookup = { googleProvider }
@@ -33,14 +37,8 @@ fun Application.configureSecurity() {
         }
     }
 
-    install(Sessions) {
-        cookie<UserSession>("UserSession") {
-            cookie.extensions["SameSite"] = "lax"
-        }
-    }
-
     routing {
+        originAuth()
         googleOauth()
     }
 }
-

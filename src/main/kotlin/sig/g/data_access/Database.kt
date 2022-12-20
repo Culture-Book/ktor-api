@@ -2,13 +2,15 @@ package sig.g.data_access
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import io.ktor.server.application.*
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.sql.transactions.transaction
 import sig.g.config.AppConfig
 import sig.g.config.getProperty
 import sig.g.exceptions.DatabaseNotInitialised
+import sig.g.modules.authentication.data.Users
 
 private val hikariConfig = HikariDataSource(
     HikariConfig().apply {
@@ -23,9 +25,13 @@ private val hikariConfig = HikariDataSource(
         validate()
     })
 
-fun Application.attemptDatabaseConnection(): Database? =
+fun configureDatabase(): Database? =
     try {
-        Database.connect(hikariConfig)
+        val db = Database.connect(hikariConfig)
+        transaction(db) {
+            SchemaUtils.create(Users)
+        }
+        db
     } catch (e: Exception) {
         throw DatabaseNotInitialised(e.message)
     }
