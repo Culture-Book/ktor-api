@@ -2,10 +2,14 @@ package sig.g.authentication
 
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
+import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
+import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.testing.*
 import org.junit.Test
 import sig.g.BaseApplicationTest
 import sig.g.modules.authentication.configureSecurity
+import sig.g.modules.authentication.data.User
 import sig.g.modules.authentication.decrypt
 import sig.g.modules.authentication.encrypt
 import kotlin.test.assertEquals
@@ -53,5 +57,26 @@ class AuthenticationTest : BaseApplicationTest() {
 
         val decoded = encrypted.decrypt()
         assertEquals(original, decoded)
+    }
+
+    @Test
+    fun `test register user`() = testApplication {
+        val email = "email@email.com".encrypt()
+        val password = "password".encrypt()
+
+        install(ContentNegotiation) {
+            json()
+        }
+
+        val request = client.preparePost("/register") {
+            contentType(ContentType.Application.Json)
+            setBody(
+                User(email = email!!, password = password!!)
+            )
+        }
+
+        request.execute().apply {
+            assertEquals(status, HttpStatusCode.Created)
+        }
     }
 }

@@ -30,12 +30,12 @@ data class User(
 
 object Users : Table() {
     val userId = uuid("userId").autoGenerate()
-    val profileUri = varchar("profileUri", 255).nullable()
-    val displayName = varchar("displayName", 100).nullable()
-    val password = varchar("password", 2048)
-    val email = varchar("email", 2048)
-    val tosAccept = varchar("tosAccept", 25).nullable()
-    val privacyAccept = varchar("privacyAccept", 25).nullable()
+    val profileUri = text("profileUri").nullable()
+    val displayName = text("displayName").nullable()
+    val password = text("password")
+    val email = text("email")
+    val tosAccept = text("tosAccept").nullable()
+    val privacyAccept = text("privacyAccept").nullable()
     val verificationStatus = integer("verificationStatus")
     val registrationStatus = integer("registrationStatus")
     override val primaryKey: PrimaryKey = PrimaryKey(userId)

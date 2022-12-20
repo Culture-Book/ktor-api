@@ -26,8 +26,8 @@ fun Routing.originAuth() {
         var user = call.receive<User>()
         val decryptedEmail = user.email.decrypt()
 
-        if (decryptedEmail.isNullOrEmpty()) {
-            call.respond(HttpStatusCode.BadRequest)
+        if (decryptedEmail.isNullOrEmpty() || !decryptedEmail.isProperEmail()) {
+            call.respond(HttpStatusCode.BadRequest, AuthError.InvalidEmail)
             return@post
         }
 
@@ -36,7 +36,7 @@ fun Routing.originAuth() {
 
         UserDAOFacadeImpl.registerUser(user)?.let {
             call.respond(HttpStatusCode.Created, it)
-        } ?: call.respond(HttpStatusCode.BadRequest)
+        } ?: call.respond(HttpStatusCode.BadRequest, AuthError.DatabaseError)
     }
 
     get(".well-known/public") {

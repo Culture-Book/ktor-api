@@ -42,3 +42,5 @@ fun Application.configureSecurity() {
         googleOauth()
     }
 }
+
+fun String?.isProperEmail() = Regex("^([a-zA-Z0-9_\\-]+)@([a-zA-Z0-9_\\-]+)\\.([a-zA-Z]{2,5})\$").matches(this ?: "")
