@@ -14,7 +14,7 @@ data class UserSession(val accessToken: String, val refreshToken: String)
 @Serializable
 data class User(
     @Serializable(with = UUIDSerializer::class)
-    val userId: UUID,
+    val userId: UUID = UUID.randomUUID(),
     @Serializable(with = URISerializer::class)
     val profileUri: URI? = null,
     val displayName: String? = null,
