@@ -4,6 +4,7 @@ import java.util.*
 
 sealed interface UserDAOFacade {
 
+    suspend fun UUID?.exists(): Boolean
     suspend fun User?.exists(): Boolean
     suspend fun getUser(userId: UUID): User?
     suspend fun registerUser(user: User): User?

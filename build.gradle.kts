@@ -7,6 +7,7 @@ val hikariVersion: String = "5.0.1"
 val postgresVersion: String = "42.5.0"
 val bouncyCastleVersion: String = "1.72.3"
 val firebaseVersion: String = "9.1.1"
+val h2Version: String = "2.1.214"
 
 plugins {
     application
@@ -58,6 +59,9 @@ dependencies {
     implementation("io.ktor:ktor-server-sessions-jvm:$ktorVersion")
     implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
+
+    implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+    testImplementation("com.h2database:h2:$h2Version")
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktorVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
 }

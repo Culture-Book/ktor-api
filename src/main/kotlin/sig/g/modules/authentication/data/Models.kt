@@ -9,7 +9,15 @@ import java.net.URI
 import java.time.LocalDateTime
 import java.util.*
 
-data class UserSession(val accessToken: String, val refreshToken: String)
+data class UserSession(val accessToken: String, val refreshToken: String? = null)
+
+sealed interface JwtClaim {
+    val claim: String
+
+    object UserId : JwtClaim {
+        override val claim: String = "userId"
+    }
+}
 
 @Serializable
 data class User(
@@ -40,6 +48,10 @@ object Users : Table() {
     val registrationStatus = integer("registrationStatus")
     override val primaryKey: PrimaryKey = PrimaryKey(userId)
 }
+
+fun User.normalize(): User = copy(
+    email = email.lowercase().trim()
+)
 
 enum class VerificationStatus {
     NotVerified, Verified, Pending

@@ -57,6 +57,16 @@ sealed interface AppConfig {
         }
     }
 
+    sealed interface OAuthConfig : AppConfig {
+        object PrivateKey : JWTConfig {
+            override val propertyKey: String = "ktor.oauth.privateKey"
+        }
+
+        object PublicKey : JWTConfig {
+            override val propertyKey: String = "ktor.oauth.publicKey"
+        }
+    }
+
     sealed interface GoogleSignIn : AppConfig {
 
         object Name : GoogleSignIn {

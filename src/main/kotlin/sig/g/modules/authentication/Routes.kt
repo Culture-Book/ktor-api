@@ -1,5 +1,6 @@
 package sig.g.modules.authentication
 
+import com.auth0.jwk.JwkProviderBuilder
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -13,6 +14,8 @@ import sig.g.modules.authentication.data.User
 import sig.g.modules.authentication.data.UserDAOFacadeImpl
 import sig.g.modules.authentication.data.UserDAOFacadeImpl.exists
 import sig.g.modules.authentication.data.UserSession
+import sig.g.modules.authentication.data.normalize
+import java.util.concurrent.TimeUnit
 
 fun Routing.googleOauth() {
     authenticate("auth-oauth-google") {
@@ -24,7 +27,7 @@ fun Routing.googleOauth() {
 fun Routing.originAuth() {
     post("/register") {
         var user = call.receive<User>()
-        val decryptedEmail = user.email.decrypt()
+        val decryptedEmail = user.email.decodeOAuth()
 
         if (decryptedEmail.isNullOrEmpty() || !decryptedEmail.isProperEmail()) {
             call.respond(HttpStatusCode.BadRequest, AuthError.InvalidEmail)
@@ -32,26 +35,30 @@ fun Routing.originAuth() {
         }
 
         user = user.copy(email = decryptedEmail)
-        if (user.exists()) call.respond(HttpStatusCode.BadRequest)
+        user = user.normalize()
+
+        if (user.exists()) {
+            call.respond(HttpStatusCode.BadRequest, AuthError.DuplicateEmail)
+            return@post
+        }
+
+
 
         UserDAOFacadeImpl.registerUser(user)?.let {
-            call.respond(HttpStatusCode.Created, it)
+            call.sessions.set(UserSession(accessToken = generateJwt(it.userId)!!))
+            call.respond(HttpStatusCode.Created)
         } ?: call.respond(HttpStatusCode.BadRequest, AuthError.DatabaseError)
     }
 
-    get(".well-known/public") {
+    get(".well-known/jwt/public") {
         call.respond(AppConfig.JWTConfig.PublicKey.getProperty())
     }
 
+    get(".well-known/oauth/public") {
+        call.respond(AppConfig.OAuthConfig.PublicKey.getProperty())
+    }
+
     get(".well-known/jwt") {
-//        val issuer = AppConfig.JWTConfig.Issuer.getProperty()
-//        val audience = AppConfig.JWTConfig.Audience.getProperty()
-//        val realm = AppConfig.JWTConfig.Realm.getProperty()
-//
-//        val jwkProvider = JwkProviderBuilder(issuer)
-//            .cached(10, 24, TimeUnit.HOURS)
-//            .rateLimited(10, 1, TimeUnit.MINUTES)
-//            .build()
         call.respond(AppConfig.JWTConfig.PublicKey.getProperty())
     }
 }

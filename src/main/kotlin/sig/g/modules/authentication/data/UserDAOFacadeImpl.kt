@@ -22,8 +22,15 @@ object UserDAOFacadeImpl : UserDAOFacade {
         registrationStatus = row[Users.registrationStatus],
     )
 
+    override suspend fun UUID?.exists(): Boolean = dbQuery {
+        if (this == null) false else
+            Users.select(Users.userId eq this).singleOrNull() != null
+    }
+
     override suspend fun User?.exists(): Boolean = dbQuery {
-        if (this == null) false else Users.select(Users.email eq email).singleOrNull() != null
+        if (this == null) false else
+            Users.select(Users.email eq email).singleOrNull() != null
+
     }
 
     override suspend fun getUser(userId: UUID): User? =
