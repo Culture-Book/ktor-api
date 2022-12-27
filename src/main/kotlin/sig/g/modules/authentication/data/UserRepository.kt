@@ -3,12 +3,12 @@ package sig.g.modules.authentication.data
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import sig.g.data_access.dbQuery
-import sig.g.modules.utils.toLocalDateTime
-import sig.g.modules.utils.toTimeStamp
+import sig.g.modules.authentication.data.models.User
+import sig.g.modules.authentication.data.models.database.Users
 import sig.g.modules.utils.toUri
-import java.util.*
+import java.time.LocalDateTime
 
-object UserDAOFacadeImpl : UserDAOFacade {
+object UserRepository : UserDao {
 
     private fun resultRowToUser(row: ResultRow) = User(
         userId = row[Users.userId],
@@ -16,37 +16,37 @@ object UserDAOFacadeImpl : UserDAOFacade {
         displayName = row[Users.displayName],
         password = row[Users.password],
         email = row[Users.email],
-        tosAccept = row[Users.tosAccept].toLocalDateTime(),
-        privacyAccept = row[Users.privacyAccept].toLocalDateTime(),
+        tosAccept = row[Users.tosAccept],
+        privacyAccept = row[Users.privacyAccept],
         verificationStatus = row[Users.verificationStatus],
         registrationStatus = row[Users.registrationStatus],
     )
 
-    override suspend fun UUID?.exists(): Boolean = dbQuery {
-        if (this == null) false else
-            Users.select(Users.userId eq this).singleOrNull() != null
+    override suspend fun String.exists(): Boolean = dbQuery {
+        Users.select(Users.email eq this).singleOrNull() != null
     }
 
-    override suspend fun User?.exists(): Boolean = dbQuery {
-        if (this == null) false else
-            Users.select(Users.email eq email).singleOrNull() != null
-
-    }
-
-    override suspend fun getUser(userId: UUID): User? =
+    override suspend fun getUser(userId: String): User? = dbQuery {
         Users.select(Users.userId eq userId)
             .map(::resultRowToUser)
             .singleOrNull()
+    }
+
+    override suspend fun getUserByEmail(email: String): User? = dbQuery {
+        Users.select(Users.email eq email)
+            .map(::resultRowToUser)
+            .singleOrNull()
+    }
 
     override suspend fun registerUser(user: User): User? = dbQuery {
         val insertStatement = Users.insert {
-            it[userId] = (user.userId)
+            it[userId] = user.userId
             it[profileUri] = user.profileUri.toString()
-            it[displayName] = user.displayName ?: ""
+            it[displayName] = user.displayName
             it[password] = user.password
             it[email] = user.email
-            it[tosAccept] = user.tosAccept.toTimeStamp()
-            it[privacyAccept] = user.privacyAccept.toTimeStamp()
+            it[tosAccept] = LocalDateTime.now()
+            it[privacyAccept] = LocalDateTime.now()
             it[verificationStatus] = user.verificationStatus
             it[registrationStatus] = user.registrationStatus
         }
@@ -54,20 +54,20 @@ object UserDAOFacadeImpl : UserDAOFacade {
     }
 
     override suspend fun updateUser(user: User): Boolean = dbQuery {
-        Users.update {
+        Users.update({ Users.userId eq user.userId }) {
             it[userId] = user.userId
             it[profileUri] = user.profileUri.toString()
             it[displayName] = user.displayName ?: ""
             it[password] = user.password
             it[email] = user.email
-            it[tosAccept] = user.tosAccept.toTimeStamp()
-            it[privacyAccept] = user.privacyAccept.toTimeStamp()
+            it[tosAccept] = user.tosAccept
+            it[privacyAccept] = user.privacyAccept
             it[verificationStatus] = user.verificationStatus
             it[registrationStatus] = user.registrationStatus
         } > 0
     }
 
-    override suspend fun deleteUser(userId: UUID): Boolean = dbQuery {
+    override suspend fun deleteUser(userId: String): Boolean = dbQuery {
         Users.deleteWhere { Users.userId eq userId } > 0
     }
 }

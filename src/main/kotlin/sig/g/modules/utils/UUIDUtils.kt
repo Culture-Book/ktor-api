@@ -1,10 +1,5 @@
 package sig.g.modules.utils
 
-import java.util.UUID
+import java.util.*
 
-fun String?.toUUID() =
-    try {
-        UUID.fromString(this)
-    } catch (e: Exception) {
-        null
-    }
+fun String?.toUUID() = UUID.fromString(this)

@@ -48,12 +48,16 @@ sealed interface AppConfig {
             override val propertyKey: String = "ktor.jwt.issuer"
         }
 
-        object Audience : JWTConfig {
-            override val propertyKey: String = "ktor.jwt.audience"
-        }
-
         object Realm : JWTConfig {
             override val propertyKey: String = "ktor.jwt.realm"
+        }
+
+        object AccessTokenExpiry : JWTConfig {
+            override val propertyKey: String = "ktor.jwt.accessTokenExpiry"
+        }
+
+        object RefreshTokenExpiry : JWTConfig {
+            override val propertyKey: String = "ktor.jwt.refreshTokenExpiry"
         }
     }
 

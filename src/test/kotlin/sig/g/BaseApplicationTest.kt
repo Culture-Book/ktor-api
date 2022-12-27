@@ -51,6 +51,7 @@ abstract class BaseApplicationTest {
         testApp {
             try {
                 transaction(database) {
+                    exec("DROP TABLE usertokens;")
                     exec("DROP TABLE users;")
                 }
             } catch (_: Exception) {

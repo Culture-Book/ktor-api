@@ -5,13 +5,13 @@ import com.zaxxer.hikari.HikariDataSource
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.name
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import sig.g.config.AppConfig
 import sig.g.config.getProperty
 import sig.g.exceptions.DatabaseNotInitialised
-import sig.g.modules.authentication.data.Users
+import sig.g.modules.authentication.data.models.database.UserTokens
+import sig.g.modules.authentication.data.models.database.Users
 
 private val hikariConfig = HikariDataSource(
     HikariConfig().apply {
@@ -31,6 +31,7 @@ fun configureDatabase(): Database? =
         val db = Database.connect(hikariConfig)
         transaction(db) {
             SchemaUtils.create(Users)
+            SchemaUtils.create(UserTokens)
         }
         db
     } catch (e: Exception) {

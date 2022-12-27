@@ -1,10 +1,9 @@
 package sig.g.modules.utils
 
+import java.time.Instant
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 
-fun LocalDateTime?.toTimeStamp() = this?.toString()
-fun String?.toLocalDateTime(): LocalDateTime? = try {
-    LocalDateTime.parse(this)
-} catch (e: Exception) {
-    null
-}
+fun addSeconds(amount: Int): LocalDateTime? = LocalDateTime.from(
+    Instant.now().atOffset(ZoneOffset.ofTotalSeconds(amount))
+)

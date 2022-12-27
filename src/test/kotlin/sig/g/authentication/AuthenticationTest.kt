@@ -3,33 +3,18 @@ package sig.g.authentication
 import io.ktor.client.call.*
 import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
-import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.server.testing.*
 import org.junit.Test
 import sig.g.BaseApplicationTest
-import sig.g.modules.authentication.*
-import sig.g.modules.authentication.data.User
-import sig.g.modules.authentication.data.UserSession
+import sig.g.modules.authentication.data.models.User
+import sig.g.modules.authentication.data.models.states.AuthError
+import sig.g.modules.authentication.decodeJwt
 import sig.g.modules.authentication.encodeOAuth
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 
 class AuthenticationTest : BaseApplicationTest() {
-
-    @Test
-    fun `test public key endpoint`() = testApplication {
-        application {
-            configureSecurity()
-        }
-        client.get(".well-known/jwt/public").apply {
-            assertEquals(
-                bodyAsText(),
-                "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3NK3kjPpIOM+OaVUMc2qTTmmn1GnXmrh40bSIHDDLuyCnbQKvM2u5g0xsmfjt9mx7gSjIrcI2AXh0WhzCfMFciq6L0mMtO9a9A3ZN3d1EYaVnCBH8sP/1srrWacTF96wQ5OuB/voptnQ3HO9kxNT++Y+gZS54NPmsDsPQQ+osXGgjq+wRavb2Vs+4LYrwLeaUpMWcEvsnJc4csGizBapvXLLUkTnAnJ6sBXaRFK/l3zsdSfn4FfIG8H1XZMOzfwDALbOm67EOmhGX5kVUHx2ux1pI3Ej1NvvAI98cAXdeF4uqgSKbRaXpTiF4gEDHJoPnlSV8Qu+vEJVFRe/fTAEnwIDAQAB"
-            )
-        }
-    }
 
     @Test
     fun `test encoding works`() {
@@ -77,8 +62,8 @@ class AuthenticationTest : BaseApplicationTest() {
     @Test
     fun `test register user, registers user`() = testApp {
 
-        val email = "email@email.com".encodeOAuth()
-        val password = "password".encodeOAuth()
+        val email = "email1@email.com".encodeOAuth()
+        val password = "password123".encodeOAuth()
         val user = User(email = email!!, password = password!!)
 
         it.post("/register") {
@@ -93,10 +78,37 @@ class AuthenticationTest : BaseApplicationTest() {
     }
 
     @Test
+    fun `test login user, logins user`() = testApp {
+
+        val email = "email1@email.com".encodeOAuth()
+        val password = "password123".encodeOAuth()
+        val user = User(email = email!!, password = password!!)
+
+        it.post("/register") {
+            contentType(ContentType.Application.Json)
+            setBody(user)
+        }.apply {
+            assertEquals(status, HttpStatusCode.Created)
+            assertNotNull(setCookie()["UserSession"])
+            print(setCookie()["UserSession"]?.value)
+        }
+
+        it.post("/login") {
+            contentType(ContentType.Application.Json)
+            setBody(user)
+        }.apply {
+            assertEquals(status, HttpStatusCode.Created)
+            assertNotNull(setCookie()["UserSession"])
+            print(setCookie()["UserSession"]?.value)
+        }
+
+    }
+
+    @Test
     fun `test register duplicate user, returns 400`() = testApp {
 
         val email = "email@email.com".encodeOAuth()
-        val password = "password".encodeOAuth()
+        val password = "password123".encodeOAuth()
         val user = User(email = email!!, password = password!!)
 
         it.post("/register") {
@@ -119,7 +131,7 @@ class AuthenticationTest : BaseApplicationTest() {
     fun `test register user, unencrypted password and email`() = testApp {
 
         val email = "email@email.com"
-        val password = "password"
+        val password = "password123"
         val user = User(email = email, password = password)
 
         it.post("/register") {
@@ -127,7 +139,7 @@ class AuthenticationTest : BaseApplicationTest() {
             setBody(user)
         }.apply {
             assertEquals(status, HttpStatusCode.BadRequest)
-            assertNotEquals(call.body(), user.userId.toString())
+            assertNotEquals(call.body(), user.userId)
         }
     }
 

@@ -5,7 +5,7 @@ import io.ktor.server.plugins.autohead.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
-import sig.g.modules.authentication.data.UserSession
+import sig.g.modules.authentication.data.models.UserSession
 
 fun Application.configureRouting() {
     install(AutoHeadResponse)
