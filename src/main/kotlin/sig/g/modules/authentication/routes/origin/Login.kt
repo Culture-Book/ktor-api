@@ -7,21 +7,20 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import sig.g.modules.authentication.constants.AuthRoute
-import sig.g.modules.authentication.data.models.states.AuthError
 import sig.g.modules.authentication.data.models.states.AuthState
 import sig.g.modules.authentication.logic.login
 
 internal fun Route.signIn() {
     post(AuthRoute.Login.route) {
         when (val authState = login(call.receive())) {
-            is AuthState.AuthSuccess -> {
+            is AuthState.Success -> {
                 call.apply {
                     sessions.set(authState)
                     respond(HttpStatusCode.OK, authState)
                 }
             }
 
-            is AuthError -> call.respond(HttpStatusCode.BadRequest, authState)
+            is AuthState.Error -> call.respond(HttpStatusCode.BadRequest, authState)
         }
     }
 }

@@ -21,6 +21,4 @@ data class UserToken(
     val expiresAt: LocalDateTime? = LocalDateTime.now(),
     @Serializable(with = TokenTypeSerializer::class)
     val type: TokenType = TokenType.Origin
-) {
-    fun toUserSession(): UserSession = UserSession(accessToken.toString(), refreshToken.toString())
-}
+)

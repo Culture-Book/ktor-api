@@ -14,7 +14,6 @@ import sig.g.httpClient
 import sig.g.modules.authentication.constants.AuthRoute
 import sig.g.modules.authentication.data.UserRepository.exists
 import sig.g.modules.authentication.data.models.GoogleUser
-import sig.g.modules.authentication.data.models.states.AuthError
 import sig.g.modules.authentication.data.models.states.AuthState
 
 internal fun Route.googleCallback() {
@@ -41,12 +40,12 @@ internal fun Route.googleCallback() {
 
         when (response.status) {
             HttpStatusCode.Created -> {
-                val responseBody = response.body<AuthState.AuthSuccess>()
+                val responseBody = response.body<AuthState.Success>()
                 call.sessions.set(responseBody)
                 call.respond(response.status, responseBody)
             }
 
-            HttpStatusCode.BadRequest -> call.respond(response.status, response.body<AuthError>())
+            HttpStatusCode.BadRequest -> call.respond(response.status, response.body<AuthState.Error>())
         }
     }
 }

@@ -7,6 +7,8 @@ import sig.g.modules.authentication.constants.AuthRoute
 import sig.g.modules.authentication.logic.configureGoogleSignIn
 import sig.g.modules.authentication.logic.configureJwt
 import sig.g.modules.authentication.routes.authenticated.authenticationRoutes
+import sig.g.modules.authentication.routes.general.getPrivacy
+import sig.g.modules.authentication.routes.general.getTos
 import sig.g.modules.authentication.routes.google.googleAuthentication
 import sig.g.modules.authentication.routes.origin.originAuthentication
 
@@ -22,5 +24,10 @@ fun Application.configureSecurity() {
             googleAuthentication()
             authenticationRoutes()
         }
+    }
+
+    routing {
+        getTos()
+        getPrivacy()
     }
 }

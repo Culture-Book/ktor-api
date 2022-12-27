@@ -11,14 +11,14 @@ import sig.g.modules.authentication.data.models.states.AuthState
 fun Application.configureRouting() {
     install(AutoHeadResponse)
     install(Sessions) {
-        cookie<AuthState.AuthSuccess>(COOKIE_NAME) {
+        cookie<AuthState.Success>(COOKIE_NAME) {
             cookie.extensions["SameSite"] = "lax"
         }
     }
 
     routing {
         get("/") {
-            val session = call.sessions.get<AuthState.AuthSuccess>()
+            val session = call.sessions.get<AuthState.Success>()
             if (session != null) {
                 call.respondText("Hello ${session.jwt}")
             } else {

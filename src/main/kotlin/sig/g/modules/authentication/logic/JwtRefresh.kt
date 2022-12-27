@@ -1,35 +1,26 @@
 package sig.g.modules.authentication.logic
 
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
-import io.ktor.server.sessions.*
-import sig.g.modules.authentication.constants.AuthRoute
 import sig.g.modules.authentication.data.UserTokenRepository
 import sig.g.modules.authentication.data.models.UserToken
-import sig.g.modules.authentication.data.models.states.AuthError
 import sig.g.modules.authentication.data.models.states.AuthState
 import sig.g.modules.authentication.generateAccessJwt
 import java.time.LocalDateTime
 
 suspend fun refreshToken(userToken: UserToken?): AuthState {
-    userToken ?: return AuthError.AuthenticationError
-    val dbUserToken = UserTokenRepository.getUserToken(userToken) ?: return AuthError.AuthenticationError
+    userToken ?: return AuthState.Error.AuthenticationError
+    val dbUserToken = UserTokenRepository.getUserToken(userToken) ?: return AuthState.Error.AuthenticationError
     return if (dbUserToken.expiresAt?.isBefore(LocalDateTime.now()) == true) {
         val newToken = generateUserToken(userId = userToken.userId)
         val isSuccess = UserTokenRepository.updateToken(newToken)
 
         if (isSuccess) {
             val jwt = generateAccessJwt(newToken.userId, newToken.accessToken, newToken.refreshToken)
-                ?: return AuthError.InvalidArgumentError
-            AuthState.AuthSuccess(jwt)
+                ?: return AuthState.Error.Generic
+            AuthState.Success(jwt)
         } else {
-            AuthError.DatabaseError
+            AuthState.Error.DatabaseError
         }
     } else {
-        AuthError.AuthenticationError
+        AuthState.Error.AuthenticationError
     }
 }

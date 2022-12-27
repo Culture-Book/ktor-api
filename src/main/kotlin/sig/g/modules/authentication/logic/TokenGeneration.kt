@@ -37,7 +37,7 @@ fun JWTPrincipal.getUserToken(): UserToken {
     return UserToken(userId = userIdClaim, refreshToken = refreshClaim, accessToken = accessClaim)
 }
 
-fun AuthState.AuthSuccess.getUserToken(): UserToken {
+fun AuthState.Success.getUserToken(): UserToken {
     val decodedJWT = JWT.decode(jwt)
     val accessClaim = decodedJWT
         .getClaim(JwtClaim.AccessToken.claim)

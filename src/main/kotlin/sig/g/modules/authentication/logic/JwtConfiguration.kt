@@ -23,7 +23,7 @@ fun AuthenticationConfig.configureJwt() {
             val jwtUserId = jwtCredential.payload.getClaim(JwtClaim.UserId.claim)?.asString() ?: ""
 
             // session token
-            val authState = sessions.get(AuthState.AuthSuccess::class)
+            val authState = sessions.get(AuthState.Success::class)
             val jwt = JWT.decode(authState?.jwt)
             val sessionUserId = jwt?.getClaim(JwtClaim.UserId.claim)?.asString() ?: ""
             val userToken = jwtCredential.getUserToken()

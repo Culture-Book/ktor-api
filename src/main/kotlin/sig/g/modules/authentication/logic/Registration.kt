@@ -4,7 +4,6 @@ import sig.g.modules.authentication.data.UserRepository
 import sig.g.modules.authentication.data.UserRepository.exists
 import sig.g.modules.authentication.data.UserTokenRepository
 import sig.g.modules.authentication.data.models.User
-import sig.g.modules.authentication.data.models.states.AuthError
 import sig.g.modules.authentication.data.models.states.AuthState
 import sig.g.modules.authentication.decodeOAuth
 import sig.g.modules.authentication.generateAccessJwt
@@ -15,15 +14,15 @@ suspend fun registerUser(callUser: User): AuthState {
     val decryptedPassword = callUser.password.decodeOAuth()
 
     if (decryptedEmail.isNullOrEmpty() || !decryptedEmail.isProperEmail()) {
-        return AuthError.InvalidEmail
+        return AuthState.Error.InvalidEmail
     }
 
     if (decryptedPassword.isNullOrEmpty()) {
-        return AuthError.InvalidPassword
+        return AuthState.Error.InvalidPassword
     }
 
     if (decryptedEmail.exists()) {
-        return AuthError.DuplicateEmail
+        return AuthState.Error.DuplicateEmail
     }
 
     val user = User(
@@ -36,12 +35,12 @@ suspend fun registerUser(callUser: User): AuthState {
         registrationStatus = callUser.registrationStatus
     )
     val dbUser =
-        UserRepository.registerUser(user) ?: return AuthError.DatabaseError
+        UserRepository.registerUser(user) ?: return AuthState.Error.DatabaseError
 
     val userToken = generateUserToken(dbUser.userId)
     val jwt = generateAccessJwt(dbUser.userId, userToken.accessToken, userToken.refreshToken)
-        ?: return AuthError.InvalidArgumentError
-    UserTokenRepository.insertToken(userToken) ?: return AuthError.InvalidArgumentError
+        ?: return AuthState.Error.Generic
+    UserTokenRepository.insertToken(userToken) ?: return AuthState.Error.Generic
 
-    return AuthState.AuthSuccess(jwt)
+    return AuthState.Success(jwt)
 }

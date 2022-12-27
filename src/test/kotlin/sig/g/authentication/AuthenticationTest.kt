@@ -8,7 +8,7 @@ import io.ktor.http.*
 import org.junit.Test
 import sig.g.BaseApplicationTest
 import sig.g.modules.authentication.data.models.User
-import sig.g.modules.authentication.data.models.states.AuthError
+import sig.g.modules.authentication.data.models.states.AuthState
 import sig.g.modules.authentication.decodeJwt
 import sig.g.modules.authentication.encodeOAuth
 import kotlin.test.assertEquals
@@ -106,7 +106,7 @@ class AuthenticationTest : BaseApplicationTest() {
             setBody(user)
         }.apply {
             assertEquals(status, HttpStatusCode.BadRequest)
-            assertEquals(call.body(), AuthError.DuplicateEmail)
+            assertEquals(call.body(), AuthState.Error.DuplicateEmail)
         }
     }
 

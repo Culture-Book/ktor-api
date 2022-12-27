@@ -9,7 +9,7 @@ import kotlinx.serialization.encoding.Encoder
 import sig.g.modules.authentication.data.models.constants.TokenType
 
 object TokenTypeSerializer : KSerializer<TokenType> {
-    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("AuthError", PrimitiveKind.STRING)
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("AuthState.Error", PrimitiveKind.STRING)
 
     override fun deserialize(decoder: Decoder): TokenType = when (decoder.decodeInt()) {
         TokenType.Origin.ordinal -> TokenType.Origin

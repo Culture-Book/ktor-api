@@ -7,6 +7,14 @@ sealed interface AppConfig {
         override val propertyKey: String = "ktor.database.driver"
     }
 
+    object TosDate : AppConfig {
+        override val propertyKey: String = "ktor.application.tos_date"
+    }
+
+    object PrivacyDate : AppConfig {
+        override val propertyKey: String = "ktor.application.privacy_date"
+    }
+
     object DatabaseUser : AppConfig {
         override val propertyKey: String = "ktor.database.user"
     }
