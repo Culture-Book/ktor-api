@@ -17,7 +17,7 @@ internal fun Route.signIn() {
             is AuthState.AuthSuccess -> {
                 call.apply {
                     sessions.set(authState)
-                    respond(HttpStatusCode.Created, authState)
+                    respond(HttpStatusCode.OK, authState)
                 }
             }
 
