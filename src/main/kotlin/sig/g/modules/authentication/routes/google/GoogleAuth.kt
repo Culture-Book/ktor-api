@@ -4,7 +4,7 @@ import io.ktor.server.auth.*
 import io.ktor.server.routing.*
 import sig.g.modules.authentication.constants.AuthRoute
 
-fun Routing.googleAuthentication() {
+fun Route.googleAuthentication() {
     authenticate(AuthRoute.GoogleAuth.route) {
         googleLogin()
         googleCallback()

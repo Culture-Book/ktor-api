@@ -4,7 +4,7 @@ import io.ktor.server.routing.*
 import sig.g.modules.authentication.routes.general.jwtPublicKey
 import sig.g.modules.authentication.routes.general.oauthPublicKey
 
-fun Routing.originAuthentication() {
+fun Route.originAuthentication() {
     jwtPublicKey()
     oauthPublicKey()
     registration()

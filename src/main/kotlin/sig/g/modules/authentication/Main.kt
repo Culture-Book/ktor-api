@@ -3,6 +3,7 @@ package sig.g.modules.authentication
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.routing.*
+import sig.g.modules.authentication.constants.AuthRoute
 import sig.g.modules.authentication.logic.configureGoogleSignIn
 import sig.g.modules.authentication.logic.configureJwt
 import sig.g.modules.authentication.routes.authenticated.authenticationRoutes
@@ -16,8 +17,10 @@ fun Application.configureSecurity() {
     }
 
     routing {
-        originAuthentication()
-        googleAuthentication()
-        authenticationRoutes()
+        route(AuthRoute.AuthRouteVersion.V1.route) {
+            originAuthentication()
+            googleAuthentication()
+            authenticationRoutes()
+        }
     }
 }

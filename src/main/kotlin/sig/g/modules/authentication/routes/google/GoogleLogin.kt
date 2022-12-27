@@ -7,6 +7,6 @@ import sig.g.modules.authentication.constants.AuthRoute
 
 internal fun Route.googleLogin() {
     get(AuthRoute.GoogleLogin.route) {
-        call.respondRedirect(AuthRoute.GoogleCallback.route)
+        call.respondRedirect("${AuthRoute.AuthRouteVersion.V1.route}/${AuthRoute.GoogleCallback.route}")
     }
 }

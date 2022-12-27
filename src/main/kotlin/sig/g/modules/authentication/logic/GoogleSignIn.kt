@@ -23,7 +23,7 @@ private val googleProvider =
 fun AuthenticationConfig.configureGoogleSignIn() {
     oauth(AuthRoute.GoogleAuth.route) {
         urlProvider = {
-            "${AppConfig.AppHost.getProperty()}/${AuthRoute.GoogleCallback.route}"
+            "${AppConfig.AppHost.getProperty()}/${AuthRoute.AuthRouteVersion.V1.route}/${AuthRoute.GoogleCallback.route}"
         }
         providerLookup = { googleProvider }
         client = HttpClient(Apache)

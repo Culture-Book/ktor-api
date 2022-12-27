@@ -46,4 +46,10 @@ sealed interface AuthRoute {
     object GoogleCallback : AuthRoute {
         override val route: String = "google-callback"
     }
+
+    sealed interface AuthRouteVersion : AuthRoute {
+        object V1 : AuthRouteVersion {
+            override val route: String = "auth/v1"
+        }
+    }
 }

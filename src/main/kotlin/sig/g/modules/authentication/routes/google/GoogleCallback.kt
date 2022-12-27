@@ -28,12 +28,12 @@ internal fun Route.googleCallback() {
         val googleUser = googleRequest.call.body<GoogleUser>()
 
         val response = if (googleUser.email.exists()) {
-            httpClient.post("${AppConfig.AppHost.getProperty()}/${AuthRoute.Login.route}") {
+            httpClient.post("${AppConfig.AppHost.getProperty()}/${AuthRoute.AuthRouteVersion.V1.route}/${AuthRoute.Login.route}") {
                 contentType(ContentType.Application.Json)
                 setBody(googleUser.toUser())
             }
         } else {
-            httpClient.post("${AppConfig.AppHost.getProperty()}/${AuthRoute.Register.route}") {
+            httpClient.post("${AppConfig.AppHost.getProperty()}/${AuthRoute.AuthRouteVersion.V1.route}/${AuthRoute.Register.route}") {
                 contentType(ContentType.Application.Json)
                 setBody(googleUser.toUser())
             }
