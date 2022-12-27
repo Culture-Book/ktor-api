@@ -6,20 +6,16 @@ import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import sig.g.modules.authentication.constants.AuthRoute
 import sig.g.modules.authentication.data.models.JwtClaim
 import sig.g.modules.authentication.logic.refreshJwt
-import sig.g.modules.authentication.routes.AuthRoute
 
 fun Route.authenticationRoutes() {
     authenticate(AuthRoute.JwtAuth.route) {
         refreshJwt()
     }
 
-    authenticate(
-        AuthRoute.GoogleAuth.route,
-        AuthRoute.JwtAuth.route,
-        strategy = AuthenticationStrategy.FirstSuccessful
-    ) {
+    authenticate(AuthRoute.JwtAuth.route) {
         get(AuthRoute.User.route) {
             val principal = call.principal<JWTPrincipal>()
             val userId = principal?.payload?.getClaim(JwtClaim.UserId.claim)?.asString() ?: ""

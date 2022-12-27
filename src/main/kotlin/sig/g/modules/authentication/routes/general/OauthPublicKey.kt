@@ -5,7 +5,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import sig.g.config.AppConfig
 import sig.g.config.getProperty
-import sig.g.modules.authentication.routes.AuthRoute
+import sig.g.modules.authentication.constants.AuthRoute
 
 internal fun Route.oauthPublicKey() {
     get(AuthRoute.OauthPublicKey.route) {

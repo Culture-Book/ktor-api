@@ -5,21 +5,22 @@ import io.ktor.server.plugins.autohead.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
-import sig.g.modules.authentication.data.models.UserSession
+import sig.g.modules.authentication.constants.COOKIE_NAME
+import sig.g.modules.authentication.data.models.states.AuthState
 
 fun Application.configureRouting() {
     install(AutoHeadResponse)
     install(Sessions) {
-        cookie<UserSession>("UserSession") {
+        cookie<AuthState.AuthSuccess>(COOKIE_NAME) {
             cookie.extensions["SameSite"] = "lax"
         }
     }
 
     routing {
         get("/") {
-            val session = call.sessions.get<UserSession>()
+            val session = call.sessions.get<AuthState.AuthSuccess>()
             if (session != null) {
-                call.respondText("Hello ${session.accessToken}")
+                call.respondText("Hello ${session.jwt}")
             } else {
                 call.respondText("Hello World!")
             }

@@ -7,7 +7,7 @@ import io.ktor.server.auth.*
 import sig.g.config.AppConfig
 import sig.g.config.getListProperty
 import sig.g.config.getProperty
-import sig.g.modules.authentication.routes.AuthRoute
+import sig.g.modules.authentication.constants.AuthRoute
 
 private val googleProvider =
     OAuthServerSettings.OAuth2ServerSettings(

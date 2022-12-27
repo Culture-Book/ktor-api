@@ -1,4 +1,4 @@
-package sig.g.modules.authentication.routes
+package sig.g.modules.authentication.constants
 
 sealed interface AuthRoute {
     val route: String

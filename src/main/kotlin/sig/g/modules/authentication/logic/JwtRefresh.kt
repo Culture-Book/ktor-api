@@ -7,12 +7,12 @@ import io.ktor.server.auth.jwt.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
+import sig.g.modules.authentication.constants.AuthRoute
 import sig.g.modules.authentication.data.UserTokenRepository
 import sig.g.modules.authentication.data.models.UserToken
 import sig.g.modules.authentication.data.models.states.AuthError
 import sig.g.modules.authentication.data.models.states.AuthState
 import sig.g.modules.authentication.generateAccessJwt
-import sig.g.modules.authentication.routes.AuthRoute
 import java.time.LocalDateTime
 
 suspend fun refreshToken(userToken: UserToken?): AuthState {
@@ -23,10 +23,9 @@ suspend fun refreshToken(userToken: UserToken?): AuthState {
         val isSuccess = UserTokenRepository.updateToken(newToken)
 
         if (isSuccess) {
-            val userSession = newToken.toUserSession()
             val jwt = generateAccessJwt(newToken.userId, newToken.accessToken, newToken.refreshToken)
                 ?: return AuthError.InvalidArgumentError
-            AuthState.AuthSuccess(userSession, jwt)
+            AuthState.AuthSuccess(jwt)
         } else {
             AuthError.DatabaseError
         }
@@ -41,7 +40,7 @@ fun Route.refreshJwt() {
         when (val authState = refreshToken(principal?.getUserToken())) {
             is AuthState.AuthSuccess -> {
                 call.apply {
-                    sessions.set(authState.userSession)
+                    sessions.set(authState)
                     respond(HttpStatusCode.OK, authState.jwt)
                 }
             }

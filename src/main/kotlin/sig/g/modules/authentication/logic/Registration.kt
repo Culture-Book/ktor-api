@@ -41,7 +41,7 @@ suspend fun registerUser(callUser: User): AuthState {
     val userToken = generateUserToken(dbUser.userId)
     val jwt = generateAccessJwt(dbUser.userId, userToken.accessToken, userToken.refreshToken)
         ?: return AuthError.InvalidArgumentError
-    val insertedToken = UserTokenRepository.insertToken(userToken) ?: return AuthError.InvalidArgumentError
+    UserTokenRepository.insertToken(userToken) ?: return AuthError.InvalidArgumentError
 
-    return AuthState.AuthSuccess(insertedToken.toUserSession(), jwt)
+    return AuthState.AuthSuccess(jwt)
 }

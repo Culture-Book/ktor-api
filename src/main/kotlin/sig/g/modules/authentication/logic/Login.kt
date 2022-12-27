@@ -18,7 +18,8 @@ suspend fun login(userCall: User): AuthState {
     val userToken = generateUserToken(user.userId)
     val jwt = generateAccessJwt(user.userId, userToken.accessToken, userToken.refreshToken)
         ?: return AuthError.InvalidArgumentError
-    val insertedToken = UserTokenRepository.insertToken(userToken) ?: return AuthError.InvalidArgumentError
 
-    return AuthState.AuthSuccess(insertedToken.toUserSession(), jwt)
+    UserTokenRepository.insertToken(userToken) ?: return AuthError.InvalidArgumentError
+
+    return AuthState.AuthSuccess(jwt)
 }
