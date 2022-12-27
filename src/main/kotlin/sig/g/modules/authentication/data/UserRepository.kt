@@ -53,17 +53,15 @@ object UserRepository : UserDao {
         insertStatement.resultedValues?.singleOrNull()?.let(::resultRowToUser)
     }
 
-    override suspend fun updateUser(user: User): Boolean = dbQuery {
-        Users.update({ Users.userId eq user.userId }) {
-            it[userId] = user.userId
-            it[profileUri] = user.profileUri.toString()
-            it[displayName] = user.displayName ?: ""
-            it[password] = user.password
-            it[email] = user.email
-            it[tosAccept] = user.tosAccept
-            it[privacyAccept] = user.privacyAccept
-            it[verificationStatus] = user.verificationStatus
-            it[registrationStatus] = user.registrationStatus
+    override suspend fun updateTos(userId: String): Boolean = dbQuery {
+        Users.update({ Users.userId eq userId }) {
+            it[tosAccept] = LocalDateTime.now()
+        } > 0
+    }
+
+    override suspend fun updatePrivacy(userId: String): Boolean = dbQuery {
+        Users.update({ Users.userId eq userId }) {
+            it[privacyAccept] = LocalDateTime.now()
         } > 0
     }
 

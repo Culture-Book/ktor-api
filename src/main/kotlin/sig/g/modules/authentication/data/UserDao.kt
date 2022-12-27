@@ -8,6 +8,7 @@ sealed interface UserDao {
     suspend fun getUser(userId: String): User?
     suspend fun getUserByEmail(email: String): User?
     suspend fun registerUser(user: User): User?
-    suspend fun updateUser(user: User): Boolean
+    suspend fun updateTos(userId: String): Boolean
+    suspend fun updatePrivacy(userId: String): Boolean
     suspend fun deleteUser(userId: String): Boolean
 }

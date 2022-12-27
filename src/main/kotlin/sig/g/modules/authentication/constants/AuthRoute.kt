@@ -25,6 +25,14 @@ sealed interface AuthRoute {
 
     object User : AuthRoute {
         override val route: String = "user"
+
+        object Tos : AuthRoute {
+            override val route: String = "tos"
+        }
+
+        object Privacy : AuthRoute {
+            override val route: String = "privacy"
+        }
     }
 
     object JwtPublicKey : AuthRoute {

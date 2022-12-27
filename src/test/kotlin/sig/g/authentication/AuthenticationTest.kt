@@ -1,5 +1,6 @@
 package sig.g.authentication
 
+import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
@@ -15,6 +16,9 @@ import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 
 class AuthenticationTest : BaseApplicationTest() {
+    private val email = "email1@email.com".encodeOAuth()
+    private val password = "password123".encodeOAuth()
+    private val user = User(email = email!!, password = password!!)
 
     @Test
     fun `test encoding works`() {
@@ -62,17 +66,12 @@ class AuthenticationTest : BaseApplicationTest() {
     @Test
     fun `test register user, registers user`() = testApp {
 
-        val email = "email1@email.com".encodeOAuth()
-        val password = "password123".encodeOAuth()
-        val user = User(email = email!!, password = password!!)
-
         it.post("/register") {
             contentType(ContentType.Application.Json)
             setBody(user)
         }.apply {
             assertEquals(status, HttpStatusCode.Created)
             assertNotNull(setCookie()["UserSession"])
-            print(setCookie()["UserSession"]?.value)
         }
 
     }
@@ -80,18 +79,7 @@ class AuthenticationTest : BaseApplicationTest() {
     @Test
     fun `test login user, logins user`() = testApp {
 
-        val email = "email1@email.com".encodeOAuth()
-        val password = "password123".encodeOAuth()
-        val user = User(email = email!!, password = password!!)
-
-        it.post("/register") {
-            contentType(ContentType.Application.Json)
-            setBody(user)
-        }.apply {
-            assertEquals(status, HttpStatusCode.Created)
-            assertNotNull(setCookie()["UserSession"])
-            print(setCookie()["UserSession"]?.value)
-        }
+        it.registerUser()
 
         it.post("/login") {
             contentType(ContentType.Application.Json)
@@ -99,17 +87,12 @@ class AuthenticationTest : BaseApplicationTest() {
         }.apply {
             assertEquals(status, HttpStatusCode.Created)
             assertNotNull(setCookie()["UserSession"])
-            print(setCookie()["UserSession"]?.value)
         }
 
     }
 
     @Test
     fun `test register duplicate user, returns 400`() = testApp {
-
-        val email = "email@email.com".encodeOAuth()
-        val password = "password123".encodeOAuth()
-        val user = User(email = email!!, password = password!!)
 
         it.post("/register") {
             contentType(ContentType.Application.Json)
@@ -143,4 +126,11 @@ class AuthenticationTest : BaseApplicationTest() {
         }
     }
 
+    private suspend fun HttpClient.registerUser() = post("/register") {
+        contentType(ContentType.Application.Json)
+        setBody(user)
+    }.apply {
+        assertEquals(status, HttpStatusCode.Created)
+        assertNotNull(setCookie()["UserSession"])
+    }
 }

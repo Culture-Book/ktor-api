@@ -33,26 +33,3 @@ suspend fun refreshToken(userToken: UserToken?): AuthState {
         AuthError.AuthenticationError
     }
 }
-
-fun Route.refreshJwt() {
-    get(AuthRoute.JwtRefresh.route) {
-        val jwtTokens = call.principal<JWTPrincipal>()?.getUserToken()
-        val sessionTokens = call.sessions.get(AuthState.AuthSuccess::class)?.getUserToken()
-        if (jwtTokens?.userId.isNullOrEmpty() && jwtTokens?.userId != sessionTokens?.userId) {
-            call.respond(HttpStatusCode.Unauthorized, AuthError.AuthenticationError)
-            return@get
-        }
-
-        when (val authState = refreshToken(jwtTokens)) {
-            is AuthState.AuthSuccess -> {
-                call.apply {
-                    sessions.clear<AuthState.AuthSuccess>()
-                    sessions.set(authState)
-                    respond(HttpStatusCode.OK, authState.jwt)
-                }
-            }
-
-            is AuthError -> call.respond(HttpStatusCode.BadRequest, authState)
-        }
-    }
-}
