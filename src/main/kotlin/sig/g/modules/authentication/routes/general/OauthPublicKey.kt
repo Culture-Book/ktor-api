@@ -9,6 +9,6 @@ import sig.g.modules.authentication.constants.AuthRoute
 
 internal fun Route.oauthPublicKey() {
     get(AuthRoute.OauthPublicKey.route) {
-        call.respond(AppConfig.OAuthConfig.PublicKey.getProperty())
+        call.respond(mapOf("jwt" to AppConfig.OAuthConfig.PublicKey.getProperty()))
     }
 }
