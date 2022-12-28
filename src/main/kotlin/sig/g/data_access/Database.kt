@@ -2,10 +2,16 @@ package sig.g.data_access
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import io.ktor.server.application.*
+import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.sql.transactions.transaction
 import sig.g.config.AppConfig
 import sig.g.config.getProperty
+import sig.g.exceptions.DatabaseNotInitialised
+import sig.g.modules.authentication.data.models.database.UserTokens
+import sig.g.modules.authentication.data.models.database.Users
 
 private val hikariConfig = HikariDataSource(
     HikariConfig().apply {
@@ -13,12 +19,23 @@ private val hikariConfig = HikariDataSource(
         jdbcUrl = AppConfig.DatabaseUrl.getProperty()
         username = AppConfig.DatabaseUser.getProperty()
         password = AppConfig.DatabasePassword.getProperty()
-        maximumPoolSize = 10
+        idleTimeout = AppConfig.DatabaseIdleTimeout.getProperty().toLongOrNull() ?: 5000
+        maximumPoolSize = AppConfig.DatabasePoolSize.getProperty().toIntOrNull() ?: 3
         isAutoCommit = false
         transactionIsolation = "TRANSACTION_REPEATABLE_READ"
         validate()
     })
 
-fun Application.databaseConnection() {
-    Database.connect(hikariConfig)
-}
+fun configureDatabase(): Database? =
+    try {
+        val db = Database.connect(hikariConfig)
+        transaction(db) {
+            SchemaUtils.create(Users)
+            SchemaUtils.create(UserTokens)
+        }
+        db
+    } catch (e: Exception) {
+        throw DatabaseNotInitialised(e.message)
+    }
+
+suspend fun <T> dbQuery(block: suspend () -> T): T = newSuspendedTransaction(Dispatchers.IO) { block() }
