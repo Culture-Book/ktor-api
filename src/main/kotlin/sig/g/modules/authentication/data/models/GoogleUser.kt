@@ -1,7 +1,7 @@
 package sig.g.modules.authentication.data.models
 
 import kotlinx.serialization.Serializable
-import sig.g.modules.authentication.data.models.constants.RegistrationStatus
+import sig.g.modules.authentication.data.models.enums.RegistrationStatus
 import sig.g.modules.authentication.encodeOAuth
 import java.net.URI
 

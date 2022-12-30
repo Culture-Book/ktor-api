@@ -2,11 +2,10 @@ package sig.g.modules.authentication.routes.authenticated
 
 import io.ktor.http.*
 import io.ktor.server.application.*
-import io.ktor.server.http.content.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import sig.g.modules.authentication.constants.AuthRoute
-import sig.g.modules.authentication.data.UserRepository
+import sig.g.modules.authentication.data.data_access.UserRepository
 import sig.g.modules.authentication.data.models.states.UserDetailsState
 import sig.g.modules.authentication.logic.getUserDetails
 import sig.g.modules.authentication.logic.getUserId

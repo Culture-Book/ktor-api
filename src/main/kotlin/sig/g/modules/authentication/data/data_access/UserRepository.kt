@@ -1,4 +1,4 @@
-package sig.g.modules.authentication.data
+package sig.g.modules.authentication.data.data_access
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -28,13 +28,13 @@ object UserRepository : UserDao {
 
     override suspend fun getUser(userId: String): User? = dbQuery {
         Users.select(Users.userId eq userId)
-            .map(::resultRowToUser)
+            .map(UserRepository::resultRowToUser)
             .singleOrNull()
     }
 
     override suspend fun getUserByEmail(email: String): User? = dbQuery {
         Users.select(Users.email eq email)
-            .map(::resultRowToUser)
+            .map(UserRepository::resultRowToUser)
             .singleOrNull()
     }
 
@@ -50,7 +50,7 @@ object UserRepository : UserDao {
             it[verificationStatus] = user.verificationStatus
             it[registrationStatus] = user.registrationStatus
         }
-        insertStatement.resultedValues?.singleOrNull()?.let(::resultRowToUser)
+        insertStatement.resultedValues?.singleOrNull()?.let(UserRepository::resultRowToUser)
     }
 
     override suspend fun updateTos(userId: String): Boolean = dbQuery {

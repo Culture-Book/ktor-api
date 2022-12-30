@@ -6,7 +6,7 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import sig.g.modules.authentication.data.models.constants.TokenType
+import sig.g.modules.authentication.data.models.enums.TokenType
 
 object TokenTypeSerializer : KSerializer<TokenType> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("AuthState.Error", PrimitiveKind.STRING)

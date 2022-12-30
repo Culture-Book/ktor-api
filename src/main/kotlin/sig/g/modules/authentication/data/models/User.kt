@@ -3,8 +3,8 @@ package sig.g.modules.authentication.data.models
 import kotlinx.serialization.Serializable
 import sig.g.data_access.serializers.LocalDateTimeSerializer
 import sig.g.data_access.serializers.URISerializer
-import sig.g.modules.authentication.data.models.constants.RegistrationStatus
-import sig.g.modules.authentication.data.models.constants.VerificationStatus
+import sig.g.modules.authentication.data.models.enums.RegistrationStatus
+import sig.g.modules.authentication.data.models.enums.VerificationStatus
 import java.net.URI
 import java.time.LocalDateTime
 

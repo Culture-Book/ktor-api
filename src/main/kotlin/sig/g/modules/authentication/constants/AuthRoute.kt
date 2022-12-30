@@ -23,6 +23,10 @@ sealed interface AuthRoute {
         override val route: String = "login"
     }
 
+    object RegisterOrLogin : AuthRoute {
+        override val route: String = "register-login"
+    }
+
     object User : AuthRoute {
         override val route: String = "user"
 

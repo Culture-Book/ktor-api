@@ -1,4 +1,4 @@
-package sig.g.modules.authentication.data.models.constants
+package sig.g.modules.authentication.data.models.enums
 
 enum class RegistrationStatus {
     Pending, Registered

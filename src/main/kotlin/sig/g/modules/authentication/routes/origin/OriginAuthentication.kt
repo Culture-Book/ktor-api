@@ -9,4 +9,5 @@ fun Route.originAuthentication() {
     oauthPublicKey()
     registration()
     signIn()
+    registrationOrLogin()
 }

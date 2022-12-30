@@ -1,4 +1,4 @@
-package sig.g.modules.authentication.data
+package sig.g.modules.authentication.data.data_access
 
 import sig.g.modules.authentication.data.models.UserToken
 

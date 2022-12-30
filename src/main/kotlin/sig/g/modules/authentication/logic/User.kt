@@ -6,7 +6,7 @@ import io.ktor.server.auth.jwt.*
 import io.ktor.util.pipeline.*
 import sig.g.config.AppConfig
 import sig.g.config.getProperty
-import sig.g.modules.authentication.data.UserRepository
+import sig.g.modules.authentication.data.data_access.UserRepository
 import sig.g.modules.authentication.data.models.JwtClaim
 import sig.g.modules.authentication.data.models.states.UserDetailsState
 import java.time.LocalDateTime

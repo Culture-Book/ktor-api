@@ -1,4 +1,4 @@
-package sig.g.modules.authentication.data
+package sig.g.modules.authentication.data.data_access
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -22,7 +22,7 @@ object UserTokenRepository : UserTokenDao {
             (UserTokens.accessToken eq userToken.accessToken) and
                     (UserTokens.refreshToken eq userToken.refreshToken) and
                     (UserTokens.userId eq userToken.userId)
-        ).singleOrNull()?.let(::rowToUserToken)
+        ).singleOrNull()?.let(UserTokenRepository::rowToUserToken)
     }
 
     override suspend fun userTokenExists(userToken: UserToken): Boolean = dbQuery {
@@ -41,7 +41,7 @@ object UserTokenRepository : UserTokenDao {
             it[expiresAt] = userToken.expiresAt ?: LocalDateTime.now()
         }
 
-        statement.resultedValues?.singleOrNull()?.let(::rowToUserToken)
+        statement.resultedValues?.singleOrNull()?.let(UserTokenRepository::rowToUserToken)
     }
 
     override suspend fun deleteToken(userId: String): Boolean = dbQuery {
@@ -57,6 +57,6 @@ object UserTokenRepository : UserTokenDao {
     }
 
     override suspend fun getUserTokens(userId: String): List<UserToken> = dbQuery {
-        UserTokens.select(UserTokens.userId eq userId).map(::rowToUserToken)
+        UserTokens.select(UserTokens.userId eq userId).map(UserTokenRepository::rowToUserToken)
     }
 }

@@ -1,6 +1,6 @@
 package sig.g.modules.authentication.logic
 
-import sig.g.modules.authentication.data.UserTokenRepository
+import sig.g.modules.authentication.data.data_access.UserTokenRepository
 import sig.g.modules.authentication.data.models.UserToken
 import sig.g.modules.authentication.data.models.states.AuthState
 import sig.g.modules.authentication.generateAccessJwt

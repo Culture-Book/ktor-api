@@ -9,7 +9,7 @@ import io.ktor.server.sessions.*
 import sig.g.config.AppConfig
 import sig.g.config.getProperty
 import sig.g.modules.authentication.constants.AuthRoute
-import sig.g.modules.authentication.data.UserTokenRepository
+import sig.g.modules.authentication.data.data_access.UserTokenRepository
 import sig.g.modules.authentication.data.models.JwtClaim
 import sig.g.modules.authentication.data.models.states.AuthState
 import sig.g.modules.authentication.jwtVerifier

@@ -12,7 +12,7 @@ import sig.g.config.AppConfig
 import sig.g.config.getProperty
 import sig.g.httpClient
 import sig.g.modules.authentication.constants.AuthRoute
-import sig.g.modules.authentication.data.UserRepository.exists
+import sig.g.modules.authentication.data.data_access.UserRepository.exists
 import sig.g.modules.authentication.data.models.GoogleUser
 import sig.g.modules.authentication.data.models.states.AuthState
 

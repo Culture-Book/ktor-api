@@ -1,8 +1,8 @@
 package sig.g.modules.authentication.logic
 
-import sig.g.modules.authentication.data.UserRepository
-import sig.g.modules.authentication.data.UserRepository.exists
-import sig.g.modules.authentication.data.UserTokenRepository
+import sig.g.modules.authentication.data.data_access.UserRepository
+import sig.g.modules.authentication.data.data_access.UserRepository.exists
+import sig.g.modules.authentication.data.data_access.UserTokenRepository
 import sig.g.modules.authentication.data.models.User
 import sig.g.modules.authentication.data.models.states.AuthState
 import sig.g.modules.authentication.decodeOAuth
