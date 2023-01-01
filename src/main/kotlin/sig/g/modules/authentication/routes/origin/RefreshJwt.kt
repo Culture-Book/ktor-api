@@ -2,37 +2,37 @@ package sig.g.modules.authentication.routes.origin
 
 import io.ktor.http.*
 import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
+import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import sig.g.modules.authentication.constants.AuthRoute
+import sig.g.modules.authentication.data.data_access.UserTokenRepository
 import sig.g.modules.authentication.data.models.states.AuthState
 import sig.g.modules.authentication.logic.getUserToken
 import sig.g.modules.authentication.logic.refreshToken
 
 
 internal fun Route.refreshJwt() {
-    get(AuthRoute.JwtRefresh.route) {
-        val jwtTokens = call.principal<JWTPrincipal>()?.getUserToken()
-        val sessionTokens = call.sessions.get(AuthState.Success::class)?.getUserToken()
+    post(AuthRoute.JwtRefresh.route) {
+        val authState: AuthState.Success = call.receive()
+        val userToken = authState.getUserToken()
 
-        if (jwtTokens?.userId.isNullOrEmpty() && jwtTokens?.userId != sessionTokens?.userId) {
+        if (userToken.userId.isEmpty() && UserTokenRepository.getUserToken(userToken) != null) {
             call.respond(HttpStatusCode.Unauthorized, AuthState.Error.AuthenticationError)
-            return@get
+            return@post
         }
 
-        when (val authState = refreshToken(jwtTokens)) {
+        when (val refreshState = refreshToken(userToken)) {
             is AuthState.Success -> {
                 call.apply {
                     sessions.clear<AuthState.Success>()
-                    sessions.set(authState)
-                    respond(HttpStatusCode.OK, authState.jwt)
+                    sessions.set(refreshState)
+                    respond(HttpStatusCode.OK, refreshState.jwt)
                 }
             }
 
-            is AuthState.Error -> call.respond(HttpStatusCode.BadRequest, authState)
+            is AuthState.Error -> call.respond(HttpStatusCode.BadRequest, refreshState)
         }
     }
 }

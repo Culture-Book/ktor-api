@@ -94,7 +94,7 @@ fun generateAccessJwt(userId: String, accessToken: UUID): String? {
         .withClaim(JwtClaim.UserId.claim, userId)
         .withClaim(JwtClaim.AccessToken.claim, accessToken.toString())
         .withExpiresAt(
-            Date(System.currentTimeMillis() + AppConfig.JWTConfig.AccessTokenExpiry.getProperty().toLong())
+            Date(System.currentTimeMillis() + /** AppConfig.JWTConfig.AccessTokenExpiry.getProperty().toLong() */ 60000)
         )
         .sign(Algorithm.HMAC256(AppConfig.JWTConfig.PrivateKey.getProperty()))
 }

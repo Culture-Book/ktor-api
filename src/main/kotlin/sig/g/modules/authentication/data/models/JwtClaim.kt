@@ -11,7 +11,4 @@ sealed interface JwtClaim {
         override val claim: String = "accessToken"
     }
 
-    object RefreshToken : JwtClaim {
-        override val claim: String = "refreshToken"
-    }
 }
