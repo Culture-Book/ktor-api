@@ -66,7 +66,7 @@ class AuthenticationTest : BaseApplicationTest() {
     @Test
     fun `test register user, registers user`() = testApp {
 
-        it.post("/register") {
+        it.post("/auth/v1/register") {
             contentType(ContentType.Application.Json)
             setBody(user)
         }.apply {
@@ -81,11 +81,11 @@ class AuthenticationTest : BaseApplicationTest() {
 
         it.registerUser()
 
-        it.post("/login") {
+        it.post("/auth/v1/login") {
             contentType(ContentType.Application.Json)
             setBody(user)
         }.apply {
-            assertEquals(status, HttpStatusCode.Created)
+            assertEquals(status, HttpStatusCode.OK)
             assertNotNull(setCookie()["UserSession"])
         }
 
@@ -94,14 +94,14 @@ class AuthenticationTest : BaseApplicationTest() {
     @Test
     fun `test register duplicate user, returns 400`() = testApp {
 
-        it.post("/register") {
+        it.post("/auth/v1/register") {
             contentType(ContentType.Application.Json)
             setBody(user)
         }.apply {
             assertEquals(status, HttpStatusCode.Created)
         }
 
-        it.post("/register") {
+        it.post("/auth/v1/register") {
             contentType(ContentType.Application.Json)
             setBody(user)
         }.apply {
@@ -117,7 +117,7 @@ class AuthenticationTest : BaseApplicationTest() {
         val password = "password123"
         val user = User(email = email, password = password)
 
-        it.post("/register") {
+        it.post("/auth/v1/register") {
             contentType(ContentType.Application.Json)
             setBody(user)
         }.apply {
@@ -126,7 +126,7 @@ class AuthenticationTest : BaseApplicationTest() {
         }
     }
 
-    private suspend fun HttpClient.registerUser() = post("/register") {
+    private suspend fun HttpClient.registerUser() = post("/auth/v1/register") {
         contentType(ContentType.Application.Json)
         setBody(user)
     }.apply {

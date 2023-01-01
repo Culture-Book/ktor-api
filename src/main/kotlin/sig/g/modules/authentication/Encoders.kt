@@ -5,7 +5,6 @@ import com.auth0.jwt.JWTVerifier
 import com.auth0.jwt.algorithms.Algorithm
 import sig.g.config.AppConfig
 import sig.g.config.getProperty
-import sig.g.modules.authentication.constants.AuthRoute
 import sig.g.modules.authentication.data.models.JwtClaim
 import java.security.KeyFactory
 import java.security.PrivateKey
@@ -94,7 +93,7 @@ fun generateAccessJwt(userId: String, accessToken: UUID): String? {
         .withClaim(JwtClaim.UserId.claim, userId)
         .withClaim(JwtClaim.AccessToken.claim, accessToken.toString())
         .withExpiresAt(
-            Date(System.currentTimeMillis() + /** AppConfig.JWTConfig.AccessTokenExpiry.getProperty().toLong() */ 60000)
+            Date(System.currentTimeMillis() + AppConfig.JWTConfig.AccessTokenExpiry.getProperty().toLong())
         )
         .sign(Algorithm.HMAC256(AppConfig.JWTConfig.PrivateKey.getProperty()))
 }
