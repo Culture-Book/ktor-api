@@ -1,10 +1,10 @@
 package io.culturebook.modules.authentication.logic
 
 import com.auth0.jwt.JWT
-import sig.g.modules.authentication.data.models.UserToken
-import sig.g.modules.authentication.data.models.interfaces.AuthState
-import sig.g.modules.authentication.data.models.interfaces.JwtClaim
-import sig.g.modules.utils.toUUID
+import io.culturebook.modules.authentication.data.models.UserToken
+import io.culturebook.modules.authentication.data.models.interfaces.AuthState
+import io.culturebook.modules.authentication.data.models.interfaces.JwtClaim
+import io.culturebook.modules.utils.toUUID
 import java.util.*
 
 fun generateUserToken(userId: String): UserToken {

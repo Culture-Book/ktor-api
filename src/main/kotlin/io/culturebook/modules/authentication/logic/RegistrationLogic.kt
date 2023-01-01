@@ -1,12 +1,12 @@
 package io.culturebook.modules.authentication.logic
 
-import sig.g.modules.authentication.data.models.database.data_access.UserRepository
-import sig.g.modules.authentication.data.models.database.data_access.UserRepository.exists
-import sig.g.modules.authentication.data.models.database.data_access.UserTokenRepository
-import sig.g.modules.authentication.data.models.User
-import sig.g.modules.authentication.data.models.interfaces.AuthState
-import sig.g.modules.authentication.decodeOAuth
-import sig.g.modules.authentication.generateAccessJwt
+import io.culturebook.modules.authentication.data.models.User
+import io.culturebook.modules.authentication.data.models.database.data_access.UserRepository
+import io.culturebook.modules.authentication.data.models.database.data_access.UserRepository.exists
+import io.culturebook.modules.authentication.data.models.database.data_access.UserTokenRepository
+import io.culturebook.modules.authentication.data.models.interfaces.AuthState
+import io.culturebook.modules.authentication.decodeOAuth
+import io.culturebook.modules.authentication.generateAccessJwt
 import java.util.*
 
 suspend fun registerUser(callUser: User): AuthState {

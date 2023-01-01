@@ -1,11 +1,11 @@
 package io.culturebook.modules.authentication.data.models.database.data_access
 
+import io.culturebook.data_access.dbQuery
+import io.culturebook.modules.authentication.data.models.User
+import io.culturebook.modules.authentication.data.models.database.Users
+import io.culturebook.modules.utils.toUri
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import sig.g.data_access.dbQuery
-import sig.g.modules.authentication.data.models.User
-import sig.g.modules.authentication.data.models.database.Users
-import sig.g.modules.utils.toUri
 import java.time.LocalDateTime
 
 object UserRepository : UserDao {

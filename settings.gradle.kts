@@ -1,1 +1,1 @@
-rootProject.name = "sig.g.culture-book"
+rootProject.name = "io.culturebook.culture-book"

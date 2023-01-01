@@ -1,11 +1,11 @@
 package io.culturebook.modules.authentication.routes.general
 
+import io.culturebook.config.AppConfig
+import io.culturebook.config.getProperty
+import io.culturebook.modules.authentication.constants.AuthRoute
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import sig.g.config.AppConfig
-import sig.g.config.getProperty
-import sig.g.modules.authentication.constants.AuthRoute
 
 internal fun Route.jwtPublicKey() {
     get(AuthRoute.JwtPublicKey.route) {

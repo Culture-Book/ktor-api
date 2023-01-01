@@ -1,8 +1,8 @@
 package io.culturebook.modules.authentication.data.models
 
+import io.culturebook.modules.authentication.constants.enums.RegistrationStatus
+import io.culturebook.modules.authentication.encodeOAuth
 import kotlinx.serialization.Serializable
-import sig.g.modules.authentication.constants.enums.RegistrationStatus
-import sig.g.modules.authentication.encodeOAuth
 import java.net.URI
 
 //{

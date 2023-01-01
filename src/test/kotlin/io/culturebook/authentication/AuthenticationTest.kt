@@ -1,16 +1,16 @@
 package io.culturebook.authentication
 
+import io.culturebook.BaseApplicationTest
+import io.culturebook.modules.authentication.data.models.User
+import io.culturebook.modules.authentication.data.models.interfaces.AuthState
+import io.culturebook.modules.authentication.decodeJwt
+import io.culturebook.modules.authentication.encodeOAuth
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import org.junit.Test
-import sig.g.BaseApplicationTest
-import sig.g.modules.authentication.data.models.User
-import sig.g.modules.authentication.data.models.interfaces.AuthState
-import sig.g.modules.authentication.decodeJwt
-import sig.g.modules.authentication.encodeOAuth
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull

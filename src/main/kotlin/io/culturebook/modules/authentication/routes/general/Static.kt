@@ -1,8 +1,8 @@
 package io.culturebook.modules.authentication.routes.general
 
+import io.culturebook.modules.authentication.constants.AuthRoute
 import io.ktor.server.http.content.*
 import io.ktor.server.routing.*
-import sig.g.modules.authentication.constants.AuthRoute
 
 
 internal fun Route.getTos() {

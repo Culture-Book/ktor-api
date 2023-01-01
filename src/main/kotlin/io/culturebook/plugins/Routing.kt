@@ -1,12 +1,11 @@
 package io.culturebook.plugins
 
+import io.culturebook.modules.authentication.constants.COOKIE_NAME
+import io.culturebook.modules.authentication.data.models.interfaces.AuthState
 import io.ktor.server.application.*
 import io.ktor.server.plugins.autohead.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
-import sig.g.modules.authentication.constants.COOKIE_NAME
-import sig.g.modules.authentication.data.models.interfaces.AuthState
+import kotlin.collections.set
 
 fun Application.configureRouting() {
     install(AutoHeadResponse)

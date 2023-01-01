@@ -1,16 +1,16 @@
 package io.culturebook.modules.authentication.routes.origin
 
+import io.culturebook.modules.authentication.constants.AuthRoute
+import io.culturebook.modules.authentication.data.models.database.data_access.UserTokenRepository
+import io.culturebook.modules.authentication.data.models.interfaces.AuthState
+import io.culturebook.modules.authentication.logic.getUserToken
+import io.culturebook.modules.authentication.logic.refreshToken
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
-import sig.g.modules.authentication.constants.AuthRoute
-import sig.g.modules.authentication.data.models.database.data_access.UserTokenRepository
-import sig.g.modules.authentication.data.models.interfaces.AuthState
-import sig.g.modules.authentication.logic.getUserToken
-import sig.g.modules.authentication.logic.refreshToken
 
 
 internal fun Route.refreshJwt() {

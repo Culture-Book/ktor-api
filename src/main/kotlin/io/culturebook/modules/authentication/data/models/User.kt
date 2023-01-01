@@ -1,10 +1,10 @@
 package io.culturebook.modules.authentication.data.models
 
+import io.culturebook.data_access.serializers.LocalDateTimeSerializer
+import io.culturebook.data_access.serializers.URISerializer
+import io.culturebook.modules.authentication.constants.enums.RegistrationStatus
+import io.culturebook.modules.authentication.constants.enums.VerificationStatus
 import kotlinx.serialization.Serializable
-import sig.g.data_access.serializers.LocalDateTimeSerializer
-import sig.g.data_access.serializers.URISerializer
-import sig.g.modules.authentication.constants.enums.RegistrationStatus
-import sig.g.modules.authentication.constants.enums.VerificationStatus
 import java.net.URI
 import java.time.LocalDateTime
 

@@ -1,7 +1,7 @@
 package io.culturebook.modules.authentication.data.models.interfaces
 
+import io.culturebook.modules.authentication.data.models.User
 import kotlinx.serialization.Serializable
-import sig.g.modules.authentication.data.models.User
 
 sealed interface UserDetailsState {
     @Serializable

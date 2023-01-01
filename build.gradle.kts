@@ -16,10 +16,10 @@ plugins {
     id("io.ktor.plugin") version "2.1.2"
 }
 
-group = "sig.g"
+group = "io.culturebook"
 version = "0.0.1"
 application {
-    mainClass.set("sig.g.ApplicationKt")
+    mainClass.set("io.culturebook.ApplicationKt")
 
     val isDevelopment: Boolean = project.ext.has("development")
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")

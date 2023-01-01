@@ -1,10 +1,10 @@
 package io.culturebook.modules.authentication.data.models.database.data_access
 
+import io.culturebook.data_access.dbQuery
+import io.culturebook.modules.authentication.data.models.UserToken
+import io.culturebook.modules.authentication.data.models.database.UserTokens
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import sig.g.data_access.dbQuery
-import sig.g.modules.authentication.data.models.UserToken
-import sig.g.modules.authentication.data.models.database.UserTokens
 import java.util.*
 
 object UserTokenRepository : UserTokenDao {

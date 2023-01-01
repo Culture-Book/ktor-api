@@ -1,6 +1,6 @@
 package io.culturebook.modules.authentication.data.models.database.data_access
 
-import sig.g.modules.authentication.data.models.UserToken
+import io.culturebook.modules.authentication.data.models.UserToken
 
 sealed interface UserTokenDao {
 

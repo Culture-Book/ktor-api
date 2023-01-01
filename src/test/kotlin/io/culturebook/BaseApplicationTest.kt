@@ -1,5 +1,8 @@
 package io.culturebook
 
+import io.culturebook.data_access.configureDatabase
+import io.culturebook.modules.authentication.configureSecurity
+import io.culturebook.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.testing.*
@@ -8,9 +11,6 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.After
 import org.junit.Before
-import sig.g.data_access.configureDatabase
-import sig.g.modules.authentication.configureSecurity
-import sig.g.plugins.*
 
 abstract class BaseApplicationTest {
     private var database: Database? = null

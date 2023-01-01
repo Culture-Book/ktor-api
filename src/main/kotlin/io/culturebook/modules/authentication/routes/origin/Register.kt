@@ -1,15 +1,15 @@
 package io.culturebook.modules.authentication.routes.origin
 
+import io.culturebook.modules.authentication.constants.AuthRoute
+import io.culturebook.modules.authentication.data.models.User
+import io.culturebook.modules.authentication.data.models.interfaces.AuthState
+import io.culturebook.modules.authentication.logic.registerUser
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
-import sig.g.modules.authentication.constants.AuthRoute
-import sig.g.modules.authentication.data.models.User
-import sig.g.modules.authentication.data.models.interfaces.AuthState
-import sig.g.modules.authentication.logic.registerUser
 
 internal fun Route.registration() {
     post(AuthRoute.Register.route) {

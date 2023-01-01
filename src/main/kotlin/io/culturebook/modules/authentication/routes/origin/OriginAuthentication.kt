@@ -1,8 +1,8 @@
 package io.culturebook.modules.authentication.routes.origin
 
+import io.culturebook.modules.authentication.routes.general.jwtPublicKey
+import io.culturebook.modules.authentication.routes.general.oauthPublicKey
 import io.ktor.server.routing.*
-import sig.g.modules.authentication.routes.general.jwtPublicKey
-import sig.g.modules.authentication.routes.general.oauthPublicKey
 
 fun Route.originAuthentication() {
     jwtPublicKey()

@@ -2,16 +2,16 @@ package io.culturebook.data_access
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import io.culturebook.config.AppConfig
+import io.culturebook.config.getProperty
+import io.culturebook.exceptions.DatabaseNotInitialised
+import io.culturebook.modules.authentication.data.models.database.UserTokens
+import io.culturebook.modules.authentication.data.models.database.Users
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
-import sig.g.config.AppConfig
-import sig.g.config.getProperty
-import sig.g.exceptions.DatabaseNotInitialised
-import sig.g.modules.authentication.data.models.database.UserTokens
-import sig.g.modules.authentication.data.models.database.Users
 
 private val hikariConfig = HikariDataSource(
     HikariConfig().apply {
@@ -28,7 +28,7 @@ private val hikariConfig = HikariDataSource(
 
 fun configureDatabase(): Database? =
     try {
-        val db = Database.connect(culturebook.data_access.hikariConfig)
+        val db = Database.connect(hikariConfig)
         transaction(db) {
             SchemaUtils.create(Users)
             SchemaUtils.create(UserTokens)

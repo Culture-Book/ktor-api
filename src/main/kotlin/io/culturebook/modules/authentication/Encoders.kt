@@ -3,9 +3,9 @@ package io.culturebook.modules.authentication
 import com.auth0.jwt.JWT
 import com.auth0.jwt.JWTVerifier
 import com.auth0.jwt.algorithms.Algorithm
-import sig.g.config.AppConfig
-import sig.g.config.getProperty
-import sig.g.modules.authentication.data.models.interfaces.JwtClaim
+import io.culturebook.config.AppConfig
+import io.culturebook.config.getProperty
+import io.culturebook.modules.authentication.data.models.interfaces.JwtClaim
 import java.security.KeyFactory
 import java.security.PrivateKey
 import java.security.PublicKey

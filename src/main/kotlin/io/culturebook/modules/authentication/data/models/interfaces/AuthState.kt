@@ -1,7 +1,7 @@
 package io.culturebook.modules.authentication.data.models.interfaces
 
+import io.culturebook.data_access.serializers.UUIDSerializer
 import kotlinx.serialization.Serializable
-import sig.g.data_access.serializers.UUIDSerializer
 import java.util.*
 
 sealed interface AuthState {
