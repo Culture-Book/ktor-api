@@ -39,4 +39,29 @@ fun AuthenticationConfig.configureJwt() {
             call.respond(HttpStatusCode.Unauthorized, "Token is not valid or has expired")
         }
     }
+    jwt(AuthRoute.JwtRefreshAuth.route) {
+        realm = AppConfig.JWTConfig.Realm.getProperty()
+        verifier(jwtVerifier)
+
+        validate { jwtCredential: JWTCredential ->
+            val jwtUserId = jwtCredential.payload.getClaim(JwtClaim.UserId.claim)?.asString() ?: ""
+
+            // session token
+            val authState = sessions.get(AuthState.Success::class)
+            val jwt = JWT.decode(authState?.refreshJwt)
+
+            val sessionUserId = jwt?.getClaim(JwtClaim.UserId.claim)?.asString() ?: ""
+            val userToken = jwtCredential.getUserToken()
+
+            if (UserTokenRepository.userTokenExists(userToken) && jwtUserId == sessionUserId) {
+                JWTPrincipal(jwtCredential.payload)
+            } else {
+                null
+            }
+        }
+
+        challenge { _, _ ->
+            call.respond(HttpStatusCode.Unauthorized, "Token is not valid or has expired")
+        }
+    }
 }

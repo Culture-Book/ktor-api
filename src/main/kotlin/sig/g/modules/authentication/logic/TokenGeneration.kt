@@ -13,12 +13,8 @@ import java.util.*
 
 fun generateUserToken(userId: String): UserToken {
     val accessToken = UUID.randomUUID()
-    val refreshToken = UUID.randomUUID()
-    val expiresAt = addSeconds(AppConfig.JWTConfig.AccessTokenExpiry.getProperty().toInt())
 
-    return UserToken(
-        userId = userId, accessToken = accessToken, refreshToken = refreshToken, expiresAt = expiresAt
-    )
+    return UserToken(userId = userId, accessToken = accessToken)
 }
 
 fun JWTPrincipal.getUserToken(): UserToken {
@@ -26,15 +22,11 @@ fun JWTPrincipal.getUserToken(): UserToken {
         .getClaim(JwtClaim.AccessToken.claim)
         .asString()
         .toUUID()
-    val refreshClaim = payload
-        .getClaim(JwtClaim.RefreshToken.claim)
-        .asString()
-        .toUUID()
     val userIdClaim = payload
         .getClaim(JwtClaim.UserId.claim)
         .asString()
 
-    return UserToken(userId = userIdClaim, refreshToken = refreshClaim, accessToken = accessClaim)
+    return UserToken(userId = userIdClaim, accessToken = accessClaim)
 }
 
 fun AuthState.Success.getUserToken(): UserToken {
@@ -43,15 +35,11 @@ fun AuthState.Success.getUserToken(): UserToken {
         .getClaim(JwtClaim.AccessToken.claim)
         .asString()
         .toUUID()
-    val refreshClaim = decodedJWT
-        .getClaim(JwtClaim.RefreshToken.claim)
-        .asString()
-        .toUUID()
     val userIdClaim = decodedJWT
         .getClaim(JwtClaim.UserId.claim)
         .asString()
 
-    return UserToken(userId = userIdClaim, refreshToken = refreshClaim, accessToken = accessClaim)
+    return UserToken(userId = userIdClaim, accessToken = accessClaim)
 }
 
 fun JWTCredential.getUserToken(): UserToken {
@@ -59,13 +47,9 @@ fun JWTCredential.getUserToken(): UserToken {
         .getClaim(JwtClaim.AccessToken.claim)
         .asString()
         .toUUID()
-    val refreshClaim = payload
-        .getClaim(JwtClaim.RefreshToken.claim)
-        .asString()
-        .toUUID()
     val userIdClaim = payload
         .getClaim(JwtClaim.UserId.claim)
         .asString()
 
-    return UserToken(userId = userIdClaim, refreshToken = refreshClaim, accessToken = accessClaim)
+    return UserToken(userId = userIdClaim, accessToken = accessClaim)
 }

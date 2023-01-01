@@ -6,7 +6,7 @@ import sig.g.modules.authentication.constants.AuthRoute
 import sig.g.modules.authentication.routes.origin.refreshJwt
 
 fun Route.authenticationRoutes() {
-    authenticate(AuthRoute.JwtAuth.route) {
+    authenticate(AuthRoute.JwtRefreshAuth.route) {
         refreshJwt()
     }
 

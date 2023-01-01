@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 sealed interface AuthState {
     @Serializable
-    data class Success(val jwt: String) : AuthState
+    data class Success(val jwt: String, val refreshJwt: String) : AuthState
 
     @Serializable
     enum class Error : AuthState {

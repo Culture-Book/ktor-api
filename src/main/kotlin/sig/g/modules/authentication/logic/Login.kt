@@ -6,6 +6,7 @@ import sig.g.modules.authentication.data.models.User
 import sig.g.modules.authentication.data.models.states.AuthState
 import sig.g.modules.authentication.decodeOAuth
 import sig.g.modules.authentication.generateAccessJwt
+import sig.g.modules.authentication.generateRefreshJwt
 
 suspend fun login(userCall: User): AuthState {
     val decryptedEmail = userCall.email.decodeOAuth() ?: return AuthState.Error.InvalidEmail
@@ -15,10 +16,10 @@ suspend fun login(userCall: User): AuthState {
     UserTokenRepository.deleteToken(user.userId)
 
     val userToken = generateUserToken(user.userId)
-    val jwt = generateAccessJwt(user.userId, userToken.accessToken, userToken.refreshToken)
-        ?: return AuthState.Error.Generic
+    val jwt = generateAccessJwt(user.userId, userToken.accessToken) ?: return AuthState.Error.Generic
+    val rJwt = generateRefreshJwt(user.userId, userToken.accessToken) ?: return AuthState.Error.Generic
 
     UserTokenRepository.insertToken(userToken) ?: return AuthState.Error.Generic
 
-    return AuthState.Success(jwt)
+    return AuthState.Success(jwt, rJwt)
 }

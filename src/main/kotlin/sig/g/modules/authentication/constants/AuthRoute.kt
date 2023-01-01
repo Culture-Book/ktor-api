@@ -11,6 +11,10 @@ sealed interface AuthRoute {
         override val route: String = "jwt-auth"
     }
 
+    object JwtRefreshAuth : AuthRoute {
+        override val route: String = "jwt-refresh-auth"
+    }
+
     object JwtRefresh : AuthRoute {
         override val route: String = "jwt-refresh"
     }

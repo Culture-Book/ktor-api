@@ -5,6 +5,7 @@ import com.auth0.jwt.JWTVerifier
 import com.auth0.jwt.algorithms.Algorithm
 import sig.g.config.AppConfig
 import sig.g.config.getProperty
+import sig.g.modules.authentication.constants.AuthRoute
 import sig.g.modules.authentication.data.models.JwtClaim
 import java.security.KeyFactory
 import java.security.PrivateKey
@@ -86,13 +87,24 @@ fun String.decodeJwt() = decrypt(privateJwtKey)
 fun String.encodeOAuth() = encrypt(publicOAuthKey)
 fun String.decodeOAuth() = decrypt(privateOAuthKey)
 
-fun generateAccessJwt(userId: String, accessToken: UUID, refreshToken: UUID): String? {
+fun generateAccessJwt(userId: String, accessToken: UUID): String? {
     val issuer = AppConfig.JWTConfig.Issuer.getProperty()
     return JWT.create()
         .withIssuer(issuer)
         .withClaim(JwtClaim.UserId.claim, userId)
         .withClaim(JwtClaim.AccessToken.claim, accessToken.toString())
-        .withClaim(JwtClaim.RefreshToken.claim, refreshToken.toString())
+        .withExpiresAt(
+            Date(System.currentTimeMillis() + AppConfig.JWTConfig.AccessTokenExpiry.getProperty().toLong())
+        )
+        .sign(Algorithm.HMAC256(AppConfig.JWTConfig.PrivateKey.getProperty()))
+}
+
+fun generateRefreshJwt(userId: String, accessToken: UUID): String? {
+    val issuer = AppConfig.JWTConfig.Issuer.getProperty()
+    return JWT.create()
+        .withIssuer(issuer)
+        .withClaim(JwtClaim.UserId.claim, userId)
+        .withClaim(JwtClaim.AccessToken.claim, accessToken.toString())
         .withExpiresAt(
             Date(System.currentTimeMillis() + AppConfig.JWTConfig.RefreshTokenExpiry.getProperty().toLong())
         )

@@ -17,6 +17,7 @@ internal fun Route.refreshJwt() {
     get(AuthRoute.JwtRefresh.route) {
         val jwtTokens = call.principal<JWTPrincipal>()?.getUserToken()
         val sessionTokens = call.sessions.get(AuthState.Success::class)?.getUserToken()
+
         if (jwtTokens?.userId.isNullOrEmpty() && jwtTokens?.userId != sessionTokens?.userId) {
             call.respond(HttpStatusCode.Unauthorized, AuthState.Error.AuthenticationError)
             return@get

@@ -13,14 +13,11 @@ object UserTokenRepository : UserTokenDao {
         tokenId = row[UserTokens.userTokenId],
         userId = row[UserTokens.userId],
         accessToken = row[UserTokens.accessToken],
-        refreshToken = row[UserTokens.refreshToken],
-        expiresAt = row[UserTokens.expiresAt],
     )
 
     override suspend fun getUserToken(userToken: UserToken): UserToken? = dbQuery {
         UserTokens.select(
             (UserTokens.accessToken eq userToken.accessToken) and
-                    (UserTokens.refreshToken eq userToken.refreshToken) and
                     (UserTokens.userId eq userToken.userId)
         ).singleOrNull()?.let(UserTokenRepository::rowToUserToken)
     }
@@ -28,7 +25,6 @@ object UserTokenRepository : UserTokenDao {
     override suspend fun userTokenExists(userToken: UserToken): Boolean = dbQuery {
         UserTokens.select(
             (UserTokens.accessToken eq userToken.accessToken) and
-                    (UserTokens.refreshToken eq userToken.refreshToken) and
                     (UserTokens.userId eq userToken.userId)
         ).singleOrNull() != null
     }
@@ -37,8 +33,6 @@ object UserTokenRepository : UserTokenDao {
         val statement = UserTokens.insert {
             it[userId] = userToken.userId
             it[accessToken] = userToken.accessToken
-            it[refreshToken] = userToken.refreshToken
-            it[expiresAt] = userToken.expiresAt ?: LocalDateTime.now()
         }
 
         statement.resultedValues?.singleOrNull()?.let(UserTokenRepository::rowToUserToken)
@@ -51,8 +45,6 @@ object UserTokenRepository : UserTokenDao {
     override suspend fun updateToken(userToken: UserToken): Boolean = dbQuery {
         UserTokens.update({ UserTokens.userId eq userToken.userId }) {
             it[accessToken] = accessToken
-            it[refreshToken] = refreshToken
-            it[expiresAt] = expiresAt
         } > 0
     }
 

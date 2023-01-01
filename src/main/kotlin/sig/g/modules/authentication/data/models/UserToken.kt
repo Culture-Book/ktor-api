@@ -15,10 +15,4 @@ data class UserToken(
     val userId: String,
     @Serializable(with = UUIDSerializer::class)
     val accessToken: UUID,
-    @Serializable(with = UUIDSerializer::class)
-    val refreshToken: UUID,
-    @Serializable(with = LocalDateTimeSerializer::class)
-    val expiresAt: LocalDateTime? = LocalDateTime.now(),
-    @Serializable(with = TokenTypeSerializer::class)
-    val type: TokenType = TokenType.Origin
 )
