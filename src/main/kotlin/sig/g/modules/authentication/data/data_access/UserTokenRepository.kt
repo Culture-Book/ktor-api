@@ -5,7 +5,7 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import sig.g.data_access.dbQuery
 import sig.g.modules.authentication.data.models.UserToken
 import sig.g.modules.authentication.data.models.database.UserTokens
-import java.time.LocalDateTime
+import java.util.*
 
 object UserTokenRepository : UserTokenDao {
 
@@ -13,6 +13,7 @@ object UserTokenRepository : UserTokenDao {
         tokenId = row[UserTokens.userTokenId],
         userId = row[UserTokens.userId],
         accessToken = row[UserTokens.accessToken],
+        refreshToken = row[UserTokens.refreshToken]
     )
 
     override suspend fun getUserToken(userToken: UserToken): UserToken? = dbQuery {
@@ -23,16 +24,17 @@ object UserTokenRepository : UserTokenDao {
     }
 
     override suspend fun userTokenExists(userToken: UserToken): Boolean = dbQuery {
-        UserTokens.select(
-            (UserTokens.accessToken eq userToken.accessToken) and
+        !UserTokens.select(
+            ((UserTokens.accessToken eq userToken.accessToken) or (UserTokens.refreshToken eq userToken.refreshToken!!)) and
                     (UserTokens.userId eq userToken.userId)
-        ).singleOrNull() != null
+        ).empty()
     }
 
     override suspend fun insertToken(userToken: UserToken): UserToken? = dbQuery {
         val statement = UserTokens.insert {
             it[userId] = userToken.userId
             it[accessToken] = userToken.accessToken
+            it[refreshToken] = userToken.refreshToken ?: UUID.randomUUID()
         }
 
         statement.resultedValues?.singleOrNull()?.let(UserTokenRepository::rowToUserToken)

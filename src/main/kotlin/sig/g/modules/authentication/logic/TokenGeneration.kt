@@ -2,19 +2,17 @@ package sig.g.modules.authentication.logic
 
 import com.auth0.jwt.JWT
 import io.ktor.server.auth.jwt.*
-import sig.g.config.AppConfig
-import sig.g.config.getProperty
 import sig.g.modules.authentication.data.models.JwtClaim
 import sig.g.modules.authentication.data.models.UserToken
 import sig.g.modules.authentication.data.models.states.AuthState
-import sig.g.modules.utils.addSeconds
 import sig.g.modules.utils.toUUID
 import java.util.*
 
 fun generateUserToken(userId: String): UserToken {
     val accessToken = UUID.randomUUID()
+    val refreshToken = UUID.randomUUID()
 
-    return UserToken(userId = userId, accessToken = accessToken)
+    return UserToken(userId = userId, accessToken = accessToken, refreshToken = refreshToken)
 }
 
 fun JWTPrincipal.getUserToken(): UserToken {

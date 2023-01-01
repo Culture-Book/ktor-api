@@ -28,7 +28,7 @@ internal fun Route.refreshJwt() {
                 call.apply {
                     sessions.clear<AuthState.Success>()
                     sessions.set(refreshState)
-                    respond(HttpStatusCode.OK, refreshState.jwt)
+                    respond(HttpStatusCode.OK, refreshState)
                 }
             }
 
