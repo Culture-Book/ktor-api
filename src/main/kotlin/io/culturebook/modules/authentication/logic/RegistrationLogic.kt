@@ -7,7 +7,7 @@ import io.culturebook.modules.authentication.data.models.database.data_access.Us
 import io.culturebook.modules.authentication.data.models.interfaces.AuthState
 import io.culturebook.modules.authentication.decodeOAuth
 import io.culturebook.modules.authentication.generateAccessJwt
-import java.util.*
+import io.culturebook.modules.utils.generateUUID
 
 suspend fun registerUser(callUser: User): AuthState {
     val decryptedEmail = callUser.email.decodeOAuth()
@@ -17,7 +17,7 @@ suspend fun registerUser(callUser: User): AuthState {
         return AuthState.Error.InvalidEmail
     }
 
-    if (decryptedPassword.isNullOrEmpty()) {
+    if (decryptedPassword.isProperPassword()) {
         return AuthState.Error.InvalidPassword
     }
 
@@ -26,7 +26,7 @@ suspend fun registerUser(callUser: User): AuthState {
     }
 
     val user = User(
-        userId = callUser.userId.ifBlank { UUID.randomUUID().toString() },
+        userId = callUser.userId.generateUUID().toString(),
         profileUri = callUser.profileUri,
         displayName = callUser.displayName,
         password = callUser.password,
@@ -43,3 +43,4 @@ suspend fun registerUser(callUser: User): AuthState {
 
     return AuthState.Success(jwt, userToken.refreshToken!!)
 }
+
