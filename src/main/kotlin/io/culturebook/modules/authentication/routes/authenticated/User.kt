@@ -13,14 +13,9 @@ import io.ktor.server.routing.*
 internal fun Route.updateTos() {
     post(AuthRoute.User.Tos.route) {
         val isSuccess = UserRepository.updateTos(getUserId())
-        if (isSuccess) call.respond(HttpStatusCode.OK) else call.respond(HttpStatusCode.BadRequest)
-    }
-}
+        val isPrivacySuccess = UserRepository.updatePrivacy(getUserId())
 
-internal fun Route.updatePrivacy() {
-    post(AuthRoute.User.Privacy.route) {
-        val isSuccess = UserRepository.updatePrivacy(getUserId())
-        if (isSuccess) call.respond(HttpStatusCode.OK) else call.respond(HttpStatusCode.BadRequest)
+        if (isSuccess && isPrivacySuccess) call.respond(HttpStatusCode.OK) else call.respond(HttpStatusCode.BadRequest)
     }
 }
 

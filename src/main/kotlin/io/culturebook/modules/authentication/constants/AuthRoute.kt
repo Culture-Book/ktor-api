@@ -3,16 +3,8 @@ package io.culturebook.modules.authentication.constants
 sealed interface AuthRoute {
     val route: String
 
-    object GoogleAuth : AuthRoute {
-        override val route: String = "google-auth"
-    }
-
     object JwtAuth : AuthRoute {
         override val route: String = "jwt-auth"
-    }
-
-    object JwtRefreshAuth : AuthRoute {
-        override val route: String = "jwt-refresh-auth"
     }
 
     object JwtRefresh : AuthRoute {
@@ -49,18 +41,6 @@ sealed interface AuthRoute {
 
     object OauthPublicKey : AuthRoute {
         override val route: String = ".well-known/oauth/public"
-    }
-
-    object GoogleLogin : AuthRoute {
-        override val route: String = "google-login"
-    }
-
-    object GoogleUser : AuthRoute {
-        override val route: String = "https://www.googleapis.com/oauth2/v1/userinfo?access_token="
-    }
-
-    object GoogleCallback : AuthRoute {
-        override val route: String = "google-callback"
     }
 
     sealed interface AuthRouteVersion : AuthRoute {

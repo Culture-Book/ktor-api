@@ -10,6 +10,5 @@ fun Route.authenticationRoutes() {
     authenticate(AuthRoute.JwtAuth.route) {
         getUserDetailsRoute()
         updateTos()
-        updatePrivacy()
     }
 }
