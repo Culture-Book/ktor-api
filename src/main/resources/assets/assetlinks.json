@@ -1,0 +1,38 @@
+[
+    {
+        "relation": [
+            "delegate_permission/common.handle_all_urls"
+        ],
+        "target": {
+            "namespace": "android_app",
+            "package_name": "uk.co.culturebook.debug",
+            "sha256_cert_fingerprints": [
+                "C1:DE:29:74:01:E7:C1:51:7B:E6:88:81:FD:0D:70:44:51:4D:87:BC:2C:38:34:8F:93:86:A1:22:39:FB:AA:12"
+            ]
+        }
+    },
+    {
+        "relation": [
+            "delegate_permission/common.handle_all_urls"
+        ],
+        "target": {
+            "namespace": "android_app",
+            "package_name": "uk.co.culturebook.pre_release",
+            "sha256_cert_fingerprints": [
+                "1B:E4:45:D8:60:32:CE:AB:99:46:4D:1F:43:29:9C:90:B2:20:EB:E9:9B:90:E0:C6:66:EA:28:BA:51:69:AA:30"
+            ]
+        }
+    },
+    {
+        "relation": [
+            "delegate_permission/common.handle_all_urls"
+        ],
+        "target": {
+            "namespace": "android_app",
+            "package_name": "uk.co.culturebook",
+            "sha256_cert_fingerprints": [
+                "2D:CF:1A:C0:4C:8E:91:01:CD:E0:1E:05:87:EB:A7:E6:6E:B2:34:1B:6D:17:F3:FE:F0:0A:80:58:FF:4C:0B:0F"
+            ]
+        }
+    }
+]
