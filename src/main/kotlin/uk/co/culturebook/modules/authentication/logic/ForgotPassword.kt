@@ -15,24 +15,21 @@ import uk.co.culturebook.modules.email.data.PasswordResetRequest
 import uk.co.culturebook.modules.email.logic.sendEmail
 import java.time.LocalDateTime
 import java.util.*
-import kotlin.coroutines.coroutineContext
-import kotlin.time.Duration
 
 internal suspend fun resetPassword(passwordReset: PasswordReset): Boolean {
-    val decryptedEmail = passwordReset.email.decodeOAuth() ?: return false
+    val decryptedUserId = passwordReset.userId.decodeOAuth() ?: return false
 
-    if (!decryptedEmail.isProperEmail()) return false
-    if (!decryptedEmail.exists()) return false
+    if (UserRepository.getUser(decryptedUserId) == null) return false
 
     val dbPasswordReset =
-        PasswordResetRepository.getPasswordReset(decryptedEmail, passwordReset.token) ?: return false
+        PasswordResetRepository.getPasswordReset(decryptedUserId, passwordReset.token) ?: return false
 
     if (dbPasswordReset.expiresAt!!.isBefore(LocalDateTime.now())) return false
 
     val decryptedPassword = passwordReset.password.decodeOAuth() ?: return false
     if (!decryptedPassword.isProperPassword()) return false
 
-    return UserRepository.updatePassword(decryptedEmail, passwordReset.password).also {
+    return UserRepository.updatePassword(decryptedUserId, passwordReset.password).also {
         PasswordResetRepository.deletePasswordReset(dbPasswordReset.userId)
     }
 }
@@ -47,7 +44,7 @@ internal suspend fun forgotPassword(passwordResetRequest: PasswordResetRequest):
     val passwordResetToken = UUID.randomUUID()
     val passwordExpiryMins = AppConfig.EmailConfig.PasswordResetExpiry.getProperty().toLong() / (1000 * 60)
     val passwordExpiry = LocalDateTime.now().plusMinutes(passwordExpiryMins)
-    val forgotPasswordLink = Constants.forgotPasswordAppLink(user.email, passwordResetToken.toString())
+    val forgotPasswordLink = Constants.forgotPasswordAppLink(user.userId, passwordResetToken.toString())
 
     PasswordResetRepository.deletePasswordReset(user.userId)
 

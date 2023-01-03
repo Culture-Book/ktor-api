@@ -65,8 +65,8 @@ object UserRepository : UserDao {
         } > 0
     }
 
-    override suspend fun updatePassword(email: String, password: String): Boolean = dbQuery {
-        Users.update({ Users.email eq email }) {
+    override suspend fun updatePassword(userId: String, password: String): Boolean = dbQuery {
+        Users.update({ Users.userId eq userId }) {
             it[Users.password] = password
         } > 0
     }
