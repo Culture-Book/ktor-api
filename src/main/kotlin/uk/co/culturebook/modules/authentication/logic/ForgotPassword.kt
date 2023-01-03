@@ -1,5 +1,7 @@
 package uk.co.culturebook.modules.authentication.logic
 
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import uk.co.culturebook.Constants
 import uk.co.culturebook.config.AppConfig
 import uk.co.culturebook.config.getProperty
@@ -13,6 +15,8 @@ import uk.co.culturebook.modules.email.data.PasswordResetRequest
 import uk.co.culturebook.modules.email.logic.sendEmail
 import java.time.LocalDateTime
 import java.util.*
+import kotlin.coroutines.coroutineContext
+import kotlin.time.Duration
 
 internal suspend fun resetPassword(passwordReset: PasswordReset): Boolean {
     val decryptedEmail = passwordReset.email.decodeOAuth() ?: return false
@@ -56,16 +60,20 @@ internal suspend fun forgotPassword(passwordResetRequest: PasswordResetRequest):
     ) ?: return false
 
     with(EmailContents) {
-        sendEmail(
-            subjectContent = ForgotPasswordSubject,
-            message = getEmailTemplate(
-                displayName = user.displayName ?: "",
-                appName = AppName,
-                validityInMinutes = passwordExpiryMins.toString(),
-                passwordResetLink = forgotPasswordLink
-            ),
-            email = user.email
-        )
+        runBlocking {
+            //TODO refactor this - implement a queue
+            delay(6000L)
+            sendEmail(
+                subjectContent = ForgotPasswordSubject,
+                message = getEmailTemplate(
+                    displayName = user.displayName ?: "",
+                    appName = AppName,
+                    validityInMinutes = passwordExpiryMins.toString(),
+                    passwordResetLink = forgotPasswordLink
+                ),
+                email = user.email
+            )
+        }
     }
     return true
 }
