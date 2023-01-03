@@ -78,4 +78,27 @@ sealed interface AppConfig {
             override val propertyKey: String = "ktor.oauth.publicKey"
         }
     }
+
+    sealed interface EmailConfig : AppConfig {
+        object Host : EmailConfig {
+            override val propertyKey: String = "ktor.email.host"
+        }
+
+        object SmtpPort : EmailConfig {
+            override val propertyKey: String = "ktor.email.smtpPort"
+        }
+
+        object Account : EmailConfig {
+            override val propertyKey: String = "ktor.email.account"
+        }
+
+        object Password : EmailConfig {
+            override val propertyKey: String = "ktor.email.password"
+        }
+
+        object PasswordResetExpiry : EmailConfig {
+            override val propertyKey: String = "ktor.email.passwordExpiry"
+        }
+
+    }
 }

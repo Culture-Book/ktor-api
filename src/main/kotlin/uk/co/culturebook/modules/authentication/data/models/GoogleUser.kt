@@ -1,8 +1,8 @@
 package uk.co.culturebook.modules.authentication.data.models
 
+import kotlinx.serialization.Serializable
 import uk.co.culturebook.modules.authentication.constants.enums.RegistrationStatus
 import uk.co.culturebook.modules.authentication.encodeOAuth
-import kotlinx.serialization.Serializable
 import java.net.URI
 
 //{

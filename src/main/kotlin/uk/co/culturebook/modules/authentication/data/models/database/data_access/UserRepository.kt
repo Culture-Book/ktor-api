@@ -1,11 +1,11 @@
 package uk.co.culturebook.modules.authentication.data.models.database.data_access
 
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import uk.co.culturebook.data_access.dbQuery
 import uk.co.culturebook.modules.authentication.data.models.User
 import uk.co.culturebook.modules.authentication.data.models.database.Users
 import uk.co.culturebook.modules.utils.toUri
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import java.time.LocalDateTime
 
 object UserRepository : UserDao {
@@ -62,6 +62,12 @@ object UserRepository : UserDao {
     override suspend fun updatePrivacy(userId: String): Boolean = dbQuery {
         Users.update({ Users.userId eq userId }) {
             it[privacyAccept] = LocalDateTime.now()
+        } > 0
+    }
+
+    override suspend fun updatePassword(email: String, password: String): Boolean = dbQuery {
+        Users.update({ Users.email eq email }) {
+            it[Users.password] = password
         } > 0
     }
 

@@ -43,6 +43,14 @@ sealed interface AuthRoute {
         override val route: String = ".well-known/oauth/public"
     }
 
+    object ResetPassword : AuthRoute {
+        override val route = "reset-password"
+    }
+
+    object ForgotPassword : AuthRoute {
+        override val route = "forgot"
+    }
+
     sealed interface AuthRouteVersion : AuthRoute {
         object V1 : AuthRouteVersion {
             override val route: String = "auth/v1"

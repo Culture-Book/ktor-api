@@ -1,14 +1,14 @@
 package uk.co.culturebook.modules.authentication.logic
 
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
+import io.ktor.util.pipeline.*
 import uk.co.culturebook.config.AppConfig
 import uk.co.culturebook.config.getProperty
 import uk.co.culturebook.modules.authentication.data.models.database.data_access.UserRepository
 import uk.co.culturebook.modules.authentication.data.models.interfaces.JwtClaim
 import uk.co.culturebook.modules.authentication.data.models.interfaces.UserDetailsState
-import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
-import io.ktor.util.pipeline.*
 import java.time.LocalDateTime
 
 suspend fun getUserDetails(userId: String): UserDetailsState {

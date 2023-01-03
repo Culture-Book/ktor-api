@@ -1,6 +1,11 @@
 package uk.co.culturebook.modules.authentication.logic
 
 import com.auth0.jwt.JWT
+import io.ktor.http.*
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
+import io.ktor.server.response.*
+import io.ktor.server.sessions.*
 import uk.co.culturebook.config.AppConfig
 import uk.co.culturebook.config.getProperty
 import uk.co.culturebook.modules.authentication.constants.AuthRoute
@@ -10,11 +15,6 @@ import uk.co.culturebook.modules.authentication.data.models.interfaces.AuthState
 import uk.co.culturebook.modules.authentication.data.models.interfaces.JwtClaim
 import uk.co.culturebook.modules.authentication.generateAccessJwt
 import uk.co.culturebook.modules.authentication.jwtVerifier
-import io.ktor.http.*
-import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
-import io.ktor.server.response.*
-import io.ktor.server.sessions.*
 
 fun AuthenticationConfig.configureJwt() {
     jwt(AuthRoute.JwtAuth.route) {

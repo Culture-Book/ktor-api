@@ -1,10 +1,10 @@
 package uk.co.culturebook.modules.authentication.data.models.database.data_access
 
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import uk.co.culturebook.data_access.dbQuery
 import uk.co.culturebook.modules.authentication.data.models.UserToken
 import uk.co.culturebook.modules.authentication.data.models.database.UserTokens
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import java.util.*
 
 object UserTokenRepository : UserTokenDao {

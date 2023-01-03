@@ -17,7 +17,7 @@ suspend fun registerUser(callUser: User): AuthState {
         return AuthState.Error.InvalidEmail
     }
 
-    if (decryptedPassword.isProperPassword()) {
+    if (!decryptedPassword.isProperPassword()) {
         return AuthState.Error.InvalidPassword
     }
 
