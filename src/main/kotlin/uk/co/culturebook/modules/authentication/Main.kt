@@ -3,26 +3,41 @@ package uk.co.culturebook.modules.authentication
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.routing.*
-import uk.co.culturebook.modules.authentication.constants.AuthRoute
-import uk.co.culturebook.modules.authentication.logic.configureJwt
-import uk.co.culturebook.modules.authentication.routes.authenticated.authenticationRoutes
-import uk.co.culturebook.modules.authentication.routes.general.getAssetLinks
-import uk.co.culturebook.modules.authentication.routes.general.getPrivacy
-import uk.co.culturebook.modules.authentication.routes.general.getTos
-import uk.co.culturebook.modules.authentication.routes.origin.originAuthentication
+import uk.co.culturebook.modules.authentication.data.interfaces.AuthRoute
+import uk.co.culturebook.modules.authentication.logic.general.configureJwt
+import uk.co.culturebook.modules.authentication.routes.authenticated.getUserDetailsRoute
+import uk.co.culturebook.modules.authentication.routes.authenticated.updateTos
+import uk.co.culturebook.modules.authentication.routes.general.*
+import uk.co.culturebook.modules.authentication.routes.resources.getAssetLinks
+import uk.co.culturebook.modules.authentication.routes.resources.getPrivacy
+import uk.co.culturebook.modules.authentication.routes.resources.getTos
 
-fun Application.configureSecurity() {
+fun Application.authenticationModule() {
+    val config = environment.config
+
     authentication {
-        configureJwt()
+        configureJwt(config)
     }
 
     routing {
+        // Auth V1
         route(AuthRoute.AuthRouteVersion.V1.route) {
-            originAuthentication()
-            authenticationRoutes()
+            publicKey(config)
+            registration(config)
+            signIn(config)
+            registrationOrLogin(config)
+            forgotPasswordRoute(config)
+            resetPassword(config)
+            refreshJwt(config)
+
+            authenticate(AuthRoute.JwtAuth.route) {
+                getUserDetailsRoute(config)
+                updateTos()
+            }
         }
     }
 
+    // Resources
     routing {
         getTos()
         getPrivacy()
