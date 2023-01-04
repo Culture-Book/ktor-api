@@ -22,6 +22,7 @@ internal fun Route.resetPassword() {
 internal fun Route.forgotPasswordRoute() {
     post(AuthRoute.ForgotPassword.route) {
         val passwordResetRequest = call.receive<PasswordResetRequest>()
-        call.respond(HttpStatusCode.OK, GenericResponse(forgotPassword(passwordResetRequest)))
+        val passwordReset = forgotPassword(passwordResetRequest)
+        call.respond(HttpStatusCode.OK, GenericResponse(passwordReset))
     }
 }
