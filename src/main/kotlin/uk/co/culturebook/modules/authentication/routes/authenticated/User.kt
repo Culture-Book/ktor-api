@@ -4,7 +4,6 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import uk.co.culturebook.data_access.models.GenericResponse
 import uk.co.culturebook.modules.authentication.constants.AuthRoute
 import uk.co.culturebook.modules.authentication.data.models.database.data_access.UserRepository
 import uk.co.culturebook.modules.authentication.data.models.interfaces.UserDetailsState
@@ -16,7 +15,7 @@ internal fun Route.updateTos() {
         val isSuccess = UserRepository.updateTos(getUserId())
         val isPrivacySuccess = UserRepository.updatePrivacy(getUserId())
 
-        if (isSuccess && isPrivacySuccess) call.respond(HttpStatusCode.OK, GenericResponse(true)) else call.respond(HttpStatusCode.BadRequest)
+        if (isSuccess && isPrivacySuccess) call.respond(HttpStatusCode.OK) else call.respond(HttpStatusCode.BadRequest)
     }
 }
 
