@@ -1,0 +1,8 @@
+package uk.co.culturebook.modules.cultural.add_new.location.data.models
+
+import kotlinx.serialization.Serializable
+import uk.co.culturebook.modules.serialization.serializers.UUIDSerializer
+import java.util.*
+
+@Serializable
+data class Culture(@Serializable(with = UUIDSerializer::class) val id: UUID, val name: String, val location: Location)

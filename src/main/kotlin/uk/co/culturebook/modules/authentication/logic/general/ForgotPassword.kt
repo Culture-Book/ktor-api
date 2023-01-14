@@ -9,9 +9,9 @@ import uk.co.culturebook.modules.authentication.data.AuthConfig.emailHost
 import uk.co.culturebook.modules.authentication.data.AuthConfig.emailPassword
 import uk.co.culturebook.modules.authentication.data.AuthConfig.emailResetExpiry
 import uk.co.culturebook.modules.authentication.data.AuthConfig.smtpPort
+import uk.co.culturebook.modules.authentication.data.constants.EmailContents
 import uk.co.culturebook.modules.authentication.data.database.repositories.PasswordResetRepository
 import uk.co.culturebook.modules.authentication.data.database.repositories.UserRepository
-import uk.co.culturebook.modules.authentication.data.database.tables.EmailContents
 import uk.co.culturebook.modules.authentication.data.models.PasswordReset
 import uk.co.culturebook.modules.authentication.data.models.PasswordResetRequest
 import uk.co.culturebook.modules.authentication.decodeOAuth

@@ -1,4 +1,4 @@
-package uk.co.culturebook.modules.cultural.add_new.location.data
+package uk.co.culturebook.modules.cultural.add_new.location.data.models
 
 import kotlinx.serialization.Serializable
 import uk.co.culturebook.modules.serialization.serializers.LocalDateTimeSerializer

@@ -1,35 +1,28 @@
 package uk.co.culturebook.utils
 
 import org.junit.Test
-import uk.co.culturebook.modules.cultural.add_new.location.data.Location
+import uk.co.culturebook.modules.cultural.add_new.location.data.models.Location
 import kotlin.test.assertEquals
 
 class DistanceTests {
-
     @Test
-    fun testDistance() {
-        val locationA = Location(3.0, 4.0)
-        val locationB = Location(5.0, 6.0)
-        val expected = 2.0
-        val actual = distance(locationA, locationB)
-        assertEquals(expected, actual)
+    fun testDistanceCalculation() {
+        val location1 = Location(48.8588443, 2.2943506)
+        val location2 = Location(40.7306458, -73.935242)
+        val expectedDistance = 5827.0
+
+        val actualDistance = getDistanceInKm(location1, location2)
+
+        assertEquals(expectedDistance, actualDistance, 1.0)
     }
 
     @Test
-    fun testDistanceNegative() {
-        val locationA = Location(-3.0, -4.0)
-        val locationB = Location(-5.0, -6.0)
-        val expected = 2.0
-        val actual = distance(locationA, locationB)
-        assertEquals(expected, actual)
-    }
+    fun testSameLocation() {
+        val location = Location(51.509865, -0.118092)
+        val expectedDistance = 0.0
 
-    @Test
-    fun testDistanceZero() {
-        val locationA = Location(0.0, 0.0)
-        val locationB = Location(0.0, 0.0)
-        val expected = 0.0
-        val actual = distance(locationA, locationB)
-        assertEquals(expected, actual)
+        val actualDistance = getDistanceInKm(location, location)
+
+        assertEquals(expectedDistance, actualDistance)
     }
 }

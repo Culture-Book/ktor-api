@@ -1,7 +1,7 @@
 package uk.co.culturebook.utils
 
-import org.junit.Test
 import org.junit.Assert.assertEquals
+import org.junit.Test
 
 class FuzzySearchTests {
     @Test
