@@ -3,7 +3,9 @@ package uk.co.culturebook.data.add_new
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.ktor.test.dispatcher.*
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
@@ -18,10 +20,13 @@ import org.junit.Test
 import uk.co.culturebook.modules.cultural.add_new.location.data.database.repositories.CultureRepository
 import uk.co.culturebook.modules.cultural.add_new.location.data.database.repositories.CultureRepository.insertCulture
 import uk.co.culturebook.modules.cultural.add_new.location.data.database.tables.Cultures
+import uk.co.culturebook.modules.cultural.add_new.location.data.interfaces.LocationState
 import uk.co.culturebook.modules.cultural.add_new.location.data.models.Culture
 import uk.co.culturebook.modules.cultural.add_new.location.data.models.Location
+import uk.co.culturebook.modules.cultural.add_new.location.logic.addCulture
 import java.util.*
 
+@OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
 class CultureRepositoryTests {
     private val dbUrl = "jdbc:h2:mem:test"
     private val dbDriver = "org.h2.Driver"
@@ -37,7 +42,8 @@ class CultureRepositoryTests {
         jdbcUrl = dbUrl
         driverClassName = dbDriver
         connectionInitSql =
-            "CREATE ALIAS IF NOT EXISTS DISTANCE_IN_KM DETERMINISTIC FOR 'uk.co.culturebook.utils.DistanceUtilsKt.getDistanceInKm';"
+            "CREATE ALIAS IF NOT EXISTS DISTANCE_IN_KM DETERMINISTIC FOR 'uk.co.culturebook.utils.DistanceUtilsKt.getDistanceInKm';" +
+            "CREATE ALIAS IF NOT EXISTS MY_SIMILARITY DETERMINISTIC FOR 'uk.co.culturebook.utils.SearchUtilsKt.matchStrings';"
         validate()
     })
     private val db = Database.connect(datasource = dbConfig)
@@ -68,7 +74,7 @@ class CultureRepositoryTests {
 
     @Test
     fun testGetCulture() = testSuspend(Dispatchers.Main) {
-        val retrievedCulture = CultureRepository.getCulture(culture1.id)
+        val retrievedCulture = CultureRepository.getCulture(culture1.id!!)
         assertNotNull(retrievedCulture)
         assertEquals(culture1, retrievedCulture)
     }
@@ -90,9 +96,9 @@ class CultureRepositoryTests {
 
     @Test
     fun testDeleteCulture() = testSuspend(Dispatchers.Main) {
-        val deleted = CultureRepository.deleteCulture(culture1.id)
+        val deleted = CultureRepository.deleteCulture(culture1.id!!)
         assertTrue(deleted)
-        val retrievedCulture = CultureRepository.getCulture(culture1.id)
+        val retrievedCulture = CultureRepository.getCulture(culture1.id!!)
         assertNull(retrievedCulture)
     }
 
@@ -102,8 +108,15 @@ class CultureRepositoryTests {
         val updatedCulture = culture1.copy(name = newName)
         val result = CultureRepository.updateCulture(updatedCulture)
         assertTrue(result)
-        val retrievedCulture = CultureRepository.getCulture(culture1.id)
+        val retrievedCulture = CultureRepository.getCulture(culture1.id!!)
         assertNotNull(retrievedCulture)
         assertEquals(newName, retrievedCulture?.name)
+    }
+
+    @Test
+    fun testInsertDuplicateCulture() = testSuspend(Dispatchers.Main) {
+        val culture1_new = Culture(UUID.randomUUID(), "Opera1", location1)
+        val state = addCulture(culture1_new)
+        assertEquals(LocationState.Error.DuplicateCulture, state)
     }
 }

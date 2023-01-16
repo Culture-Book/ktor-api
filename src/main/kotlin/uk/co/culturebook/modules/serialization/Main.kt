@@ -11,6 +11,7 @@ fun Application.serializationModule() {
             Json {
                 prettyPrint = true
                 isLenient = true
+                ignoreUnknownKeys = true
             }
         )
     }

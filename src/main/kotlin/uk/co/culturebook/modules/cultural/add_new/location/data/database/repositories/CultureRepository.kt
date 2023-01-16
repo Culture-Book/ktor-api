@@ -2,12 +2,16 @@ package uk.co.culturebook.modules.cultural.add_new.location.data.database.reposi
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import uk.co.culturebook.modules.cultural.add_new.location.data.database.tables.Cultures
 import uk.co.culturebook.modules.cultural.add_new.location.data.interfaces.CulturesDao
 import uk.co.culturebook.modules.cultural.add_new.location.data.models.Culture
 import uk.co.culturebook.modules.cultural.add_new.location.data.models.Location
 import uk.co.culturebook.modules.database.dbQuery
+import uk.co.culturebook.modules.database.getDistanceFunction
 import uk.co.culturebook.modules.database.rawQuery
+import uk.co.culturebook.modules.database.similarityFunction
 import uk.co.culturebook.utils.toUUID
 import java.sql.ResultSet
 import java.util.*
@@ -35,7 +39,29 @@ object CultureRepository : CulturesDao {
         Cultures.select { Cultures.id eq id }.singleOrNull()?.let(::rowToCulture)
     }
 
-    // This only works in PostgresSQL
+    /** MY_SIMILARITY is a user defined function in [similarityFunction] currently only H2 and Postgres dialects have been defined, define your own dialect when needed
+     * */
+    override suspend fun getCulturesByName(name: String): List<Culture> = dbQuery {
+        val query = if (currentDialect is PostgreSQLDialect) {
+            """
+            SELECT ${Cultures.id.name}, ${Cultures.name.name}, ${Cultures.lat.name}, ${Cultures.lon.name}, MY_SIMILARITY(${Cultures.name.name}, '$name') as distance
+            FROM ${Cultures.tableName}
+            WHERE ${Cultures.name.name} % '$name'
+            ORDER BY distance DESC""".trimIndent()
+        } else {
+            """
+            SELECT ${Cultures.id.name}, ${Cultures.name.name}, ${Cultures.lat.name}, ${Cultures.lon.name}, MY_SIMILARITY(${Cultures.name.name}, '$name') as distance
+            FROM ${Cultures.tableName}
+            WHERE MY_SIMILARITY(${Cultures.name.name}, '$name') > 0.8
+            ORDER BY distance DESC""".trimIndent()
+        }
+        rawQuery(query, ::resultSetToCultures)?.map { it.first } ?: emptyList()
+    }
+
+
+    /** DISTANCE_IN_KM is a user defined function in [getDistanceFunction] currently only H2 and Postgres dialects have been defined, define your own dialect when needed
+     *  TODO - DISTANCE_IN_KM is a potentially expensive operation and we are doing it twice, hence increasing the complexity of the query, in future optimisation we would find a way to use it once.
+     * */
     override suspend fun getCulturesByLocation(location: Location, kmLimit: Double): List<Culture> =
         rawQuery(
             """
@@ -48,7 +74,7 @@ object CultureRepository : CulturesDao {
 
     override suspend fun insertCulture(culture: Culture): Culture? = dbQuery {
         val statement = Cultures.insert {
-            it[id] = culture.id
+            it[id] = culture.id ?: UUID.randomUUID()
             it[name] = culture.name
             it[lat] = culture.location.latitude
             it[lon] = culture.location.longitude
@@ -61,7 +87,7 @@ object CultureRepository : CulturesDao {
     }
 
     override suspend fun updateCulture(culture: Culture): Boolean = dbQuery {
-        Cultures.update({ Cultures.id eq culture.id }) {
+        Cultures.update({ Cultures.id eq culture.id!! }) {
             it[name] = culture.name
             it[lat] = culture.location.latitude
             it[lon] = culture.location.longitude
