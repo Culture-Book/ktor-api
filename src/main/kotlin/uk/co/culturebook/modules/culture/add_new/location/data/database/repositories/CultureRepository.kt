@@ -1,13 +1,13 @@
-package uk.co.culturebook.modules.cultural.add_new.location.data.database.repositories
+package uk.co.culturebook.modules.culture.add_new.location.data.database.repositories
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
-import uk.co.culturebook.modules.cultural.add_new.location.data.database.tables.Cultures
-import uk.co.culturebook.modules.cultural.add_new.location.data.interfaces.CulturesDao
-import uk.co.culturebook.modules.cultural.add_new.location.data.models.Culture
-import uk.co.culturebook.modules.cultural.add_new.location.data.models.Location
+import uk.co.culturebook.modules.culture.add_new.location.data.database.tables.Cultures
+import uk.co.culturebook.modules.culture.add_new.location.data.interfaces.CulturesDao
+import uk.co.culturebook.modules.culture.add_new.location.data.models.Culture
+import uk.co.culturebook.modules.culture.add_new.location.data.models.Location
 import uk.co.culturebook.modules.database.dbQuery
 import uk.co.culturebook.modules.database.getDistanceFunction
 import uk.co.culturebook.modules.database.rawQuery

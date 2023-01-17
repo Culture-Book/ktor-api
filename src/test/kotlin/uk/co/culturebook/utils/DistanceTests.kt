@@ -1,7 +1,7 @@
 package uk.co.culturebook.utils
 
 import org.junit.Test
-import uk.co.culturebook.modules.cultural.add_new.location.data.models.Location
+import uk.co.culturebook.modules.culture.add_new.location.data.models.Location
 import kotlin.test.assertEquals
 
 class DistanceTests {

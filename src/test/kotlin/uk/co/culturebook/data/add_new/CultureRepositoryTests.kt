@@ -17,13 +17,13 @@ import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
-import uk.co.culturebook.modules.cultural.add_new.location.data.database.repositories.CultureRepository
-import uk.co.culturebook.modules.cultural.add_new.location.data.database.repositories.CultureRepository.insertCulture
-import uk.co.culturebook.modules.cultural.add_new.location.data.database.tables.Cultures
-import uk.co.culturebook.modules.cultural.add_new.location.data.interfaces.LocationState
-import uk.co.culturebook.modules.cultural.add_new.location.data.models.Culture
-import uk.co.culturebook.modules.cultural.add_new.location.data.models.Location
-import uk.co.culturebook.modules.cultural.add_new.location.logic.addCulture
+import uk.co.culturebook.modules.culture.add_new.location.data.database.repositories.CultureRepository
+import uk.co.culturebook.modules.culture.add_new.location.data.database.repositories.CultureRepository.insertCulture
+import uk.co.culturebook.modules.culture.add_new.location.data.database.tables.Cultures
+import uk.co.culturebook.modules.culture.add_new.location.data.interfaces.CultureState
+import uk.co.culturebook.modules.culture.add_new.location.data.models.Culture
+import uk.co.culturebook.modules.culture.add_new.location.data.models.Location
+import uk.co.culturebook.modules.culture.add_new.location.logic.addCulture
 import java.util.*
 
 @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
@@ -43,7 +43,7 @@ class CultureRepositoryTests {
         driverClassName = dbDriver
         connectionInitSql =
             "CREATE ALIAS IF NOT EXISTS DISTANCE_IN_KM DETERMINISTIC FOR 'uk.co.culturebook.utils.DistanceUtilsKt.getDistanceInKm';" +
-            "CREATE ALIAS IF NOT EXISTS MY_SIMILARITY DETERMINISTIC FOR 'uk.co.culturebook.utils.SearchUtilsKt.matchStrings';"
+                    "CREATE ALIAS IF NOT EXISTS MY_SIMILARITY DETERMINISTIC FOR 'uk.co.culturebook.utils.SearchUtilsKt.matchStrings';"
         validate()
     })
     private val db = Database.connect(datasource = dbConfig)
@@ -117,6 +117,6 @@ class CultureRepositoryTests {
     fun testInsertDuplicateCulture() = testSuspend(Dispatchers.Main) {
         val culture1_new = Culture(UUID.randomUUID(), "Opera1", location1)
         val state = addCulture(culture1_new)
-        assertEquals(LocationState.Error.DuplicateCulture, state)
+        assertEquals(CultureState.Error.DuplicateCulture, state)
     }
 }

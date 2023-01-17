@@ -15,7 +15,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import uk.co.culturebook.modules.authentication.data.database.tables.PasswordResets
 import uk.co.culturebook.modules.authentication.data.database.tables.UserTokens
 import uk.co.culturebook.modules.authentication.data.database.tables.Users
-import uk.co.culturebook.modules.cultural.add_new.location.data.database.tables.Cultures
+import uk.co.culturebook.modules.culture.add_new.location.data.database.tables.Cultures
 import uk.co.culturebook.modules.database.DatabaseConfig.driver
 import uk.co.culturebook.modules.database.DatabaseConfig.idleTimeout
 import uk.co.culturebook.modules.database.DatabaseConfig.password
