@@ -1,4 +1,4 @@
-package uk.co.culturebook.modules.authentication.data.database.tables
+package uk.co.culturebook.modules.authentication.data.constants
 
 object EmailContents {
     const val AppName = "Culturebook"
