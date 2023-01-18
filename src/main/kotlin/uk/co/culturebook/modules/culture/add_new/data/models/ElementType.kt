@@ -24,3 +24,12 @@ sealed interface ElementType {
         val startLocation: Location
     ) : ElementType
 }
+
+fun String.decodeElementType(startLocation: Location?, startDateTime: LocalDateTime?) = when {
+    equals(ElementType.Food.toString()) -> ElementType.Food
+    equals(ElementType.PoI.toString()) -> ElementType.PoI
+    equals(ElementType.Music.toString()) -> ElementType.Music
+    equals(ElementType.Story.toString()) -> ElementType.Story
+    startLocation != null && startDateTime != null -> ElementType.Event(startDateTime, startLocation)
+    else -> throw IllegalArgumentException()
+}
