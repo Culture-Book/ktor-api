@@ -7,4 +7,6 @@ object Cultures : Table() {
     val name = text("culture_name")
     val lat = double("loc_lat")
     val lon = double("loc_lon")
+
+    override val primaryKey = PrimaryKey(id)
 }

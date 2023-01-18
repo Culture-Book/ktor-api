@@ -9,7 +9,7 @@ data class Element(
     @Serializable(with = UUIDSerializer::class)
     val id: UUID,
     val name: String,
-    val type: ElementType,
+    val type: IElementType,
     val location: Location,
     val information: String
 )

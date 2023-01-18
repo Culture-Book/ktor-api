@@ -5,6 +5,8 @@ import uk.co.culturebook.modules.culture.add_new.data.models.ElementType
 import java.util.*
 
 interface ElementDao {
+
+    suspend fun getElement(id: UUID): Element?
     suspend fun getDuplicateElement(name: String, type: ElementType): List<Element>
 
 //    suspend fun uploadMedia(files: List<MediaFile>): List<MediaFile>

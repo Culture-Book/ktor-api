@@ -13,4 +13,6 @@ object Elements : Table() {
     val event_loc_lat = double("event_loc_lat").nullable()
     val event_loc_lon = double("event_loc_lon").nullable()
     val information = largeText("info")
+
+    override val primaryKey = PrimaryKey(id)
 }

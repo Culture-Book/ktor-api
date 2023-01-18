@@ -11,7 +11,7 @@ import uk.co.culturebook.modules.culture.add_new.data.models.Location
 import uk.co.culturebook.modules.culture.add_new.logic.addCulture
 import uk.co.culturebook.modules.culture.add_new.logic.getCultureById
 import uk.co.culturebook.modules.culture.add_new.logic.getCulturesByLocation
-import uk.co.culturebook.utils.generateUUID
+import uk.co.culturebook.utils.toUUID
 
 internal fun Route.addNewCulture() {
     post(AddNewRoute.Cultures.route) {
@@ -30,7 +30,7 @@ internal fun Route.getCulture() {
     }
 
     get(AddNewRoute.Cultures.route) {
-        val id = call.request.queryParameters[AddNewRoute.Culture.idParam].generateUUID()
+        val id = call.request.queryParameters[AddNewRoute.Culture.idParam].toUUID()
         call.respond(getCultureById(id))
     }
 }
