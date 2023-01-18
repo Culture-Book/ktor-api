@@ -1,4 +1,4 @@
-package uk.co.culturebook.modules.culture.add_new.location.data.models
+package uk.co.culturebook.modules.culture.add_new.data.models
 
 import kotlinx.serialization.Serializable
 import uk.co.culturebook.modules.serialization.serializers.UUIDSerializer

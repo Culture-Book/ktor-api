@@ -1,7 +1,7 @@
-package uk.co.culturebook.modules.culture.add_new.location.data.interfaces
+package uk.co.culturebook.modules.culture.add_new.data.interfaces
 
-import uk.co.culturebook.modules.culture.add_new.location.data.models.Culture
-import uk.co.culturebook.modules.culture.add_new.location.data.models.Location
+import uk.co.culturebook.modules.culture.add_new.data.models.Culture
+import uk.co.culturebook.modules.culture.add_new.data.models.Location
 import java.util.*
 
 interface CulturesDao {

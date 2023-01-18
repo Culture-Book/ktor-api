@@ -1,8 +1,8 @@
-package uk.co.culturebook.modules.culture.add_new.location.logic
+package uk.co.culturebook.modules.culture.add_new.logic
 
-import uk.co.culturebook.modules.culture.add_new.location.data.database.repositories.CultureRepository
-import uk.co.culturebook.modules.culture.add_new.location.data.interfaces.CultureState
-import uk.co.culturebook.modules.culture.add_new.location.data.models.Culture
+import uk.co.culturebook.modules.culture.add_new.data.database.repositories.CultureRepository
+import uk.co.culturebook.modules.culture.add_new.data.interfaces.CultureState
+import uk.co.culturebook.modules.culture.add_new.data.models.Culture
 
 internal suspend fun addCulture(culture: Culture): CultureState {
     val culturesWithSimilarName = CultureRepository.getCulturesByName(culture.name)

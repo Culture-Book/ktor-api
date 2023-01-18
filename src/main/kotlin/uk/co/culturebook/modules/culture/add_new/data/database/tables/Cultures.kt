@@ -1,4 +1,4 @@
-package uk.co.culturebook.modules.culture.add_new.location.data.database.tables
+package uk.co.culturebook.modules.culture.add_new.data.database.tables
 
 import org.jetbrains.exposed.sql.Table
 

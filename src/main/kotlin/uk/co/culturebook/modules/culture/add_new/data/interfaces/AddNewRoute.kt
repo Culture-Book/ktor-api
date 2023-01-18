@@ -1,4 +1,4 @@
-package uk.co.culturebook.modules.culture.add_new.interfaces
+package uk.co.culturebook.modules.culture.add_new.data.interfaces
 
 sealed interface AddNewRoute {
     val route: String

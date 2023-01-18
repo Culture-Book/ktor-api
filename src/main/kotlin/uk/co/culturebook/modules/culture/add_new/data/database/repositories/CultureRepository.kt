@@ -1,13 +1,13 @@
-package uk.co.culturebook.modules.culture.add_new.location.data.database.repositories
+package uk.co.culturebook.modules.culture.add_new.data.database.repositories
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
-import uk.co.culturebook.modules.culture.add_new.location.data.database.tables.Cultures
-import uk.co.culturebook.modules.culture.add_new.location.data.interfaces.CulturesDao
-import uk.co.culturebook.modules.culture.add_new.location.data.models.Culture
-import uk.co.culturebook.modules.culture.add_new.location.data.models.Location
+import uk.co.culturebook.modules.culture.add_new.data.database.tables.Cultures
+import uk.co.culturebook.modules.culture.add_new.data.interfaces.CulturesDao
+import uk.co.culturebook.modules.culture.add_new.data.models.Culture
+import uk.co.culturebook.modules.culture.add_new.data.models.Location
 import uk.co.culturebook.modules.database.dbQuery
 import uk.co.culturebook.modules.database.getDistanceFunction
 import uk.co.culturebook.modules.database.rawQuery
@@ -36,7 +36,7 @@ object CultureRepository : CulturesDao {
     }
 
     override suspend fun getCulture(id: UUID): Culture? = dbQuery {
-        Cultures.select { Cultures.id eq id }.singleOrNull()?.let(::rowToCulture)
+        Cultures.select { Cultures.id eq id }.singleOrNull()?.let(CultureRepository::rowToCulture)
     }
 
     /** MY_SIMILARITY is a user defined function in [similarityFunction] currently only H2 and Postgres dialects have been defined, define your own dialect when needed
@@ -55,7 +55,7 @@ object CultureRepository : CulturesDao {
             WHERE MY_SIMILARITY(${Cultures.name.name}, '$name') > 0.8
             ORDER BY distance DESC""".trimIndent()
         }
-        rawQuery(query, ::resultSetToCultures)?.map { it.first } ?: emptyList()
+        rawQuery(query, CultureRepository::resultSetToCultures)?.map { it.first } ?: emptyList()
     }
 
 
@@ -69,7 +69,7 @@ object CultureRepository : CulturesDao {
             FROM ${Cultures.tableName}
             WHERE DISTANCE_IN_KM(${Cultures.lat.name}, ${Cultures.lon.name}, ${location.latitude}, ${location.longitude}) <= $kmLimit
             ORDER BY distance ASC""".trimIndent(),
-            transform = ::resultSetToCultures
+            transform = CultureRepository::resultSetToCultures
         )?.map { it.first } ?: emptyList()
 
     override suspend fun insertCulture(culture: Culture): Culture? = dbQuery {
@@ -79,7 +79,7 @@ object CultureRepository : CulturesDao {
             it[lat] = culture.location.latitude
             it[lon] = culture.location.longitude
         }
-        statement.resultedValues?.singleOrNull()?.let(::rowToCulture)
+        statement.resultedValues?.singleOrNull()?.let(CultureRepository::rowToCulture)
     }
 
     override suspend fun deleteCulture(id: UUID): Boolean = dbQuery {
