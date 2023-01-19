@@ -29,7 +29,7 @@ internal fun Route.getCulture() {
         call.respond(getCulturesByLocation(location))
     }
 
-    get(AddNewRoute.Cultures.route) {
+    get(AddNewRoute.Culture.route) {
         val id = call.request.queryParameters[AddNewRoute.Culture.idParam].toUUID()
         call.respond(getCultureById(id))
     }

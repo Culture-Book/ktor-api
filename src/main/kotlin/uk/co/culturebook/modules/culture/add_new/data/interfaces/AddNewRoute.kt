@@ -19,6 +19,16 @@ sealed interface AddNewRoute {
 
     object Culture : AddNewRoute {
         override val route = "culture"
-        val idParam = "culture_id"
+        const val idParam = "culture_id"
+    }
+
+    object Element : AddNewRoute {
+        override val route: String = "element"
+
+        object Duplicate : AddNewRoute {
+            override val route: String = "${Element.route}/duplicate"
+            const val nameParam = "name"
+            const val typeParam = "type"
+        }
     }
 }

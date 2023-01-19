@@ -5,7 +5,8 @@ import org.jetbrains.exposed.sql.Table
 
 object UserTokens : Table() {
     val userTokenId = uuid("userTokenId").autoGenerate()
-    val userId = text("userId").references(Users.userId, onDelete = ReferenceOption.CASCADE, onUpdate = ReferenceOption.CASCADE)
+    val userId =
+        text("userId").references(Users.userId, onDelete = ReferenceOption.CASCADE, onUpdate = ReferenceOption.CASCADE)
     val accessToken = uuid("accessToken")
     val refreshToken = uuid("refreshToken")
 
