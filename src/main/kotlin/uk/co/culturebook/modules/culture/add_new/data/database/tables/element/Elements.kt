@@ -1,10 +1,12 @@
-package uk.co.culturebook.modules.culture.add_new.data.database.tables
+package uk.co.culturebook.modules.culture.add_new.data.database.tables.element
 
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.javatime.datetime
+import uk.co.culturebook.modules.culture.add_new.data.database.tables.Cultures
 
 object Elements : Table() {
     val id = uuid("element_id").autoGenerate()
+    val culture_id = uuid("culture_id").references(Cultures.id)
     val name = text("name")
     val type = text("type")
     val loc_lat = double("loc_lat")

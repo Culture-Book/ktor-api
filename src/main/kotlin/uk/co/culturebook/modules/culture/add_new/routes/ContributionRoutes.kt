@@ -12,56 +12,56 @@ import uk.co.culturebook.modules.culture.add_new.data.AddNewConfig.fileHost
 import uk.co.culturebook.modules.culture.add_new.data.AddNewConfig.hostApiKey
 import uk.co.culturebook.modules.culture.add_new.data.AddNewConfig.hostToken
 import uk.co.culturebook.modules.culture.add_new.data.data.interfaces.AddNewRoute
-import uk.co.culturebook.modules.culture.add_new.data.database.repositories.ElementRepository
-import uk.co.culturebook.modules.culture.add_new.data.interfaces.ElementState
+import uk.co.culturebook.modules.culture.add_new.data.database.repositories.ContributionRepository
+import uk.co.culturebook.modules.culture.add_new.data.interfaces.ContributionState
 import uk.co.culturebook.modules.culture.add_new.data.models.BucketNameKey
-import uk.co.culturebook.modules.culture.add_new.data.models.Element
+import uk.co.culturebook.modules.culture.add_new.data.models.Contribution
 import uk.co.culturebook.modules.culture.add_new.data.models.MediaFile
 import uk.co.culturebook.modules.culture.add_new.data.models.isValidElementTypeName
-import uk.co.culturebook.modules.culture.add_new.logic.addElement
-import uk.co.culturebook.modules.culture.add_new.logic.getDuplicateElements
-import uk.co.culturebook.modules.culture.add_new.logic.uploadMedia
+import uk.co.culturebook.modules.culture.add_new.logic.addContribution
+import uk.co.culturebook.modules.culture.add_new.logic.getDuplicateContributions
+import uk.co.culturebook.modules.culture.add_new.logic.uploadContributionMedia
 import uk.co.culturebook.utils.forceNotNull
 import java.util.*
 
-internal fun Route.getElementRoutes() {
-    get(AddNewRoute.Element.Duplicate.route) {
-        val name = call.request.queryParameters[AddNewRoute.Element.Duplicate.nameParam].forceNotNull(call)
-        val type = call.request.queryParameters[AddNewRoute.Element.Duplicate.typeParam].forceNotNull(call)
+internal fun Route.getContributionRoutes() {
+    get(AddNewRoute.Contribution.Duplicate.route) {
+        val name = call.request.queryParameters[AddNewRoute.Contribution.Duplicate.nameParam].forceNotNull(call)
+        val type = call.request.queryParameters[AddNewRoute.Contribution.Duplicate.typeParam].forceNotNull(call)
 
         if (!type.isValidElementTypeName()) {
             call.respond(HttpStatusCode.BadRequest)
             return@get
         }
 
-        val duplicates = getDuplicateElements(name, type)
+        val duplicates = getDuplicateContributions(name, type)
 
         if (duplicates.isEmpty()) call.respond(HttpStatusCode.OK) else call.respond(HttpStatusCode.Conflict, duplicates)
     }
 }
 
-internal fun Route.addElementRoutes() {
+internal fun Route.addContributionRoutes() {
     val config = environment!!.config
-    post(AddNewRoute.Element.Submit.route) {
-        val callElement = call.receive<Element>()
-        val elementState = addElement(
+    post(AddNewRoute.Contribution.Submit.route) {
+        val callContribution = call.receive<Contribution>()
+        val contributionState = addContribution(
             apiKey = config.hostApiKey,
             bearer = config.hostToken,
             fileHost = config.fileHost,
-            element = callElement
+            contribution = callContribution
         )
-        if (elementState is ElementState.Success.AddElement) {
-            call.respond(HttpStatusCode.OK, elementState.element)
+        if (contributionState is ContributionState.Success.AddContribution) {
+            call.respond(HttpStatusCode.OK, contributionState.contribution)
         } else {
-            ElementRepository.deleteElement(callElement.id)
-            call.respond(HttpStatusCode.BadRequest, elementState)
+            ContributionRepository.deleteContribution(callContribution.id)
+            call.respond(HttpStatusCode.BadRequest, contributionState)
         }
     }
 }
 
-internal fun Route.uploadMediaRoute() {
+internal fun Route.uploadContributionMediaRoute() {
     val config = environment!!.config
-    post(AddNewRoute.Element.Submit.Upload.route) {
+    post(AddNewRoute.Contribution.Submit.Upload.route) {
         val multiPartData = call.receiveMultipart()
         val mediaFiles = arrayListOf<MediaFile>()
         var bucketName: String? = null
@@ -72,7 +72,7 @@ internal fun Route.uploadMediaRoute() {
         }
 
         if (bucketName == null) {
-            call.respond(HttpStatusCode.BadRequest, ElementState.Error.NoBucketName)
+            call.respond(HttpStatusCode.BadRequest, ContributionState.Error.NoBucketName)
             return@post
         }
 
@@ -95,14 +95,14 @@ internal fun Route.uploadMediaRoute() {
             }
         }
 
-        val uploadFilesState = uploadMedia(
+        val uploadFilesState = uploadContributionMedia(
             apiKey = config.hostApiKey,
             bearer = config.hostToken,
             fileHost = config.fileHost,
             mediaFiles = mediaFiles
         )
 
-        if (uploadFilesState is ElementState.Success.UploadSuccess) {
+        if (uploadFilesState is ContributionState.Success.UploadSuccess) {
             call.respond(HttpStatusCode.OK, uploadFilesState.keys)
         } else {
             call.respond(HttpStatusCode.BadRequest, uploadFilesState)

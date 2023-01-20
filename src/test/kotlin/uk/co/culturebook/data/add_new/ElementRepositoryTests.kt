@@ -19,7 +19,7 @@ import org.junit.Before
 import org.junit.Test
 import uk.co.culturebook.modules.culture.add_new.data.database.repositories.ElementRepository
 import uk.co.culturebook.modules.culture.add_new.data.database.repositories.ElementRepository.insertElement
-import uk.co.culturebook.modules.culture.add_new.data.database.tables.Elements
+import uk.co.culturebook.modules.culture.add_new.data.database.tables.element.Elements
 import uk.co.culturebook.modules.culture.add_new.data.models.Element
 import uk.co.culturebook.modules.culture.add_new.data.models.ElementType
 import uk.co.culturebook.modules.culture.add_new.data.models.EventType

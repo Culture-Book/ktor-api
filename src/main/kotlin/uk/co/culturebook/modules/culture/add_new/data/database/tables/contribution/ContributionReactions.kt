@@ -1,12 +1,13 @@
-package uk.co.culturebook.modules.culture.add_new.data.database.tables
+package uk.co.culturebook.modules.culture.add_new.data.database.tables.contribution
 
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.Table
+import uk.co.culturebook.modules.culture.add_new.data.database.tables.Reactions
 
 
-object ElementReactions : Table() {
-    val elementId = uuid("element_id").references(
-        Elements.id,
+object ContributionReactions : Table() {
+    val contributionId = uuid("contribution_id").references(
+        Contributions.id,
         onDelete = ReferenceOption.CASCADE,
         onUpdate = ReferenceOption.CASCADE
     )

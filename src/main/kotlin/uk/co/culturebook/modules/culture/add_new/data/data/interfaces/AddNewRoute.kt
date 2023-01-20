@@ -1,4 +1,4 @@
-package uk.co.culturebook.modules.culture.add_new.data.interfaces
+package uk.co.culturebook.modules.culture.add_new.data.data.interfaces
 
 sealed interface AddNewRoute {
     val route: String
@@ -27,6 +27,7 @@ sealed interface AddNewRoute {
 
         object Submit : AddNewRoute {
             override val route: String = "${Element.route}/submit"
+
             object Upload : AddNewRoute {
                 override val route: String = "${Submit.route}/upload"
             }
@@ -34,6 +35,24 @@ sealed interface AddNewRoute {
 
         object Duplicate : AddNewRoute {
             override val route: String = "${Element.route}/duplicate"
+            const val nameParam = "name"
+            const val typeParam = "type"
+        }
+    }
+
+    object Contribution : AddNewRoute {
+        override val route: String = "contribution"
+
+        object Submit : AddNewRoute {
+            override val route: String = "${Contribution.route}/submit"
+
+            object Upload : AddNewRoute {
+                override val route: String = "${Submit.route}/upload"
+            }
+        }
+
+        object Duplicate : AddNewRoute {
+            override val route: String = "${Contribution.route}/duplicate"
             const val nameParam = "name"
             const val typeParam = "type"
         }

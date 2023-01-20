@@ -16,6 +16,8 @@ import uk.co.culturebook.modules.authentication.data.database.tables.PasswordRes
 import uk.co.culturebook.modules.authentication.data.database.tables.UserTokens
 import uk.co.culturebook.modules.authentication.data.database.tables.Users
 import uk.co.culturebook.modules.culture.add_new.data.database.tables.*
+import uk.co.culturebook.modules.culture.add_new.data.database.tables.contribution.*
+import uk.co.culturebook.modules.culture.add_new.data.database.tables.element.*
 import uk.co.culturebook.modules.database.DatabaseConfig.driver
 import uk.co.culturebook.modules.database.DatabaseConfig.idleTimeout
 import uk.co.culturebook.modules.database.DatabaseConfig.password
@@ -51,6 +53,7 @@ fun Application.databaseModule() =
 
             // Element Tables
             SchemaUtils.create(Elements)
+            SchemaUtils.create(Contributions)
             SchemaUtils.create(Comments)
             SchemaUtils.create(Reactions)
             SchemaUtils.create(Media)
@@ -60,6 +63,10 @@ fun Application.databaseModule() =
             SchemaUtils.create(ElementComments)
             SchemaUtils.create(ElementReactions)
             SchemaUtils.create(ElementMedia)
+            SchemaUtils.create(LinkedContributions)
+            SchemaUtils.create(ContributionComments)
+            SchemaUtils.create(ContributionReactions)
+            SchemaUtils.create(ContributionMedia)
 
             // Custom functions
             getDistanceFunction()

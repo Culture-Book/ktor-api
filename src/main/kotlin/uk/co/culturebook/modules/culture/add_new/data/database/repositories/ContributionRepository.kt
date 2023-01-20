@@ -8,9 +8,9 @@ import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import uk.co.culturebook.Constants
 import uk.co.culturebook.modules.culture.add_new.client
-import uk.co.culturebook.modules.culture.add_new.data.database.tables.element.Elements
-import uk.co.culturebook.modules.culture.add_new.data.database.tables.element.LinkedElements
-import uk.co.culturebook.modules.culture.add_new.data.interfaces.ElementDao
+import uk.co.culturebook.modules.culture.add_new.data.database.tables.contribution.Contributions
+import uk.co.culturebook.modules.culture.add_new.data.database.tables.contribution.LinkedContributions
+import uk.co.culturebook.modules.culture.add_new.data.interfaces.ContributionDao
 import uk.co.culturebook.modules.culture.add_new.data.interfaces.external.MediaRoute
 import uk.co.culturebook.modules.culture.add_new.data.models.*
 import uk.co.culturebook.modules.database.dbQuery
@@ -19,50 +19,51 @@ import uk.co.culturebook.utils.toUUID
 import java.sql.ResultSet
 import java.util.*
 
-object ElementRepository : ElementDao {
+object ContributionRepository : ContributionDao {
 
-    private fun rowToElement(resultRow: ResultRow): Element {
-        val location = resultRow[Elements.event_loc_lat]?.let { Location(it, resultRow[Elements.event_loc_lon]!!) }
-        val eventStartDate = resultRow[Elements.event_start_date]
+    private fun rowToContribution(resultRow: ResultRow): Contribution {
+        val location =
+            resultRow[Contributions.event_loc_lat]?.let { Location(it, resultRow[Contributions.event_loc_lon]!!) }
+        val eventStartDate = resultRow[Contributions.event_start_date]
 
-        return Element(
-            id = resultRow[Elements.id],
-            cultureId = resultRow[Elements.culture_id],
-            name = resultRow[Elements.name],
-            type = resultRow[Elements.type].decodeElementType(),
-            location = Location(resultRow[Elements.loc_lat], resultRow[Elements.loc_lon]),
+        return Contribution(
+            elementId = resultRow[Contributions.element_id],
+            id = resultRow[Contributions.id],
+            name = resultRow[Contributions.name],
+            type = resultRow[Contributions.type].decodeElementType(),
+            location = Location(resultRow[Contributions.loc_lat], resultRow[Contributions.loc_lon]),
             eventType = location?.let { EventType(eventStartDate!!, location) },
-            information = resultRow[Elements.information],
+            information = resultRow[Contributions.information],
         )
     }
 
-    private fun resultSetToElements(rs: ResultSet) = rs.use { resultSet ->
-        val elements = arrayListOf<Pair<Element, Double>>()
+    private fun resultSetToContributions(rs: ResultSet) = rs.use { resultSet ->
+        val elements = arrayListOf<Pair<Contribution, Double>>()
         while (resultSet.next()) {
-            val latitude = resultSet.getDouble(Elements.loc_lat.name)
-            val longitude = resultSet.getDouble(Elements.loc_lon.name)
+            val latitude = resultSet.getDouble(Contributions.loc_lat.name)
+            val longitude = resultSet.getDouble(Contributions.loc_lon.name)
             val location = Location(latitude, longitude)
 
-            val eventStartDate = resultSet.getTimestamp(Elements.event_start_date.name)?.toLocalDateTime()
-            val eventLatitude = resultSet.getDouble(Elements.event_loc_lat.name)
+            val eventStartDate = resultSet.getTimestamp(Contributions.event_start_date.name)?.toLocalDateTime()
+            val eventLatitude = resultSet.getDouble(Contributions.event_loc_lat.name)
             val eventLongitude =
-                resultSet.getDouble(Elements.event_loc_lon.name).takeIf { it != 0.0 && latitude != 0.0 }
+                resultSet.getDouble(Contributions.event_loc_lon.name).takeIf { it != 0.0 && latitude != 0.0 }
             val eventLocation = eventLongitude?.let { Location(eventLatitude, eventLongitude) }
 
-            elements += Element(
-                id = resultSet.getString(Elements.id.name).toUUID(),
-                cultureId = resultSet.getString(Elements.culture_id.name).toUUID(),
-                name = resultSet.getString(Elements.name.name),
-                type = resultSet.getString(Elements.type.name).decodeElementType(),
+            elements += Contribution(
+                elementId = resultSet.getString(Contributions.element_id.name).toUUID(),
+                id = resultSet.getString(Contributions.id.name).toUUID(),
+                name = resultSet.getString(Contributions.name.name),
+                type = resultSet.getString(Contributions.type.name).decodeElementType(),
                 location = location,
                 eventType = eventLocation?.let { EventType(eventStartDate!!, eventLocation) },
-                information = resultSet.getString(Elements.information.name),
+                information = resultSet.getString(Contributions.information.name),
             ) to resultSet.getDouble("distance")
         }
         elements.toList()
     }
 
-    override suspend fun createBucketForElement(
+    override suspend fun createBucketForContribution(
         request: BucketRequest,
         apiKey: String,
         bearer: String,
@@ -79,25 +80,25 @@ object ElementRepository : ElementDao {
         return response.status == HttpStatusCode.OK
     }
 
-    override suspend fun getElement(id: UUID): Element? = dbQuery {
-        Elements.select { Elements.id eq id }.singleOrNull()?.let(::rowToElement)
+    override suspend fun getContribution(id: UUID): Contribution? = dbQuery {
+        Contributions.select { Contributions.id eq id }.singleOrNull()?.let(::rowToContribution)
     }
 
-    override suspend fun getDuplicateElement(name: String, type: String): List<Element> = dbQuery {
+    override suspend fun getDuplicateContribution(name: String, type: String): List<Contribution> = dbQuery {
         val query = if (currentDialect is PostgreSQLDialect) {
             """
-            SELECT *, MY_SIMILARITY(${Elements.name.name}, '$name') as distance
-            FROM ${Elements.tableName} 
-            WHERE ${Elements.name.name} % '$name' AND ${Elements.type.name} = '$type'
+            SELECT *, MY_SIMILARITY(${Contributions.name.name}, '$name') as distance
+            FROM ${Contributions.tableName} 
+            WHERE ${Contributions.name.name} % '$name' AND ${Contributions.type.name} = '$type'
             ORDER BY distance DESC""".trimIndent()
         } else {
             """
-            SELECT *, MY_SIMILARITY(${Elements.name.name}, '$name') as distance
-            FROM ${Elements.tableName}
-            WHERE MY_SIMILARITY(${Elements.name.name}, '$name') > 0.8 AND ${Elements.type.name} = '$type'
+            SELECT *, MY_SIMILARITY(${Contributions.name.name}, '$name') as distance
+            FROM ${Contributions.tableName}
+            WHERE MY_SIMILARITY(${Contributions.name.name}, '$name') > 0.8 AND ${Contributions.type.name} = '$type'
             ORDER BY distance DESC""".trimIndent()
         }
-        rawQuery(query, ::resultSetToElements)?.map { it.first } ?: emptyList()
+        rawQuery(query, ::resultSetToContributions)?.map { it.first } ?: emptyList()
     }
 
     override suspend fun uploadMedia(
@@ -124,16 +125,16 @@ object ElementRepository : ElementDao {
         return results
     }
 
-    override suspend fun linkElements(parentId: UUID, elementIds: List<UUID>): Boolean = dbQuery {
+    override suspend fun linkContributions(parentId: UUID, elementIds: List<UUID>): Boolean = dbQuery {
         if (elementIds.isEmpty()) return@dbQuery true
-        LinkedElements.batchInsert(elementIds) {
-            set(LinkedElements.parent_element_id, parentId)
-            set(LinkedElements.child_element_id, it)
+        LinkedContributions.batchInsert(elementIds) {
+            set(LinkedContributions.parent_element_id, parentId)
+            set(LinkedContributions.child_element_id, it)
         }.isNotEmpty()
     }
 
-    override suspend fun insertElement(element: Element): Element? = dbQuery {
-        val statement = Elements.insert {
+    override suspend fun insertContribution(element: Contribution): Contribution? = dbQuery {
+        val statement = Contributions.insert {
             it[id] = element.id
             it[name] = element.name
             it[type] = element.type.name
@@ -144,15 +145,15 @@ object ElementRepository : ElementDao {
             it[event_loc_lon] = if (element.eventType != null) element.eventType.location.longitude else null
             it[information] = element.information
         }
-        statement.resultedValues?.singleOrNull()?.let(::rowToElement)
+        statement.resultedValues?.singleOrNull()?.let(::rowToContribution)
     }
 
-    override suspend fun deleteElement(elementId: UUID): Boolean = dbQuery {
-        Elements.deleteWhere { id eq elementId } > 0
+    override suspend fun deleteContribution(elementId: UUID): Boolean = dbQuery {
+        Contributions.deleteWhere { id eq elementId } > 0
     }
 
-    override suspend fun updateElement(element: Element): Boolean = dbQuery {
-        Elements.update({ Elements.id eq element.id }) {
+    override suspend fun updateContribution(element: Contribution): Boolean = dbQuery {
+        Contributions.update({ Contributions.id eq element.id }) {
             it[id] = element.id
             it[name] = element.name
             it[type] = element.type.name

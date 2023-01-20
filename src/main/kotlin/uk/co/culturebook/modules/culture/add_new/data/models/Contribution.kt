@@ -5,11 +5,11 @@ import uk.co.culturebook.modules.serialization.serializers.UUIDSerializer
 import java.util.*
 
 @Serializable
-data class Element(
+data class Contribution(
     @Serializable(with = UUIDSerializer::class)
     val id: UUID = UUID.randomUUID(),
     @Serializable(with = UUIDSerializer::class)
-    val cultureId: UUID,
+    val elementId: UUID,
     val name: String,
     val type: ElementType,
     val location: Location,
