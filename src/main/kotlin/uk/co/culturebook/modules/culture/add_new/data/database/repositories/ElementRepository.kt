@@ -135,6 +135,7 @@ object ElementRepository : ElementDao {
     override suspend fun insertElement(element: Element): Element? = dbQuery {
         val statement = Elements.insert {
             it[id] = element.id
+            it[culture_id] = element.cultureId
             it[name] = element.name
             it[type] = element.type.name
             it[loc_lat] = element.location.latitude
@@ -154,6 +155,7 @@ object ElementRepository : ElementDao {
     override suspend fun updateElement(element: Element): Boolean = dbQuery {
         Elements.update({ Elements.id eq element.id }) {
             it[id] = element.id
+            it[culture_id] = element.cultureId
             it[name] = element.name
             it[type] = element.type.name
             it[loc_lat] = element.location.latitude

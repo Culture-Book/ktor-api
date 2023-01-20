@@ -1,12 +1,16 @@
 package uk.co.culturebook.modules.culture.add_new.data.database.tables.contribution
 
+import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.javatime.datetime
 import uk.co.culturebook.modules.culture.add_new.data.database.tables.element.Elements
 
 object Contributions : Table() {
     val id = uuid("contribution_id").autoGenerate()
-    val element_id = uuid("element_id").references(Elements.id)
+    val element_id = uuid("element_id").references(Elements.id,
+        onDelete = ReferenceOption.CASCADE,
+        onUpdate = ReferenceOption.CASCADE
+    )
     val name = text("name")
     val type = text("type")
     val loc_lat = double("loc_lat")

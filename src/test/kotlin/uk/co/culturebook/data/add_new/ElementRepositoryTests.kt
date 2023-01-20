@@ -17,13 +17,12 @@ import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
+import uk.co.culturebook.modules.culture.add_new.data.database.repositories.CultureRepository.insertCulture
 import uk.co.culturebook.modules.culture.add_new.data.database.repositories.ElementRepository
 import uk.co.culturebook.modules.culture.add_new.data.database.repositories.ElementRepository.insertElement
+import uk.co.culturebook.modules.culture.add_new.data.database.tables.Cultures
 import uk.co.culturebook.modules.culture.add_new.data.database.tables.element.Elements
-import uk.co.culturebook.modules.culture.add_new.data.models.Element
-import uk.co.culturebook.modules.culture.add_new.data.models.ElementType
-import uk.co.culturebook.modules.culture.add_new.data.models.EventType
-import uk.co.culturebook.modules.culture.add_new.data.models.Location
+import uk.co.culturebook.modules.culture.add_new.data.models.*
 import java.time.LocalDateTime
 import java.util.*
 
@@ -36,12 +35,19 @@ class ElementRepositoryTests {
     private val location3 = Location(0.0, 0.1)
     private val location4 = Location(1.0, 1.2)
     private val location5 = Location(1.0, 1.1)
-    private val element1 = Element(UUID.randomUUID(), "Opera1", ElementType.Food, location1, "Information")
-    private val element2 = Element(UUID.randomUUID(), "Opera2", ElementType.Music, location2, "Information")
-    private val element3 = Element(UUID.randomUUID(), "Opera3", ElementType.PoI, location3, "Information")
-    private val element4 = Element(UUID.randomUUID(), "Opera4", ElementType.Story, location4, "Information")
+
+    private val culture1 = Culture(UUID.randomUUID(), "Opera1", location1)
+    private val culture2 = Culture(UUID.randomUUID(), "Opera2", location2)
+    private val culture3 = Culture(UUID.randomUUID(), "Opera3", location3)
+    private val culture4 = Culture(UUID.randomUUID(), "Opera4", location4)
+    private val culture5 = Culture(UUID.randomUUID(), "Opera5", location5)
+    private val element1 = Element(UUID.randomUUID(), culture1.id!!, "Opera1", ElementType.Food, location1, "Information")
+    private val element2 = Element(UUID.randomUUID(), culture2.id!!, "Opera2", ElementType.Music, location2, "Information")
+    private val element3 = Element(UUID.randomUUID(), culture3.id!!, "Opera3", ElementType.PoI, location3, "Information")
+    private val element4 = Element(UUID.randomUUID(), culture4.id!!, "Opera4", ElementType.Story, location4, "Information")
     private val element5 = Element(
         UUID.randomUUID(),
+        culture5.id!!,
         "Opera5",
         ElementType.Event,
         location5,
@@ -64,7 +70,15 @@ class ElementRepositoryTests {
         Dispatchers.setMain(mainThreadSurrogate)
         testSuspend(Dispatchers.Main) {
             newSuspendedTransaction {
+                create(Cultures)
                 create(Elements)
+
+                insertCulture(culture1)
+                insertCulture(culture2)
+                insertCulture(culture3)
+                insertCulture(culture4)
+                insertCulture(culture5)
+
                 insertElement(element1)
                 insertElement(element2)
                 insertElement(element3)
