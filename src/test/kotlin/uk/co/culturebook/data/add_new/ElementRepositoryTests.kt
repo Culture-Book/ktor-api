@@ -22,6 +22,7 @@ import uk.co.culturebook.modules.culture.add_new.data.database.repositories.Elem
 import uk.co.culturebook.modules.culture.add_new.data.database.tables.Elements
 import uk.co.culturebook.modules.culture.add_new.data.models.Element
 import uk.co.culturebook.modules.culture.add_new.data.models.ElementType
+import uk.co.culturebook.modules.culture.add_new.data.models.EventType
 import uk.co.culturebook.modules.culture.add_new.data.models.Location
 import java.time.LocalDateTime
 import java.util.*
@@ -35,16 +36,17 @@ class ElementRepositoryTests {
     private val location3 = Location(0.0, 0.1)
     private val location4 = Location(1.0, 1.2)
     private val location5 = Location(1.0, 1.1)
-    private val element1 = Element(UUID.randomUUID(), "Opera1", ElementType.Food(), location1, "Information")
-    private val element2 = Element(UUID.randomUUID(), "Opera2", ElementType.Music(), location2, "Information")
-    private val element3 = Element(UUID.randomUUID(), "Opera3", ElementType.PoI(), location3, "Information")
-    private val element4 = Element(UUID.randomUUID(), "Opera4", ElementType.Story(), location4, "Information")
+    private val element1 = Element(UUID.randomUUID(), "Opera1", ElementType.Food, location1, "Information")
+    private val element2 = Element(UUID.randomUUID(), "Opera2", ElementType.Music, location2, "Information")
+    private val element3 = Element(UUID.randomUUID(), "Opera3", ElementType.PoI, location3, "Information")
+    private val element4 = Element(UUID.randomUUID(), "Opera4", ElementType.Story, location4, "Information")
     private val element5 = Element(
         UUID.randomUUID(),
         "Opera5",
-        ElementType.Event(LocalDateTime.parse("2019-01-21T05:47:20.949"), location3),
+        ElementType.Event,
         location5,
-        "Information"
+        "Information",
+        EventType(LocalDateTime.parse("2019-01-21T05:47:20.949"), location3),
     )
 
     private val mainThreadSurrogate = newSingleThreadContext("UI thread")
@@ -92,11 +94,11 @@ class ElementRepositoryTests {
 
     @Test
     fun testGetDuplicateElements() = testSuspend(Dispatchers.Main) {
-        val elements = ElementRepository.getDuplicateElement("Opera", ElementType.PoI().name)
+        val elements = ElementRepository.getDuplicateElement("Opera", ElementType.PoI.name)
         assertEquals(1, elements.size)
         assertEquals(element3, elements.first())
 
-        val elements1 = ElementRepository.getDuplicateElement("What what", ElementType.Music().name)
+        val elements1 = ElementRepository.getDuplicateElement("What what", ElementType.Music.name)
         assertEquals(0, elements1.size)
     }
 

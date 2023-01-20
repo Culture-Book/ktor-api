@@ -7,9 +7,11 @@ import java.util.*
 @Serializable
 data class Element(
     @Serializable(with = UUIDSerializer::class)
-    val id: UUID,
+    val id: UUID = UUID.randomUUID(),
     val name: String,
     val type: ElementType,
     val location: Location,
-    val information: String
+    val information: String,
+    val eventType: EventType? = null,
+    val linkElements: List<@Serializable(with = UUIDSerializer::class) UUID> = emptyList()
 )

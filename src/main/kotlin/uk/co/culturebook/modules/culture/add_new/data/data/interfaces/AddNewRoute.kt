@@ -25,6 +25,13 @@ sealed interface AddNewRoute {
     object Element : AddNewRoute {
         override val route: String = "element"
 
+        object Submit : AddNewRoute {
+            override val route: String = "${Element.route}/submit"
+            object Upload : AddNewRoute {
+                override val route: String = "${Submit.route}/upload"
+            }
+        }
+
         object Duplicate : AddNewRoute {
             override val route: String = "${Element.route}/duplicate"
             const val nameParam = "name"

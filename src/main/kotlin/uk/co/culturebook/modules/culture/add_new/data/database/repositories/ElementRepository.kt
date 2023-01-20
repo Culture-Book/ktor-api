@@ -1,15 +1,18 @@
 package uk.co.culturebook.modules.culture.add_new.data.database.repositories
 
+import io.ktor.client.request.*
+import io.ktor.http.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
+import uk.co.culturebook.Constants
+import uk.co.culturebook.modules.culture.add_new.client
 import uk.co.culturebook.modules.culture.add_new.data.database.tables.Elements
+import uk.co.culturebook.modules.culture.add_new.data.database.tables.LinkedElements
 import uk.co.culturebook.modules.culture.add_new.data.interfaces.ElementDao
-import uk.co.culturebook.modules.culture.add_new.data.models.Element
-import uk.co.culturebook.modules.culture.add_new.data.models.ElementType
-import uk.co.culturebook.modules.culture.add_new.data.models.Location
-import uk.co.culturebook.modules.culture.add_new.data.models.decodeElementType
+import uk.co.culturebook.modules.culture.add_new.data.interfaces.external.MediaRoute
+import uk.co.culturebook.modules.culture.add_new.data.models.*
 import uk.co.culturebook.modules.database.dbQuery
 import uk.co.culturebook.modules.database.rawQuery
 import uk.co.culturebook.utils.toUUID
@@ -25,8 +28,9 @@ object ElementRepository : ElementDao {
         return Element(
             id = resultRow[Elements.id],
             name = resultRow[Elements.name],
-            type = resultRow[Elements.type].decodeElementType(location, eventStartDate),
+            type = resultRow[Elements.type].decodeElementType(),
             location = Location(resultRow[Elements.loc_lat], resultRow[Elements.loc_lon]),
+            eventType = location?.let { EventType(eventStartDate!!, location) },
             information = resultRow[Elements.information],
         )
     }
@@ -47,12 +51,30 @@ object ElementRepository : ElementDao {
             elements += Element(
                 id = resultSet.getString(Elements.id.name).toUUID(),
                 name = resultSet.getString(Elements.name.name),
-                type = resultSet.getString(Elements.type.name).decodeElementType(eventLocation, eventStartDate),
+                type = resultSet.getString(Elements.type.name).decodeElementType(),
                 location = location,
+                eventType = eventLocation?.let { EventType(eventStartDate!!, eventLocation) },
                 information = resultSet.getString(Elements.information.name),
             ) to resultSet.getDouble("distance")
         }
         elements.toList()
+    }
+
+    override suspend fun createBucketForElement(
+        request: BucketRequest,
+        apiKey: String,
+        bearer: String,
+        fileHost: String
+    ): Boolean {
+        val response = client.post(MediaRoute.BucketRoute.getBucket(fileHost)) {
+            headers {
+                append(Constants.Headers.Authorization, "Bearer $bearer")
+                append(Constants.Headers.ApiKey, apiKey)
+            }
+            contentType(ContentType.Application.Json)
+            setBody(request)
+        }
+        return response.status == HttpStatusCode.OK
     }
 
     override suspend fun getElement(id: UUID): Element? = dbQuery {
@@ -76,6 +98,38 @@ object ElementRepository : ElementDao {
         rawQuery(query, ::resultSetToElements)?.map { it.first } ?: emptyList()
     }
 
+    override suspend fun uploadMedia(
+        apiKey: String,
+        bearer: String,
+        fileHost: String,
+        files: List<MediaFile>
+    ): List<MediaFile> {
+        val results = arrayListOf<MediaFile>()
+        files.forEach { file ->
+            val response = client.post(file.getUri(fileHost).toURL()) {
+                headers {
+                    append(Constants.Headers.Authorization, "Bearer $bearer")
+                    append(Constants.Headers.ApiKey, apiKey)
+                }
+                contentType(ContentType.Any)
+                setBody(file.data)
+            }
+
+            if (response.status == HttpStatusCode.OK) {
+                results += file
+            }
+        }
+        return results
+    }
+
+    override suspend fun linkElements(parentId: UUID, elementIds: List<UUID>): Boolean = dbQuery {
+        if (elementIds.isEmpty()) return@dbQuery true
+        LinkedElements.batchInsert(elementIds) {
+            set(LinkedElements.parent_element_id, parentId)
+            set(LinkedElements.child_element_id, it)
+        }.isNotEmpty()
+    }
+
     override suspend fun insertElement(element: Element): Element? = dbQuery {
         val statement = Elements.insert {
             it[id] = element.id
@@ -83,9 +137,9 @@ object ElementRepository : ElementDao {
             it[type] = element.type.name
             it[loc_lat] = element.location.latitude
             it[loc_lon] = element.location.longitude
-            it[event_start_date] = if (element.type is ElementType.Event) element.type.startDateTime else null
-            it[event_loc_lat] = if (element.type is ElementType.Event) element.type.startLocation.latitude else null
-            it[event_loc_lon] = if (element.type is ElementType.Event) element.type.startLocation.longitude else null
+            it[event_start_date] = if (element.eventType != null) element.eventType.startDateTime else null
+            it[event_loc_lat] = if (element.eventType != null) element.eventType.location.latitude else null
+            it[event_loc_lon] = if (element.eventType != null) element.eventType.location.longitude else null
             it[information] = element.information
         }
         statement.resultedValues?.singleOrNull()?.let(::rowToElement)
@@ -102,9 +156,9 @@ object ElementRepository : ElementDao {
             it[type] = element.type.name
             it[loc_lat] = element.location.latitude
             it[loc_lon] = element.location.longitude
-            it[event_start_date] = if (element.type is ElementType.Event) element.type.startDateTime else null
-            it[event_loc_lat] = if (element.type is ElementType.Event) element.type.startLocation.latitude else null
-            it[event_loc_lon] = if (element.type is ElementType.Event) element.type.startLocation.longitude else null
+            it[event_start_date] = if (element.eventType != null) element.eventType.startDateTime else null
+            it[event_loc_lat] = if (element.eventType != null) element.eventType.location.latitude else null
+            it[event_loc_lon] = if (element.eventType != null) element.eventType.location.longitude else null
             it[information] = element.information
         } > 0
     }

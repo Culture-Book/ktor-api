@@ -9,15 +9,17 @@ sealed interface ElementState {
         data class AddElement(val element: Element) : Success
 
         @Serializable
-        data class GetElements(val elements: List<Element>) : Success
-
-        @Serializable
-        data class GetElement(val element: Element) : Success
+        data class UploadSuccess(val keys: List<String>) : Success
     }
 
     @Serializable
     enum class Error : ElementState {
         Generic,
-        DuplicateElement
+        DuplicateElement,
+        FailedToAddElement,
+        FailedToLinkElements,
+        FailedToUploadFiles,
+        NoBucketName,
+        FailedToCreateBucket
     }
 }
