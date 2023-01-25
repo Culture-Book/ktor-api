@@ -116,7 +116,7 @@ class CultureRepositoryTests {
     @Test
     fun testInsertDuplicateCulture() = testSuspend(Dispatchers.Main) {
         val culture1_new = Culture(UUID.randomUUID(), "Opera1", location1)
-        val state = addCulture(culture1_new)
+        val state = addCulture(culture1_new, location1)
         assertEquals(CultureState.Error.DuplicateCulture, state)
     }
 }
