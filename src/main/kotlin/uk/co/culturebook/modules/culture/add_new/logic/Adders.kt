@@ -7,11 +7,12 @@ import uk.co.culturebook.modules.culture.add_new.data.interfaces.ContributionSta
 import uk.co.culturebook.modules.culture.add_new.data.interfaces.CultureState
 import uk.co.culturebook.modules.culture.add_new.data.interfaces.ElementState
 import uk.co.culturebook.modules.culture.add_new.data.models.*
+import uk.co.culturebook.utils.fuzzySearchStrings
 
-internal suspend fun addCulture(culture: Culture): CultureState {
-    val culturesWithSimilarName = CultureRepository.getCulturesByName(culture.name)
-
-    return if (culturesWithSimilarName.isEmpty()) {
+internal suspend fun addCulture(culture: Culture, location: Location): CultureState {
+    val nearbyCultures = CultureRepository.getCulturesByLocation(location)
+    val isNotDuplicate = nearbyCultures.map { it.name }.fuzzySearchStrings(culture.name, 0.5).isEmpty()
+    return if (isNotDuplicate) {
         CultureRepository.insertCulture(culture)?.let { CultureState.Success.AddCulture(culture) }
             ?: CultureState.Error.Generic
     } else {
