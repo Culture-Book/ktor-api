@@ -17,18 +17,18 @@ import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
-import uk.co.culturebook.modules.culture.add_new.location.data.database.repositories.CultureRepository
-import uk.co.culturebook.modules.culture.add_new.location.data.database.repositories.CultureRepository.insertCulture
-import uk.co.culturebook.modules.culture.add_new.location.data.database.tables.Cultures
-import uk.co.culturebook.modules.culture.add_new.location.data.interfaces.CultureState
-import uk.co.culturebook.modules.culture.add_new.location.data.models.Culture
-import uk.co.culturebook.modules.culture.add_new.location.data.models.Location
-import uk.co.culturebook.modules.culture.add_new.location.logic.addCulture
+import uk.co.culturebook.modules.culture.add_new.data.database.repositories.CultureRepository
+import uk.co.culturebook.modules.culture.add_new.data.database.repositories.CultureRepository.insertCulture
+import uk.co.culturebook.modules.culture.add_new.data.database.tables.Cultures
+import uk.co.culturebook.modules.culture.add_new.data.interfaces.CultureState
+import uk.co.culturebook.modules.culture.add_new.data.models.Culture
+import uk.co.culturebook.modules.culture.add_new.data.models.Location
+import uk.co.culturebook.modules.culture.add_new.logic.addCulture
 import java.util.*
 
 @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
 class CultureRepositoryTests {
-    private val dbUrl = "jdbc:h2:mem:test"
+    private val dbUrl = "jdbc:h2:mem:test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;"
     private val dbDriver = "org.h2.Driver"
     private val location1 = Location(48.8588443, 2.2943506)
     private val location2 = Location(48.8588443, 2.1943506)

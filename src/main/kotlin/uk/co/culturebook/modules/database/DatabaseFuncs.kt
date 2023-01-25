@@ -38,7 +38,7 @@ internal fun Transaction.similarityFunction() {
         is PostgreSQLDialect -> exec(
             """
                 CREATE EXTENSION IF NOT EXISTS pg_trgm;
-                SET pg_trgm.similarity_threshold = 0.8;  
+                SET pg_trgm.similarity_threshold = 0.7;  
                 
                 CREATE OR REPLACE FUNCTION MY_SIMILARITY(str1 text, str2 text) RETURNS real AS ${'$'}${'$'}
                 SELECT similarity(str1, str2)

@@ -15,7 +15,9 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import uk.co.culturebook.modules.authentication.data.database.tables.PasswordResets
 import uk.co.culturebook.modules.authentication.data.database.tables.UserTokens
 import uk.co.culturebook.modules.authentication.data.database.tables.Users
-import uk.co.culturebook.modules.culture.add_new.location.data.database.tables.Cultures
+import uk.co.culturebook.modules.culture.add_new.data.database.tables.*
+import uk.co.culturebook.modules.culture.add_new.data.database.tables.contribution.*
+import uk.co.culturebook.modules.culture.add_new.data.database.tables.element.*
 import uk.co.culturebook.modules.database.DatabaseConfig.driver
 import uk.co.culturebook.modules.database.DatabaseConfig.idleTimeout
 import uk.co.culturebook.modules.database.DatabaseConfig.password
@@ -43,10 +45,30 @@ fun Application.databaseModule() =
     try {
         val db = Database.connect(environment.config.hikariConfig)
         transaction(db) {
+            // Auth tables
             SchemaUtils.create(Cultures)
             SchemaUtils.create(Users)
             SchemaUtils.create(UserTokens)
             SchemaUtils.create(PasswordResets)
+
+            // Element Tables
+            SchemaUtils.create(Elements)
+            SchemaUtils.create(Contributions)
+            SchemaUtils.create(Comments)
+            SchemaUtils.create(Reactions)
+            SchemaUtils.create(Media)
+
+            // M-M tables
+            SchemaUtils.create(LinkedElements)
+            SchemaUtils.create(ElementComments)
+            SchemaUtils.create(ElementReactions)
+            SchemaUtils.create(ElementMedia)
+            SchemaUtils.create(LinkedContributions)
+            SchemaUtils.create(ContributionComments)
+            SchemaUtils.create(ContributionReactions)
+            SchemaUtils.create(ContributionMedia)
+
+            // Custom functions
             getDistanceFunction()
             similarityFunction()
         }

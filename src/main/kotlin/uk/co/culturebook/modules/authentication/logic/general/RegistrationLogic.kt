@@ -11,7 +11,7 @@ import uk.co.culturebook.modules.authentication.generateAccessJwt
 import uk.co.culturebook.modules.authentication.logic.utils.generateUserToken
 import uk.co.culturebook.modules.authentication.logic.utils.isProperEmail
 import uk.co.culturebook.modules.authentication.logic.utils.isProperPassword
-import uk.co.culturebook.utils.generateUUID
+import uk.co.culturebook.utils.toUUIDOrRandom
 
 suspend fun registerUser(config: ApplicationConfig, callUser: User): AuthState {
     val decryptedEmail = callUser.email.decodeOAuth(config)
@@ -30,7 +30,7 @@ suspend fun registerUser(config: ApplicationConfig, callUser: User): AuthState {
     }
 
     val user = User(
-        userId = callUser.userId.generateUUID().toString(),
+        userId = callUser.userId.toUUIDOrRandom().toString(),
         profileUri = callUser.profileUri,
         displayName = callUser.displayName,
         password = callUser.password,
