@@ -36,7 +36,7 @@ internal fun Route.getElementRoutes() {
 
         val duplicates = getDuplicateElements(name, type)
 
-        if (duplicates.isEmpty()) call.respond(HttpStatusCode.OK) else call.respond(HttpStatusCode.Conflict, duplicates)
+        call.respond(HttpStatusCode.OK, duplicates)
     }
 }
 
