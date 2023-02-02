@@ -41,10 +41,14 @@ class ElementRepositoryTests {
     private val culture3 = Culture(UUID.randomUUID(), "Opera3", location3)
     private val culture4 = Culture(UUID.randomUUID(), "Opera4", location4)
     private val culture5 = Culture(UUID.randomUUID(), "Opera5", location5)
-    private val element1 = Element(UUID.randomUUID(), culture1.id!!, "Opera1", ElementType.Food, location1, "Information")
-    private val element2 = Element(UUID.randomUUID(), culture2.id!!, "Opera2", ElementType.Music, location2, "Information")
-    private val element3 = Element(UUID.randomUUID(), culture3.id!!, "Opera3", ElementType.PoI, location3, "Information")
-    private val element4 = Element(UUID.randomUUID(), culture4.id!!, "Opera4", ElementType.Story, location4, "Information")
+    private val element1 =
+        Element(UUID.randomUUID(), culture1.id!!, "Opera1", ElementType.Food, location1, "Information")
+    private val element2 =
+        Element(UUID.randomUUID(), culture2.id!!, "Opera2", ElementType.Music, location2, "Information")
+    private val element3 =
+        Element(UUID.randomUUID(), culture3.id!!, "Opera3", ElementType.PoI, location3, "Information")
+    private val element4 =
+        Element(UUID.randomUUID(), culture4.id!!, "Opera4", ElementType.Story, location4, "Information")
     private val element5 = Element(
         UUID.randomUUID(),
         culture5.id!!,
@@ -114,6 +118,16 @@ class ElementRepositoryTests {
 
         val elements1 = ElementRepository.getDuplicateElement("What what", ElementType.Music.name)
         assertEquals(0, elements1.size)
+
+        val diffElement = Element(
+            cultureId = UUID.randomUUID(),
+            information = "hello",
+            location = Location(99.9, 99.9),
+            name = "A completely different and new name",
+            type = ElementType.Story
+        )
+        val elements2 = ElementRepository.getDuplicateElement(diffElement.name, diffElement.type.name)
+        assert(elements2.isEmpty())
     }
 
     @Test
