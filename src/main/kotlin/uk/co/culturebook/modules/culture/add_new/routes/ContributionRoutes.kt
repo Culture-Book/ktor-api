@@ -7,15 +7,16 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.*
-import io.ktor.utils.io.core.*
+import io.ktor.utils.io.jvm.javaio.*
+import kotlinx.serialization.json.Json
 import uk.co.culturebook.modules.culture.add_new.data.AddNewConfig.fileHost
 import uk.co.culturebook.modules.culture.add_new.data.AddNewConfig.hostApiKey
 import uk.co.culturebook.modules.culture.add_new.data.AddNewConfig.hostToken
 import uk.co.culturebook.modules.culture.add_new.data.data.interfaces.AddNewRoute
 import uk.co.culturebook.modules.culture.add_new.data.database.repositories.ContributionRepository
 import uk.co.culturebook.modules.culture.add_new.data.interfaces.ContributionState
-import uk.co.culturebook.modules.culture.add_new.data.models.BucketNameKey
 import uk.co.culturebook.modules.culture.add_new.data.models.Contribution
+import uk.co.culturebook.modules.culture.add_new.data.models.ContributionKey
 import uk.co.culturebook.modules.culture.add_new.data.models.MediaFile
 import uk.co.culturebook.modules.culture.add_new.data.models.isValidElementTypeName
 import uk.co.culturebook.modules.culture.add_new.logic.addContribution
@@ -40,55 +41,47 @@ internal fun Route.getContributionRoutes() {
     }
 }
 
-internal fun Route.addContributionRoutes() {
+internal fun Route.uploadContributionRoute() {
     val config = environment!!.config
     post(AddNewRoute.Contribution.Submit.route) {
-        val callContribution = call.receive<Contribution>()
-        val contributionState = addContribution(
-            apiKey = config.hostApiKey,
-            bearer = config.hostToken,
-            fileHost = config.fileHost,
-            contribution = callContribution
-        )
-        if (contributionState is ContributionState.Success.AddContribution) {
-            call.respond(HttpStatusCode.OK, contributionState.contribution)
-        } else {
-            ContributionRepository.deleteContribution(callContribution.id)
-            call.respond(HttpStatusCode.BadRequest, contributionState)
-        }
-    }
-}
-
-internal fun Route.uploadContributionMediaRoute() {
-    val config = environment!!.config
-    post(AddNewRoute.Contribution.Submit.Upload.route) {
         val multiPartData = call.receiveMultipart()
         val mediaFiles = arrayListOf<MediaFile>()
-        var bucketName: String? = null
         val parts = multiPartData.readAllParts()
 
-        parts.forEach { part ->
-            if (part is PartData.FormItem && part.name == BucketNameKey) bucketName = part.value
-        }
+        val contributionPart = parts.find { part -> part is PartData.FormItem && part.name == ContributionKey }
+        val contribution = if (contributionPart is PartData.FormItem) {
+            Json.decodeFromString(Contribution.serializer(), contributionPart.value)
+        } else null
 
-        if (bucketName == null) {
+        if (contribution == null) {
             call.respond(HttpStatusCode.BadRequest, ContributionState.Error.NoBucketName)
             return@post
+        } else {
+            val state = addContribution(
+                apiKey = config.hostApiKey,
+                bearer = config.hostToken,
+                fileHost = config.fileHost,
+                contribution = contribution
+            )
+            if (state is ContributionState.Error) {
+                ContributionRepository.deleteContribution(contribution.id)
+                call.respond(HttpStatusCode.BadRequest, state)
+                return@post
+            }
         }
 
-        parts.forEach { part ->
-            var bytes: ByteArray? = null
-
-            when (part) {
-                is PartData.BinaryChannelItem -> part.provider().readAvailable { bytes = it.moveToByteArray() }
-                is PartData.BinaryItem -> bytes = part.provider().readBytes()
-                is PartData.FileItem -> bytes = part.provider().readBytes()
-                else -> {}
+        for (part in parts) {
+            val stream = when (part) {
+                is PartData.BinaryChannelItem -> part.provider()
+                is PartData.BinaryItem -> part.provider().asStream().toByteReadChannel()
+                is PartData.FileItem -> part.provider().asStream().toByteReadChannel()
+                else -> null
             }
-            bytes?.let {
+
+            stream?.let {
                 mediaFiles += MediaFile(
                     UUID.randomUUID().toString(),
-                    bucketName!!,
+                    contribution.id.toString(),
                     it,
                     part.contentType?.contentType ?: ContentType.Any.contentType
                 )
@@ -105,8 +98,8 @@ internal fun Route.uploadContributionMediaRoute() {
         if (uploadFilesState is ContributionState.Success.UploadSuccess) {
             call.respond(HttpStatusCode.OK, uploadFilesState.keys)
         } else {
+            ContributionRepository.deleteContribution(contribution.id)
             call.respond(HttpStatusCode.BadRequest, uploadFilesState)
         }
     }
-
 }

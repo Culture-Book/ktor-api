@@ -7,7 +7,8 @@ import uk.co.culturebook.modules.culture.add_new.data.database.tables.element.El
 
 object Contributions : Table() {
     val id = uuid("contribution_id").autoGenerate()
-    val element_id = uuid("element_id").references(Elements.id,
+    val element_id = uuid("element_id").references(
+        Elements.id,
         onDelete = ReferenceOption.CASCADE,
         onUpdate = ReferenceOption.CASCADE
     )

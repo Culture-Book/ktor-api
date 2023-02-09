@@ -27,10 +27,6 @@ sealed interface AddNewRoute {
 
         object Submit : AddNewRoute {
             override val route: String = "${Element.route}/submit"
-
-            object Upload : AddNewRoute {
-                override val route: String = "${Submit.route}/upload"
-            }
         }
 
         object Duplicate : AddNewRoute {

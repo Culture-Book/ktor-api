@@ -31,13 +31,11 @@ fun Application.addNewModule() {
             addNewCulture()
             getCulture()
 
-            addElementRoutes()
-            uploadMediaRoute()
+            submitElement()
             getElementRoutes()
 
             getContributionRoutes()
-            addContributionRoutes()
-            uploadContributionMediaRoute()
+            uploadContributionRoute()
         }
     }
 }

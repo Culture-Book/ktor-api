@@ -49,7 +49,7 @@ internal suspend fun addElement(
     return ElementState.Success.AddElement(insertElement)
 }
 
-internal suspend fun uploadMedia(
+internal suspend fun uploadElementMedia(
     apiKey: String,
     bearer: String,
     fileHost: String,

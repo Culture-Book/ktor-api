@@ -115,7 +115,7 @@ object ContributionRepository : ContributionDao {
                     append(Constants.Headers.ApiKey, apiKey)
                 }
                 contentType(ContentType.Any)
-                setBody(file.data)
+                setBody(file.dataStream)
             }
 
             if (response.status == HttpStatusCode.OK) {

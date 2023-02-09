@@ -7,20 +7,21 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.*
-import io.ktor.utils.io.core.*
+import io.ktor.utils.io.jvm.javaio.*
+import kotlinx.serialization.json.Json
 import uk.co.culturebook.modules.culture.add_new.data.AddNewConfig.fileHost
 import uk.co.culturebook.modules.culture.add_new.data.AddNewConfig.hostApiKey
 import uk.co.culturebook.modules.culture.add_new.data.AddNewConfig.hostToken
 import uk.co.culturebook.modules.culture.add_new.data.data.interfaces.AddNewRoute
-import uk.co.culturebook.modules.culture.add_new.data.database.repositories.ElementRepository
+import uk.co.culturebook.modules.culture.add_new.data.database.repositories.ElementRepository.deleteElement
 import uk.co.culturebook.modules.culture.add_new.data.interfaces.ElementState
-import uk.co.culturebook.modules.culture.add_new.data.models.BucketNameKey
 import uk.co.culturebook.modules.culture.add_new.data.models.Element
+import uk.co.culturebook.modules.culture.add_new.data.models.ElementKey
 import uk.co.culturebook.modules.culture.add_new.data.models.MediaFile
 import uk.co.culturebook.modules.culture.add_new.data.models.isValidElementTypeName
 import uk.co.culturebook.modules.culture.add_new.logic.addElement
 import uk.co.culturebook.modules.culture.add_new.logic.getDuplicateElements
-import uk.co.culturebook.modules.culture.add_new.logic.uploadMedia
+import uk.co.culturebook.modules.culture.add_new.logic.uploadElementMedia
 import uk.co.culturebook.utils.forceNotNull
 import java.util.*
 
@@ -40,62 +41,54 @@ internal fun Route.getElementRoutes() {
     }
 }
 
-internal fun Route.addElementRoutes() {
+internal fun Route.submitElement() {
     val config = environment!!.config
     post(AddNewRoute.Element.Submit.route) {
-        val callElement = call.receive<Element>()
-        val elementState = addElement(
-            apiKey = config.hostApiKey,
-            bearer = config.hostToken,
-            fileHost = config.fileHost,
-            element = callElement
-        )
-        if (elementState is ElementState.Success.AddElement) {
-            call.respond(HttpStatusCode.OK, elementState.element)
-        } else {
-            ElementRepository.deleteElement(callElement.id)
-            call.respond(HttpStatusCode.BadRequest, elementState)
-        }
-    }
-}
-
-internal fun Route.uploadMediaRoute() {
-    val config = environment!!.config
-    post(AddNewRoute.Element.Submit.Upload.route) {
         val multiPartData = call.receiveMultipart()
         val mediaFiles = arrayListOf<MediaFile>()
-        var bucketName: String? = null
         val parts = multiPartData.readAllParts()
 
-        parts.forEach { part ->
-            if (part is PartData.FormItem && part.name == BucketNameKey) bucketName = part.value
-        }
+        val elementPart = parts.find { part -> part is PartData.FormItem && part.name == ElementKey }
+        val element = if (elementPart is PartData.FormItem) {
+            Json.decodeFromString(Element.serializer(), elementPart.value)
+        } else null
 
-        if (bucketName == null) {
+        if (element == null) {
             call.respond(HttpStatusCode.BadRequest, ElementState.Error.NoBucketName)
             return@post
+        } else {
+            val state = addElement(
+                apiKey = config.hostApiKey,
+                bearer = config.hostToken,
+                fileHost = config.fileHost,
+                element = element
+            )
+            if (state is ElementState.Error) {
+                deleteElement(element.id)
+                call.respond(HttpStatusCode.BadRequest, state)
+                return@post
+            }
         }
 
-        parts.forEach { part ->
-            var bytes: ByteArray? = null
-
-            when (part) {
-                is PartData.BinaryChannelItem -> part.provider().readAvailable { bytes = it.moveToByteArray() }
-                is PartData.BinaryItem -> bytes = part.provider().readBytes()
-                is PartData.FileItem -> bytes = part.provider().readBytes()
-                else -> {}
+        for (part in parts) {
+            val stream = when (part) {
+                is PartData.BinaryChannelItem -> part.provider()
+                is PartData.BinaryItem -> part.provider().asStream().toByteReadChannel()
+                is PartData.FileItem -> part.provider().asStream().toByteReadChannel()
+                else -> null
             }
-            bytes?.let {
+
+            stream?.let {
                 mediaFiles += MediaFile(
                     UUID.randomUUID().toString(),
-                    bucketName!!,
+                    element.id.toString(),
                     it,
                     part.contentType?.contentType ?: ContentType.Any.contentType
                 )
             }
         }
 
-        val uploadFilesState = uploadMedia(
+        val uploadFilesState = uploadElementMedia(
             apiKey = config.hostApiKey,
             bearer = config.hostToken,
             fileHost = config.fileHost,
@@ -105,8 +98,8 @@ internal fun Route.uploadMediaRoute() {
         if (uploadFilesState is ElementState.Success.UploadSuccess) {
             call.respond(HttpStatusCode.OK, uploadFilesState.keys)
         } else {
+            deleteElement(element.id)
             call.respond(HttpStatusCode.BadRequest, uploadFilesState)
         }
     }
-
 }
