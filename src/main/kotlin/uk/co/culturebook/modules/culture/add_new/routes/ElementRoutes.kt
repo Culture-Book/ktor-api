@@ -88,18 +88,21 @@ internal fun Route.submitElement() {
             }
         }
 
-        val uploadFilesState = uploadElementMedia(
-            apiKey = config.hostApiKey,
-            bearer = config.hostToken,
-            fileHost = config.fileHost,
-            mediaFiles = mediaFiles
-        )
-
-        if (uploadFilesState is ElementState.Success.UploadSuccess) {
-            call.respond(HttpStatusCode.OK, uploadFilesState.keys)
+        if (mediaFiles.isNotEmpty()) {
+            val uploadFilesState = uploadElementMedia(
+                apiKey = config.hostApiKey,
+                bearer = config.hostToken,
+                fileHost = config.fileHost,
+                mediaFiles = mediaFiles
+            )
+            if (uploadFilesState is ElementState.Success.UploadSuccess) {
+                call.respond(HttpStatusCode.OK, uploadFilesState.keys)
+            } else {
+                deleteElement(element.id)
+                call.respond(HttpStatusCode.BadRequest, uploadFilesState)
+            }
         } else {
-            deleteElement(element.id)
-            call.respond(HttpStatusCode.BadRequest, uploadFilesState)
+            call.respond(HttpStatusCode.OK, listOf(element.id.toString()))
         }
     }
 }

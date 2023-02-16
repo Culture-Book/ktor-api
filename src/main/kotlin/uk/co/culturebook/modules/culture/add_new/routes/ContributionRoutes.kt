@@ -37,7 +37,7 @@ internal fun Route.getContributionRoutes() {
 
         val duplicates = getDuplicateContributions(name, type)
 
-        if (duplicates.isEmpty()) call.respond(HttpStatusCode.OK) else call.respond(HttpStatusCode.Conflict, duplicates)
+        call.respond(HttpStatusCode.OK, duplicates)
     }
 }
 
@@ -88,18 +88,22 @@ internal fun Route.uploadContributionRoute() {
             }
         }
 
-        val uploadFilesState = uploadContributionMedia(
-            apiKey = config.hostApiKey,
-            bearer = config.hostToken,
-            fileHost = config.fileHost,
-            mediaFiles = mediaFiles
-        )
+        if (mediaFiles.isNotEmpty()) {
+            val uploadFilesState = uploadContributionMedia(
+                apiKey = config.hostApiKey,
+                bearer = config.hostToken,
+                fileHost = config.fileHost,
+                mediaFiles = mediaFiles
+            )
 
-        if (uploadFilesState is ContributionState.Success.UploadSuccess) {
-            call.respond(HttpStatusCode.OK, uploadFilesState.keys)
+            if (uploadFilesState is ContributionState.Success.UploadSuccess) {
+                call.respond(HttpStatusCode.OK, uploadFilesState.keys)
+            } else {
+                ContributionRepository.deleteContribution(contribution.id)
+                call.respond(HttpStatusCode.BadRequest, uploadFilesState)
+            }
         } else {
-            ContributionRepository.deleteContribution(contribution.id)
-            call.respond(HttpStatusCode.BadRequest, uploadFilesState)
+            call.respond(HttpStatusCode.OK, listOf(contribution.id.toString()))
         }
     }
 }

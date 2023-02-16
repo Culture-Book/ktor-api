@@ -133,17 +133,18 @@ object ContributionRepository : ContributionDao {
         }.isNotEmpty()
     }
 
-    override suspend fun insertContribution(element: Contribution): Contribution? = dbQuery {
+    override suspend fun insertContribution(contribution: Contribution): Contribution? = dbQuery {
         val statement = Contributions.insert {
-            it[id] = element.id
-            it[name] = element.name
-            it[type] = element.type.name
-            it[loc_lat] = element.location.latitude
-            it[loc_lon] = element.location.longitude
-            it[event_start_date] = if (element.eventType != null) element.eventType.startDateTime else null
-            it[event_loc_lat] = if (element.eventType != null) element.eventType.location.latitude else null
-            it[event_loc_lon] = if (element.eventType != null) element.eventType.location.longitude else null
-            it[information] = element.information
+            it[id] = contribution.id
+            it[name] = contribution.name
+            it[type] = contribution.type.name
+            it[element_id] = contribution.elementId
+            it[loc_lat] = contribution.location.latitude
+            it[loc_lon] = contribution.location.longitude
+            it[event_start_date] = if (contribution.eventType != null) contribution.eventType.startDateTime else null
+            it[event_loc_lat] = if (contribution.eventType != null) contribution.eventType.location.latitude else null
+            it[event_loc_lon] = if (contribution.eventType != null) contribution.eventType.location.longitude else null
+            it[information] = contribution.information
         }
         statement.resultedValues?.singleOrNull()?.let(::rowToContribution)
     }
