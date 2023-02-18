@@ -36,3 +36,4 @@ out/
 firebase-tools-linux
 
 *.conf
+/local.properties

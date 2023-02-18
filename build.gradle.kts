@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 val ktorVersion: String by project
 val kotlinVersion: String by project
 val logbackVersion: String by project
@@ -9,6 +12,22 @@ val bouncyCastleVersion: String = "1.72.3"
 val firebaseVersion: String = "9.1.1"
 val h2Version: String = "2.1.214"
 
+val localProperties = Properties()
+try {
+    localProperties.load(FileInputStream(rootProject.file("local.properties")))
+} catch (ignored: Exception) {
+}
+
+tasks.withType<JavaExec>() {
+    localProperties["DB_PORT"]?.let { environment("DB_PORT", it) }
+    localProperties["EMAIL_ACCOUNT"]?.let { environment("EMAIL_ACCOUNT", it) }
+    localProperties["EMAIL_HOST"]?.let { environment("EMAIL_HOST", it) }
+    localProperties["EMAIL_PASSWORD"]?.let { environment("EMAIL_PASSWORD", it) }
+    localProperties["SMTP_PORT"]?.let { environment("SMTP_PORT", it) }
+    localProperties["SUPABASE_API_KEY"]?.let { environment("SUPABASE_API_KEY", it) }
+    localProperties["SUPABASE_TOKEN"]?.let { environment("SUPABASE_TOKEN", it) }
+}
+
 plugins {
     application
     kotlin("jvm") version "1.7.20"
@@ -18,11 +37,9 @@ plugins {
 
 group = "uk.co.culturebook"
 version = "0.0.1"
+
 application {
     mainClass.set("uk.co.culturebook.ApplicationKt")
-
-    val isDevelopment: Boolean = project.ext.has("development")
-    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
 }
 
 repositories {
