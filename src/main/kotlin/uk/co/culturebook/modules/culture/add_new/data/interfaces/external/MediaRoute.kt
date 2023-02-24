@@ -11,11 +11,12 @@ sealed interface MediaRoute {
 
     object FileRoute {
         fun getRoute(bucketName: String, fileName: String) = "/object/$bucketName/$fileName"
+        fun getParentRoute(bucketName: String, parent: String, fileName: String) = "/object/$bucketName/$parent/$fileName"
     }
 
     object BucketRoute {
         fun getBucket(fileHost: String) = "${fileHost}/${V1_STORAGE}/bucket"
-        fun getRoute(bucketName: String) = "/object/$bucketName"
+        fun getBucket(fileHost: String, id: String) = "${fileHost}/${V1_STORAGE}/bucket/$id"
         fun getMedia(fileHost: String, bucketName: String) =
             "${fileHost}/${V1_STORAGE}/object/list/$bucketName"
     }

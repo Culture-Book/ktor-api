@@ -97,12 +97,14 @@ internal suspend fun addContribution(
 }
 
 internal suspend fun uploadContributionMedia(
+    parentElement: String,
     apiKey: String,
     bearer: String,
     fileHost: String,
     mediaFiles: List<MediaFile>
 ): ContributionState {
     val files = ContributionRepository.uploadMedia(
+        parent = parentElement,
         apiKey = apiKey,
         bearer = bearer,
         fileHost = fileHost,

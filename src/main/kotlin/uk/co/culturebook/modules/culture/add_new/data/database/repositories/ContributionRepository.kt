@@ -102,6 +102,7 @@ object ContributionRepository : ContributionDao {
     }
 
     override suspend fun uploadMedia(
+        parent: String,
         apiKey: String,
         bearer: String,
         fileHost: String,
@@ -109,7 +110,7 @@ object ContributionRepository : ContributionDao {
     ): List<MediaFile> {
         val results = arrayListOf<MediaFile>()
         files.forEach { file ->
-            val response = client.post(file.getUri(fileHost).toURL()) {
+            val response = client.post(file.getParentUri(fileHost, parent).toURL()) {
                 headers {
                     append(Constants.Headers.Authorization, "Bearer $bearer")
                     append(Constants.Headers.ApiKey, apiKey)
@@ -123,6 +124,27 @@ object ContributionRepository : ContributionDao {
             }
         }
         return results
+    }
+
+    override suspend fun deleteBucketForContribution(
+        request: BucketRequest,
+        apiKey: String,
+        bearer: String,
+        fileHost: String
+    ): Boolean {
+        val response = client.delete(MediaRoute.BucketRoute.getBucket(fileHost, request.id)) {
+            headers {
+                append(Constants.Headers.Authorization, "Bearer $bearer")
+                append(Constants.Headers.ApiKey, apiKey)
+            }
+            contentType(ContentType.Application.Json)
+            setBody(request)
+        }
+        return response.status == HttpStatusCode.OK
+    }
+
+    suspend fun getContrs() = dbQuery {
+        Contributions.selectAll().map { rowToContribution(it) }
     }
 
     override suspend fun linkContributions(parentId: UUID, elementIds: List<UUID>): Boolean = dbQuery {

@@ -79,6 +79,23 @@ object ElementRepository : ElementDao {
         return response.status == HttpStatusCode.OK
     }
 
+    override suspend fun deleteBucketForElement(
+        request: BucketRequest,
+        apiKey: String,
+        bearer: String,
+        fileHost: String
+    ): Boolean {
+        val response = client.delete(MediaRoute.BucketRoute.getBucket(fileHost, request.id)) {
+            headers {
+                append(Constants.Headers.Authorization, "Bearer $bearer")
+                append(Constants.Headers.ApiKey, apiKey)
+            }
+            contentType(ContentType.Application.Json)
+            setBody(request)
+        }
+        return response.status == HttpStatusCode.OK
+    }
+
     override suspend fun getElement(id: UUID): Element? = dbQuery {
         Elements.select { Elements.id eq id }.singleOrNull()?.let(::rowToElement)
     }

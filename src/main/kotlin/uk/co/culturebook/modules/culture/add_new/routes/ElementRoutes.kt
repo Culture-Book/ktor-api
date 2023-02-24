@@ -13,16 +13,16 @@ import uk.co.culturebook.modules.culture.add_new.data.AddNewConfig.fileHost
 import uk.co.culturebook.modules.culture.add_new.data.AddNewConfig.hostApiKey
 import uk.co.culturebook.modules.culture.add_new.data.AddNewConfig.hostToken
 import uk.co.culturebook.modules.culture.add_new.data.data.interfaces.AddNewRoute
+import uk.co.culturebook.modules.culture.add_new.data.database.repositories.ElementRepository.deleteBucketForElement
 import uk.co.culturebook.modules.culture.add_new.data.database.repositories.ElementRepository.deleteElement
+import uk.co.culturebook.modules.culture.add_new.data.database.repositories.MediaRepository
 import uk.co.culturebook.modules.culture.add_new.data.interfaces.ElementState
-import uk.co.culturebook.modules.culture.add_new.data.models.Element
-import uk.co.culturebook.modules.culture.add_new.data.models.ElementKey
-import uk.co.culturebook.modules.culture.add_new.data.models.MediaFile
-import uk.co.culturebook.modules.culture.add_new.data.models.isValidElementTypeName
+import uk.co.culturebook.modules.culture.add_new.data.models.*
 import uk.co.culturebook.modules.culture.add_new.logic.addElement
 import uk.co.culturebook.modules.culture.add_new.logic.getDuplicateElements
 import uk.co.culturebook.modules.culture.add_new.logic.uploadElementMedia
 import uk.co.culturebook.utils.forceNotNull
+import uk.co.culturebook.utils.toUri
 import java.util.*
 
 internal fun Route.getElementRoutes() {
@@ -96,7 +96,23 @@ internal fun Route.submitElement() {
                 mediaFiles = mediaFiles
             )
             if (uploadFilesState is ElementState.Success.UploadSuccess) {
-                call.respond(HttpStatusCode.OK, uploadFilesState.keys)
+                val media = uploadFilesState.keys.map { Media(uri = it.toUri()!!) }
+                val addedMedia = MediaRepository.insertMedia(media)
+                val elementMediaAdded = MediaRepository.insertElementMedia(addedMedia, element)
+
+                if (elementMediaAdded) {
+                    val updatedElement = element.copy(media = addedMedia)
+                    call.respond(HttpStatusCode.OK, updatedElement)
+                } else {
+                    deleteElement(element.id)
+                    deleteBucketForElement(
+                        request = BucketRequest(element.id.toString(), element.id.toString()),
+                        apiKey = config.hostApiKey,
+                        bearer = config.hostToken,
+                        fileHost = config.fileHost
+                    )
+                    call.respond(HttpStatusCode.BadRequest, uploadFilesState)
+                }
             } else {
                 deleteElement(element.id)
                 call.respond(HttpStatusCode.BadRequest, uploadFilesState)

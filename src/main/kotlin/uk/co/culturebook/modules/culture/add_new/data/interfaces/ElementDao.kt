@@ -14,6 +14,13 @@ interface ElementDao {
         fileHost: String,
     ): Boolean
 
+    suspend fun deleteBucketForElement(
+        request: BucketRequest,
+        apiKey: String,
+        bearer: String,
+        fileHost: String,
+    ): Boolean
+
     suspend fun getElement(id: UUID): Element?
     suspend fun getDuplicateElement(name: String, type: String): List<Element>
     suspend fun uploadMedia(apiKey: String, bearer: String, fileHost: String, files: List<MediaFile>): List<MediaFile>

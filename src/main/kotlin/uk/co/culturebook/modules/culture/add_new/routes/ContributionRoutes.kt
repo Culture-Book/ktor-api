@@ -14,15 +14,15 @@ import uk.co.culturebook.modules.culture.add_new.data.AddNewConfig.hostApiKey
 import uk.co.culturebook.modules.culture.add_new.data.AddNewConfig.hostToken
 import uk.co.culturebook.modules.culture.add_new.data.data.interfaces.AddNewRoute
 import uk.co.culturebook.modules.culture.add_new.data.database.repositories.ContributionRepository
+import uk.co.culturebook.modules.culture.add_new.data.database.repositories.ContributionRepository.deleteBucketForContribution
+import uk.co.culturebook.modules.culture.add_new.data.database.repositories.MediaRepository
 import uk.co.culturebook.modules.culture.add_new.data.interfaces.ContributionState
-import uk.co.culturebook.modules.culture.add_new.data.models.Contribution
-import uk.co.culturebook.modules.culture.add_new.data.models.ContributionKey
-import uk.co.culturebook.modules.culture.add_new.data.models.MediaFile
-import uk.co.culturebook.modules.culture.add_new.data.models.isValidElementTypeName
+import uk.co.culturebook.modules.culture.add_new.data.models.*
 import uk.co.culturebook.modules.culture.add_new.logic.addContribution
 import uk.co.culturebook.modules.culture.add_new.logic.getDuplicateContributions
 import uk.co.culturebook.modules.culture.add_new.logic.uploadContributionMedia
 import uk.co.culturebook.utils.forceNotNull
+import uk.co.culturebook.utils.toUri
 import java.util.*
 
 internal fun Route.getContributionRoutes() {
@@ -90,6 +90,7 @@ internal fun Route.uploadContributionRoute() {
 
         if (mediaFiles.isNotEmpty()) {
             val uploadFilesState = uploadContributionMedia(
+                parentElement = contribution.elementId.toString(),
                 apiKey = config.hostApiKey,
                 bearer = config.hostToken,
                 fileHost = config.fileHost,
@@ -97,7 +98,22 @@ internal fun Route.uploadContributionRoute() {
             )
 
             if (uploadFilesState is ContributionState.Success.UploadSuccess) {
-                call.respond(HttpStatusCode.OK, uploadFilesState.keys)
+                val media = uploadFilesState.keys.map { Media(uri = it.toUri()!!) }
+                val addedMedia = MediaRepository.insertMedia(media)
+                val contributionMediaAdded = MediaRepository.insertContributionMedia(addedMedia, contribution)
+                if (contributionMediaAdded) {
+                    val updatedContribution = contribution.copy(media = addedMedia)
+                    call.respond(HttpStatusCode.OK, updatedContribution)
+                } else {
+                    ContributionRepository.deleteContribution(contribution.id)
+                    deleteBucketForContribution(
+                        request = BucketRequest(contribution.id.toString(), contribution.id.toString()),
+                        apiKey = config.hostApiKey,
+                        bearer = config.hostToken,
+                        fileHost = config.fileHost
+                    )
+                    call.respond(HttpStatusCode.BadRequest, uploadFilesState)
+                }
             } else {
                 ContributionRepository.deleteContribution(contribution.id)
                 call.respond(HttpStatusCode.BadRequest, uploadFilesState)

@@ -23,6 +23,15 @@ data class MediaFile(
     fun getUri(fileHost: String): URI =
         URI.create(fileHost + MediaRoute.Version.V1_STORAGE + MediaRoute.FileRoute.getRoute(bucketName, fileName))
 
+    fun getParentUri(fileHost: String, parent: String): URI =
+        URI.create(
+            fileHost + MediaRoute.Version.V1_STORAGE + MediaRoute.FileRoute.getParentRoute(
+                bucketName,
+                parent,
+                fileName
+            )
+        )
+
 }
 
 const val ElementKey = "element"
