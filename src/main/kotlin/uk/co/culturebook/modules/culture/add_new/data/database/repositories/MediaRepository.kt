@@ -14,13 +14,15 @@ import uk.co.culturebook.modules.culture.add_new.data.database.tables.Media as M
 object MediaRepository {
     private fun rowToMedia(resultRow: ResultRow) = Media(
         resultRow[MediaT.id],
-        resultRow[MediaT.uri].toUri()!!)
-
+        resultRow[MediaT.uri].toUri()!!,
+        resultRow[MediaT.contentType]
+        )
 
     suspend fun insertMedia(media: List<Media>) = dbQuery {
         MediaT.batchInsert(media) {
             set(MediaT.id, it.id)
             set(MediaT.uri, it.uri.toString())
+            set(MediaT.contentType, it.contentType)
         }.map(::rowToMedia)
     }
 

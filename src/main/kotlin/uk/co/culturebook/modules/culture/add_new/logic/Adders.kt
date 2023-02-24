@@ -62,7 +62,7 @@ internal suspend fun uploadElementMedia(
         files = mediaFiles,
     )
     if (files.isEmpty()) return ElementState.Error.FailedToUploadFiles
-    return ElementState.Success.UploadSuccess(files.map { it.getUri(fileHost).toString() })
+    return ElementState.Success.UploadSuccess(files.map { it.getUri(fileHost).toString() to it.contentType })
 }
 
 internal suspend fun addContribution(
@@ -111,5 +111,5 @@ internal suspend fun uploadContributionMedia(
         files = mediaFiles,
     )
     if (files.isEmpty()) return ContributionState.Error.FailedToUploadFiles
-    return ContributionState.Success.UploadSuccess(files.map { it.getUri(fileHost).toString() })
+    return ContributionState.Success.UploadSuccess(files.map { it.getUri(fileHost).toString() to it.contentType })
 }

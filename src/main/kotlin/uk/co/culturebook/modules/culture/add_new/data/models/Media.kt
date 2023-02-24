@@ -11,5 +11,6 @@ data class Media(
     @Serializable(with = UUIDSerializer::class)
     val id: UUID = UUID.randomUUID(),
     @Serializable(with = URISerializer::class)
-    val uri: URI
+    val uri: URI,
+    val contentType: String
 )

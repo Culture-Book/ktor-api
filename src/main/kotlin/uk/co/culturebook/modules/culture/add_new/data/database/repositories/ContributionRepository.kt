@@ -115,7 +115,7 @@ object ContributionRepository : ContributionDao {
                     append(Constants.Headers.Authorization, "Bearer $bearer")
                     append(Constants.Headers.ApiKey, apiKey)
                 }
-                contentType(ContentType.Any)
+                contentType(ContentType.parse(file.contentType))
                 setBody(file.dataStream)
             }
 

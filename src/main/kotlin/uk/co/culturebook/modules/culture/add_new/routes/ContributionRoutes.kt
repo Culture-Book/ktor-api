@@ -83,7 +83,7 @@ internal fun Route.uploadContributionRoute() {
                     UUID.randomUUID().toString(),
                     contribution.id.toString(),
                     it,
-                    part.contentType?.contentType ?: ContentType.Any.contentType
+                    "${part.contentType?.contentType ?: "*"}/${part.contentType?.contentSubtype ?: "*"}"
                 )
             }
         }
@@ -98,7 +98,7 @@ internal fun Route.uploadContributionRoute() {
             )
 
             if (uploadFilesState is ContributionState.Success.UploadSuccess) {
-                val media = uploadFilesState.keys.map { Media(uri = it.toUri()!!) }
+                val media = uploadFilesState.media.map { Media(uri = it.first.toUri()!!, contentType = it.second) }
                 val addedMedia = MediaRepository.insertMedia(media)
                 val contributionMediaAdded = MediaRepository.insertContributionMedia(addedMedia, contribution)
                 if (contributionMediaAdded) {

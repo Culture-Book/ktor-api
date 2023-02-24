@@ -9,7 +9,7 @@ sealed interface ElementState {
         data class AddElement(val element: Element) : Success
 
         @Serializable
-        data class UploadSuccess(val keys: List<String>) : Success
+        data class UploadSuccess(val media: List<Pair<String, String>>) : Success
     }
 
     @Serializable

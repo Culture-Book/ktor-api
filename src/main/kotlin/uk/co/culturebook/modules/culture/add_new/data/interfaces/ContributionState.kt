@@ -9,7 +9,7 @@ sealed interface ContributionState {
         data class AddContribution(val contribution: Contribution) : Success
 
         @Serializable
-        data class UploadSuccess(val keys: List<String>) : Success
+        data class UploadSuccess(val media: List<Pair<String, String>>) : Success
     }
 
     @Serializable
