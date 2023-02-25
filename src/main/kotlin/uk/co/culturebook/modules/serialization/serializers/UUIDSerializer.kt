@@ -9,7 +9,7 @@ import kotlinx.serialization.encoding.Encoder
 import java.util.*
 
 object UUIDSerializer : KSerializer<UUID> {
-    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("LocalDateTime", PrimitiveKind.STRING)
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("UUID", PrimitiveKind.STRING)
 
     override fun deserialize(decoder: Decoder): UUID = UUID.fromString(decoder.decodeString())
 

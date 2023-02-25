@@ -34,3 +34,6 @@ out/
 ### VS Code ###
 .vscode/
 firebase-tools-linux
+
+*.conf
+/local.properties
