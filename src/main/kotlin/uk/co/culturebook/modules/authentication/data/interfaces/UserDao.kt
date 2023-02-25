@@ -9,6 +9,6 @@ interface UserDao {
     suspend fun registerUser(user: User): User?
     suspend fun updateTos(userId: String): Boolean
     suspend fun updatePrivacy(userId: String): Boolean
-    suspend fun updatePassword(email: String, password: String): Boolean
+    suspend fun updatePassword(userId: String, password: String): Boolean
     suspend fun deleteUser(userId: String): Boolean
 }

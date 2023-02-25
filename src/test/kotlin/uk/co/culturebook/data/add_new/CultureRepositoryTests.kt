@@ -17,13 +17,13 @@ import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
-import uk.co.culturebook.modules.culture.add_new.data.database.repositories.CultureRepository
-import uk.co.culturebook.modules.culture.add_new.data.database.repositories.CultureRepository.insertCulture
-import uk.co.culturebook.modules.culture.add_new.data.database.tables.Cultures
-import uk.co.culturebook.modules.culture.add_new.data.interfaces.CultureState
-import uk.co.culturebook.modules.culture.add_new.data.models.Culture
-import uk.co.culturebook.modules.culture.add_new.data.models.Location
 import uk.co.culturebook.modules.culture.add_new.logic.addCulture
+import uk.co.culturebook.modules.culture.data.database.repositories.CultureRepository
+import uk.co.culturebook.modules.culture.data.database.repositories.CultureRepository.insertCulture
+import uk.co.culturebook.modules.culture.data.database.tables.Cultures
+import uk.co.culturebook.modules.culture.data.interfaces.CultureState
+import uk.co.culturebook.modules.culture.data.models.Culture
+import uk.co.culturebook.modules.culture.data.models.Location
 import java.util.*
 
 @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)

@@ -1,5 +1,5 @@
-import java.util.Properties
 import java.io.FileInputStream
+import java.util.*
 
 val ktorVersion: String by project
 val kotlinVersion: String by project
@@ -18,7 +18,7 @@ try {
 } catch (ignored: Exception) {
 }
 
-tasks.withType<JavaExec>() {
+tasks.withType<JavaExec> {
     localProperties["DB_PORT"]?.let { environment("DB_PORT", it) }
     localProperties["EMAIL_ACCOUNT"]?.let { environment("EMAIL_ACCOUNT", it) }
     localProperties["EMAIL_HOST"]?.let { environment("EMAIL_HOST", it) }
@@ -30,8 +30,8 @@ tasks.withType<JavaExec>() {
 
 plugins {
     application
-    kotlin("jvm") version "1.7.20"
-    kotlin("plugin.serialization") version "1.7.20"
+    kotlin("jvm") version "1.8.10"
+    kotlin("plugin.serialization") version "1.8.10"
     id("io.ktor.plugin") version "2.1.2"
 }
 

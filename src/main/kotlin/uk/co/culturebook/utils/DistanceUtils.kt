@@ -1,6 +1,6 @@
 package uk.co.culturebook.utils
 
-import uk.co.culturebook.modules.culture.add_new.data.models.Location
+import uk.co.culturebook.modules.culture.data.models.Location
 import java.lang.Math.toRadians
 import kotlin.math.atan2
 import kotlin.math.cos

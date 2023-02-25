@@ -8,7 +8,6 @@ import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
-import uk.co.culturebook.modules.culture.add_new.data.data.interfaces.AddNewRoute
 import uk.co.culturebook.modules.culture.add_new.routes.*
 
 val client by lazy {
@@ -27,7 +26,7 @@ val client by lazy {
 
 fun Application.addNewModule() {
     routing {
-        route(AddNewRoute.AddNewVersion.V1.route) {
+        route(uk.co.culturebook.modules.culture.data.data.interfaces.AddNewRoute.AddNewVersion.V1.route) {
             addNewCulture()
             getCulture()
 

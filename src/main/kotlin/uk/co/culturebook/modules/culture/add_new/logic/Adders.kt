@@ -1,12 +1,11 @@
 package uk.co.culturebook.modules.culture.add_new.logic
 
-import uk.co.culturebook.modules.culture.add_new.data.database.repositories.ContributionRepository
-import uk.co.culturebook.modules.culture.add_new.data.database.repositories.CultureRepository
-import uk.co.culturebook.modules.culture.add_new.data.database.repositories.ElementRepository
-import uk.co.culturebook.modules.culture.add_new.data.interfaces.ContributionState
-import uk.co.culturebook.modules.culture.add_new.data.interfaces.CultureState
-import uk.co.culturebook.modules.culture.add_new.data.interfaces.ElementState
-import uk.co.culturebook.modules.culture.add_new.data.models.*
+import uk.co.culturebook.modules.culture.data.database.repositories.CultureRepository
+import uk.co.culturebook.modules.culture.data.database.repositories.ElementRepository
+import uk.co.culturebook.modules.culture.data.interfaces.ContributionState
+import uk.co.culturebook.modules.culture.data.interfaces.CultureState
+import uk.co.culturebook.modules.culture.data.interfaces.ElementState
+import uk.co.culturebook.modules.culture.data.models.*
 import uk.co.culturebook.utils.fuzzySearchStrings
 
 internal suspend fun addCulture(culture: Culture, location: Location): CultureState {
@@ -72,23 +71,34 @@ internal suspend fun addContribution(
     contribution: Contribution
 ): ContributionState {
     val isDuplicate =
-        ContributionRepository.getDuplicateContribution(contribution.name, contribution.type.name).isNotEmpty()
+        uk.co.culturebook.modules.culture.data.database.repositories.ContributionRepository.getDuplicateContribution(
+            contribution.name,
+            contribution.type.name
+        ).isNotEmpty()
 
     if (isDuplicate) return ContributionState.Error.DuplicateContribution
 
-    val insertedContribution = ContributionRepository.insertContribution(contribution)
-        ?: return ContributionState.Error.FailedToAddContribution
+    val insertedContribution =
+        uk.co.culturebook.modules.culture.data.database.repositories.ContributionRepository.insertContribution(
+            contribution
+        )
+            ?: return ContributionState.Error.FailedToAddContribution
 
-    val linkedElements = ContributionRepository.linkContributions(insertedContribution.id, contribution.linkElements)
+    val linkedElements =
+        uk.co.culturebook.modules.culture.data.database.repositories.ContributionRepository.linkContributions(
+            insertedContribution.id,
+            contribution.linkElements
+        )
 
     if (!linkedElements) return ContributionState.Error.FailedToLinkContributions
 
-    val bucketCreated = ContributionRepository.createBucketForContribution(
-        apiKey = apiKey,
-        bearer = bearer,
-        fileHost = fileHost,
-        request = BucketRequest(id = contribution.id.toString(), name = contribution.id.toString())
-    )
+    val bucketCreated =
+        uk.co.culturebook.modules.culture.data.database.repositories.ContributionRepository.createBucketForContribution(
+            apiKey = apiKey,
+            bearer = bearer,
+            fileHost = fileHost,
+            request = BucketRequest(id = contribution.id.toString(), name = contribution.id.toString())
+        )
 
     if (!bucketCreated) {
         return ContributionState.Error.FailedToCreateBucket
@@ -103,7 +113,7 @@ internal suspend fun uploadContributionMedia(
     fileHost: String,
     mediaFiles: List<MediaFile>
 ): ContributionState {
-    val files = ContributionRepository.uploadMedia(
+    val files = uk.co.culturebook.modules.culture.data.database.repositories.ContributionRepository.uploadMedia(
         parent = parentElement,
         apiKey = apiKey,
         bearer = bearer,

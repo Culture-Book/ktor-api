@@ -1,12 +1,12 @@
 package uk.co.culturebook.modules.culture.add_new.logic
 
-import uk.co.culturebook.modules.culture.add_new.data.database.repositories.ContributionRepository
-import uk.co.culturebook.modules.culture.add_new.data.database.repositories.CultureRepository
-import uk.co.culturebook.modules.culture.add_new.data.database.repositories.ElementRepository
-import uk.co.culturebook.modules.culture.add_new.data.interfaces.CultureState
-import uk.co.culturebook.modules.culture.add_new.data.models.Contribution
-import uk.co.culturebook.modules.culture.add_new.data.models.Element
-import uk.co.culturebook.modules.culture.add_new.data.models.Location
+import uk.co.culturebook.modules.culture.data.database.repositories.ContributionRepository
+import uk.co.culturebook.modules.culture.data.database.repositories.CultureRepository
+import uk.co.culturebook.modules.culture.data.database.repositories.ElementRepository
+import uk.co.culturebook.modules.culture.data.interfaces.CultureState
+import uk.co.culturebook.modules.culture.data.models.Contribution
+import uk.co.culturebook.modules.culture.data.models.Element
+import uk.co.culturebook.modules.culture.data.models.Location
 import java.util.*
 
 internal suspend fun getCulturesByLocation(location: Location) =

@@ -17,12 +17,12 @@ import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
-import uk.co.culturebook.modules.culture.add_new.data.database.repositories.CultureRepository.insertCulture
-import uk.co.culturebook.modules.culture.add_new.data.database.repositories.ElementRepository
-import uk.co.culturebook.modules.culture.add_new.data.database.repositories.ElementRepository.insertElement
-import uk.co.culturebook.modules.culture.add_new.data.database.tables.Cultures
-import uk.co.culturebook.modules.culture.add_new.data.database.tables.element.Elements
-import uk.co.culturebook.modules.culture.add_new.data.models.*
+import uk.co.culturebook.modules.culture.data.database.repositories.CultureRepository.insertCulture
+import uk.co.culturebook.modules.culture.data.database.repositories.ElementRepository
+import uk.co.culturebook.modules.culture.data.database.repositories.ElementRepository.insertElement
+import uk.co.culturebook.modules.culture.data.database.tables.Cultures
+import uk.co.culturebook.modules.culture.data.database.tables.element.Elements
+import uk.co.culturebook.modules.culture.data.models.*
 import java.time.LocalDateTime
 import java.util.*
 
