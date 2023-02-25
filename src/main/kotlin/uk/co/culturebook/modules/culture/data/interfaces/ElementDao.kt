@@ -1,8 +1,6 @@
 package uk.co.culturebook.modules.culture.data.interfaces
 
-import uk.co.culturebook.modules.culture.data.models.BucketRequest
-import uk.co.culturebook.modules.culture.data.models.Element
-import uk.co.culturebook.modules.culture.data.models.MediaFile
+import uk.co.culturebook.modules.culture.data.models.*
 import java.util.*
 
 interface ElementDao {
@@ -20,6 +18,21 @@ interface ElementDao {
         bearer: String,
         fileHost: String,
     ): Boolean
+
+    suspend fun getPreviewElements(
+        location: Location,
+        types: List<ElementType> = emptyList(),
+        kmLimit: Double = 1.0,
+        page: Int = 1,
+        limit: Int = 3
+    ): List<Element>
+
+    suspend fun getPreviewElements(
+        searchString: String,
+        kmLimit: Double = 1.0,
+        page: Int = 0,
+        limit: Int = 3
+    ): List<Element>
 
     suspend fun getElement(id: UUID): Element?
     suspend fun getDuplicateElement(name: String, type: String): List<Element>

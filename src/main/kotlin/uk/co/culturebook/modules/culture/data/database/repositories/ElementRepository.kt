@@ -8,6 +8,7 @@ import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import uk.co.culturebook.Constants
 import uk.co.culturebook.modules.culture.add_new.client
+import uk.co.culturebook.modules.culture.data.database.tables.Cultures
 import uk.co.culturebook.modules.culture.data.database.tables.element.Elements
 import uk.co.culturebook.modules.culture.data.database.tables.element.LinkedElements
 import uk.co.culturebook.modules.culture.data.interfaces.ElementDao
@@ -94,6 +95,51 @@ object ElementRepository : ElementDao {
             setBody(request)
         }
         return response.status == HttpStatusCode.OK
+    }
+
+    override suspend fun getPreviewElements(
+        location: Location,
+        types: List<ElementType>,
+        kmLimit: Double,
+        page: Int,
+        limit: Int
+    ): List<Element> = dbQuery {
+        rawQuery(
+            """
+            SELECT ${Elements.id.name}, ${Elements.culture_id.name}, ${Elements.name.name}, ${Elements.type.name}, ${Elements.loc_lat.name}, ${Elements.loc_lon.name}, ${Elements.event_start_date.name}, ${Elements.event_loc_lat.name}, , ${Elements.event_loc_lon.name}, ${Elements.information.name}, DISTANCE_IN_KM(${Cultures.lat.name}, ${Cultures.lon.name}, ${location.latitude}, ${location.longitude}) as distance
+            FROM ${Elements.tableName}
+            WHERE DISTANCE_IN_KM(${Elements.loc_lat.name}, ${Elements.loc_lon.name}, ${location.latitude}, ${location.longitude}) <= $kmLimit
+            OFFSET ${(page - 1) * limit} ROWS
+            FETCH NEXT $limit ROWS ONLY
+            ORDER BY distance ASC""".trimIndent(),
+            transform = ::resultSetToElements
+        )?.map { it.first } ?: emptyList()
+    }
+
+    override suspend fun getPreviewElements(
+        searchString: String,
+        kmLimit: Double,
+        page: Int,
+        limit: Int
+    ): List<Element> = dbQuery {
+        val query = if (currentDialect is PostgreSQLDialect) {
+            """
+            SELECT *, MY_SIMILARITY(${Elements.name.name}, '$searchString') as distance
+            FROM ${Elements.tableName} 
+            WHERE ${Elements.name.name} % '$searchString'
+            OFFSET ${(page - 1) * limit} ROWS
+            FETCH NEXT $limit ROWS ONLY
+            ORDER BY distance DESC""".trimIndent()
+        } else {
+            """
+            SELECT *, MY_SIMILARITY(${Elements.name.name}, '$searchString') as distance
+            FROM ${Elements.tableName}
+            WHERE MY_SIMILARITY(${Elements.name.name}, '$searchString') > 0.8
+            OFFSET ${(page - 1) * limit} ROWS
+            FETCH NEXT $limit ROWS ONLY
+            ORDER BY distance DESC""".trimIndent()
+        }
+        rawQuery(query, ::resultSetToElements)?.map { it.first } ?: emptyList()
     }
 
     override suspend fun getElement(id: UUID): Element? = dbQuery {
