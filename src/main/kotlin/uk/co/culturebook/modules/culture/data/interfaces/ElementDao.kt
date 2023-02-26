@@ -29,6 +29,7 @@ interface ElementDao {
 
     suspend fun getPreviewElements(
         searchString: String,
+        types: List<ElementType> = emptyList(),
         kmLimit: Double = 1.0,
         page: Int = 0,
         limit: Int = 3

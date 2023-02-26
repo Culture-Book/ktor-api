@@ -104,11 +104,12 @@ object ElementRepository : ElementDao {
         page: Int,
         limit: Int
     ): List<Element> = dbQuery {
+        val typeString = types.joinToString(prefix = "(", postfix = ")", separator = ",")
         rawQuery(
             """
             SELECT ${Elements.id.name}, ${Elements.culture_id.name}, ${Elements.name.name}, ${Elements.type.name}, ${Elements.loc_lat.name}, ${Elements.loc_lon.name}, ${Elements.event_start_date.name}, ${Elements.event_loc_lat.name}, , ${Elements.event_loc_lon.name}, ${Elements.information.name}, DISTANCE_IN_KM(${Cultures.lat.name}, ${Cultures.lon.name}, ${location.latitude}, ${location.longitude}) as distance
             FROM ${Elements.tableName}
-            WHERE DISTANCE_IN_KM(${Elements.loc_lat.name}, ${Elements.loc_lon.name}, ${location.latitude}, ${location.longitude}) <= $kmLimit
+            WHERE DISTANCE_IN_KM(${Elements.loc_lat.name}, ${Elements.loc_lon.name}, ${location.latitude}, ${location.longitude}) <= $kmLimit AND ${Elements.type.name} IN $typeString
             OFFSET ${(page - 1) * limit} ROWS
             FETCH NEXT $limit ROWS ONLY
             ORDER BY distance ASC""".trimIndent(),
@@ -118,15 +119,17 @@ object ElementRepository : ElementDao {
 
     override suspend fun getPreviewElements(
         searchString: String,
+        types: List<ElementType>,
         kmLimit: Double,
         page: Int,
         limit: Int
     ): List<Element> = dbQuery {
+        val typeString = types.joinToString(prefix = "(", postfix = ")", separator = ",")
         val query = if (currentDialect is PostgreSQLDialect) {
             """
             SELECT *, MY_SIMILARITY(${Elements.name.name}, '$searchString') as distance
             FROM ${Elements.tableName} 
-            WHERE ${Elements.name.name} % '$searchString'
+            WHERE ${Elements.name.name} % '$searchString' AND ${Elements.type.name} IN $typeString
             OFFSET ${(page - 1) * limit} ROWS
             FETCH NEXT $limit ROWS ONLY
             ORDER BY distance DESC""".trimIndent()
