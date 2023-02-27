@@ -104,17 +104,17 @@ object ElementRepository : ElementDao {
         page: Int,
         limit: Int
     ): List<Element> = dbQuery {
-        val typeString = types.joinToString(prefix = "(", postfix = ")", separator = ",")
-        rawQuery(
+        val typeString = types.joinToString(prefix = "(\'", postfix = "\')", separator = "\',\'")
+        val query =
             """
-            SELECT ${Elements.id.name}, ${Elements.culture_id.name}, ${Elements.name.name}, ${Elements.type.name}, ${Elements.loc_lat.name}, ${Elements.loc_lon.name}, ${Elements.event_start_date.name}, ${Elements.event_loc_lat.name}, , ${Elements.event_loc_lon.name}, ${Elements.information.name}, DISTANCE_IN_KM(${Cultures.lat.name}, ${Cultures.lon.name}, ${location.latitude}, ${location.longitude}) as distance
+            SELECT *, DISTANCE_IN_KM(${Cultures.lat.name}, ${Cultures.lon.name}, ${location.latitude}, ${location.longitude}) as distance
             FROM ${Elements.tableName}
             WHERE DISTANCE_IN_KM(${Elements.loc_lat.name}, ${Elements.loc_lon.name}, ${location.latitude}, ${location.longitude}) <= $kmLimit AND ${Elements.type.name} IN $typeString
+            ORDER BY distance DESC
             OFFSET ${(page - 1) * limit} ROWS
             FETCH NEXT $limit ROWS ONLY
-            ORDER BY distance ASC""".trimIndent(),
-            transform = ::resultSetToElements
-        )?.map { it.first } ?: emptyList()
+            """.trimIndent()
+        rawQuery(query, transform = ::resultSetToElements)?.map { it.first } ?: emptyList()
     }
 
     override suspend fun getPreviewElements(
@@ -124,24 +124,16 @@ object ElementRepository : ElementDao {
         page: Int,
         limit: Int
     ): List<Element> = dbQuery {
-        val typeString = types.joinToString(prefix = "(", postfix = ")", separator = ",")
-        val query = if (currentDialect is PostgreSQLDialect) {
-            """
-            SELECT *, MY_SIMILARITY(${Elements.name.name}, '$searchString') as distance
-            FROM ${Elements.tableName} 
-            WHERE ${Elements.name.name} % '$searchString' AND ${Elements.type.name} IN $typeString
-            OFFSET ${(page - 1) * limit} ROWS
-            FETCH NEXT $limit ROWS ONLY
-            ORDER BY distance DESC""".trimIndent()
-        } else {
+        val typeString = types.joinToString(prefix = "(\'", postfix = "\')", separator = "\',\'")
+        val query =
             """
             SELECT *, MY_SIMILARITY(${Elements.name.name}, '$searchString') as distance
             FROM ${Elements.tableName}
-            WHERE MY_SIMILARITY(${Elements.name.name}, '$searchString') > 0.8
+            WHERE MY_SIMILARITY(${Elements.name.name}, '$searchString') > 0.5 AND ${Elements.type.name} IN $typeString
+            ORDER BY distance DESC
             OFFSET ${(page - 1) * limit} ROWS
             FETCH NEXT $limit ROWS ONLY
-            ORDER BY distance DESC""".trimIndent()
-        }
+            """.trimIndent()
         rawQuery(query, ::resultSetToElements)?.map { it.first } ?: emptyList()
     }
 
@@ -160,7 +152,7 @@ object ElementRepository : ElementDao {
             """
             SELECT *, MY_SIMILARITY(${Elements.name.name}, '$name') as distance
             FROM ${Elements.tableName}
-            WHERE MY_SIMILARITY(${Elements.name.name}, '$name') > 0.8 AND ${Elements.type.name} = '$type'
+            WHERE MY_SIMILARITY(${Elements.name.name}, '$name') > 0.5 AND ${Elements.type.name} = '$type'
             ORDER BY distance DESC""".trimIndent()
         }
         rawQuery(query, ::resultSetToElements)?.map { it.first } ?: emptyList()

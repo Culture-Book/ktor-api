@@ -96,7 +96,7 @@ object ContributionRepository : ContributionDao {
             """
             SELECT *, MY_SIMILARITY(${Contributions.name.name}, '$name') as distance
             FROM ${Contributions.tableName}
-            WHERE MY_SIMILARITY(${Contributions.name.name}, '$name') > 0.8 AND ${Contributions.type.name} = '$type'
+            WHERE MY_SIMILARITY(${Contributions.name.name}, '$name') > 0.5 AND ${Contributions.type.name} = '$type'
             ORDER BY distance DESC""".trimIndent()
         }
         rawQuery(
@@ -147,14 +147,6 @@ object ContributionRepository : ContributionDao {
         return response.status == HttpStatusCode.OK
     }
 
-    suspend fun getContrs() = dbQuery {
-        Contributions.selectAll().map {
-            rowToContribution(
-                it
-            )
-        }
-    }
-
     override suspend fun linkContributions(parentId: UUID, elementIds: List<UUID>): Boolean = dbQuery {
         if (elementIds.isEmpty()) return@dbQuery true
         LinkedContributions.batchInsert(elementIds) {
@@ -196,5 +188,27 @@ object ContributionRepository : ContributionDao {
             it[event_loc_lon] = if (element.eventType != null) element.eventType.location.longitude else null
             it[information] = element.information
         } > 0
+    }
+
+    override suspend fun getContributions(
+        elementId: UUID,
+        searchString: String,
+        types: List<ElementType>,
+        page: Int,
+        limit: Int
+    ): List<Contribution> = dbQuery {
+        val typeString = types.joinToString(prefix = "(\'", postfix = "\')", separator = "\',\'")
+        val query =
+            """
+            SELECT *, MY_SIMILARITY(${Contributions.name.name}, '$searchString') as distance
+            FROM ${Contributions.tableName}
+            WHERE MY_SIMILARITY(${Contributions.name.name}, '$searchString') > 0.5
+            AND ${Contributions.type.name} IN $typeString
+            AND ${Contributions.element_id.name} = '$elementId'
+            ORDER BY distance DESC
+            OFFSET ${(page - 1) * limit} ROWS
+            FETCH NEXT $limit ROWS ONLY
+            """.trimIndent()
+        rawQuery(query, ::resultSetToContributions)?.map { it.first } ?: emptyList()
     }
 }

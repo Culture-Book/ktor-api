@@ -2,20 +2,15 @@ package uk.co.culturebook.modules.culture.nearby
 
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
-import uk.co.culturebook.modules.culture.add_new.routes.*
-import uk.co.culturebook.modules.culture.data.data.interfaces.AddNewRoute
+import uk.co.culturebook.modules.culture.data.data.interfaces.ElementRoute
+import uk.co.culturebook.modules.culture.nearby.routes.getContributionRoute
+import uk.co.culturebook.modules.culture.nearby.routes.getElementsRoute
 
-fun Application.addNewModule() {
+fun Application.nearbyModule() {
     routing {
-        route(AddNewRoute.AddNewVersion.V1.route) {
-            addNewCulture()
-            getCulture()
-
-            submitElement()
-            getElementRoutes()
-
-            getContributionRoutes()
-            uploadContributionRoute()
+        route(ElementRoute.Version.V1.route) {
+            getElementsRoute()
+            getContributionRoute()
         }
     }
 }

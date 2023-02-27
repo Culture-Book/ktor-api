@@ -52,7 +52,7 @@ object CultureRepository : CulturesDao {
             """
             SELECT ${Cultures.id.name}, ${Cultures.name.name}, ${Cultures.lat.name}, ${Cultures.lon.name}, MY_SIMILARITY(${Cultures.name.name}, '$name') as distance
             FROM ${Cultures.tableName}
-            WHERE MY_SIMILARITY(${Cultures.name.name}, '$name') > 0.8
+            WHERE MY_SIMILARITY(${Cultures.name.name}, '$name') > 0.5
             ORDER BY distance DESC""".trimIndent()
         }
         rawQuery(query, CultureRepository::resultSetToCultures)?.map { it.first } ?: emptyList()

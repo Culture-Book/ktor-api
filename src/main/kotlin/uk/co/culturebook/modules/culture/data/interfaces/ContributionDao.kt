@@ -2,6 +2,7 @@ package uk.co.culturebook.modules.culture.data.interfaces
 
 import uk.co.culturebook.modules.culture.data.models.BucketRequest
 import uk.co.culturebook.modules.culture.data.models.Contribution
+import uk.co.culturebook.modules.culture.data.models.ElementType
 import uk.co.culturebook.modules.culture.data.models.MediaFile
 import java.util.*
 
@@ -35,4 +36,11 @@ interface ContributionDao {
     suspend fun insertContribution(contribution: Contribution): Contribution?
     suspend fun deleteContribution(elementId: UUID): Boolean
     suspend fun updateContribution(element: Contribution): Boolean
+    suspend fun getContributions(
+        elementId: UUID,
+        searchString: String,
+        types: List<ElementType>,
+        page: Int = 1,
+        limit: Int = 3
+    ): List<Contribution>
 }
