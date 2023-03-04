@@ -8,6 +8,7 @@ import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import uk.co.culturebook.Constants
 import uk.co.culturebook.modules.culture.add_new.client
+import uk.co.culturebook.modules.culture.data.database.tables.BlockedContributions
 import uk.co.culturebook.modules.culture.data.database.tables.contribution.Contributions
 import uk.co.culturebook.modules.culture.data.database.tables.contribution.LinkedContributions
 import uk.co.culturebook.modules.culture.data.interfaces.ContributionDao
@@ -191,6 +192,7 @@ object ContributionRepository : ContributionDao {
     }
 
     override suspend fun getContributions(
+        userId: String,
         elementId: UUID,
         searchString: String,
         types: List<ElementType>,
@@ -200,11 +202,61 @@ object ContributionRepository : ContributionDao {
         val typeString = types.joinToString(prefix = "(\'", postfix = "\')", separator = "\',\'")
         val query =
             """
-            SELECT *, MY_SIMILARITY(${Contributions.name.name}, '$searchString') as distance
-            FROM ${Contributions.tableName}
+            SELECT c.${Contributions.id.name}, 
+                    c.${Contributions.element_id.name},
+                    c.${Contributions.name.name},
+                    c.${Contributions.type.name},
+                    c.${Contributions.loc_lat.name},
+                    c.${Contributions.loc_lon.name},
+                    c.${Contributions.event_start_date.name},
+                    c.${Contributions.event_loc_lat.name},
+                    c.${Contributions.event_loc_lon.name},
+                    c.${Contributions.information.name},
+                    MY_SIMILARITY(${Contributions.name.name}, '$searchString') as distance
+            FROM ${Contributions.tableName} c
+            LEFT JOIN ${BlockedContributions.tableName} bc
+            ON bc.${BlockedContributions.contributionId.name} = c.${Contributions.id.name} 
+                AND bc."${BlockedContributions.userId.name}" = '$userId'
+            WHERE 
+                c.${Contributions.element_id} = '$elementId'
+                AND MY_SIMILARITY(${Contributions.name.name}, '$searchString') > 0.5
+                AND c.${Contributions.type.name} IN $typeString 
+                AND bc.${BlockedContributions.id.name} IS NULL
+            ORDER BY distance DESC
+            OFFSET ${(page - 1) * limit} ROWS
+            FETCH NEXT $limit ROWS ONLY
+            """.trimIndent()
+        rawQuery(query, ::resultSetToContributions)?.map { it.first } ?: emptyList()
+    }
+
+    override suspend fun getContributions(
+        userId: String,
+        searchString: String,
+        types: List<ElementType>,
+        page: Int,
+        limit: Int
+    ): List<Contribution> = dbQuery {
+        val typeString = types.joinToString(prefix = "(\'", postfix = "\')", separator = "\',\'")
+        val query =
+            """
+            SELECT c.${Contributions.id.name}, 
+                    c.${Contributions.element_id.name},
+                    c.${Contributions.name.name},
+                    c.${Contributions.type.name},
+                    c.${Contributions.loc_lat.name},
+                    c.${Contributions.loc_lon.name},
+                    c.${Contributions.event_start_date.name},
+                    c.${Contributions.event_loc_lat.name},
+                    c.${Contributions.event_loc_lon.name},
+                    c.${Contributions.information.name},
+                    MY_SIMILARITY(${Contributions.name.name}, '$searchString') as distance
+            FROM ${Contributions.tableName} c
+            LEFT JOIN ${BlockedContributions.tableName} bc
+            ON bc.${BlockedContributions.contributionId.name} = c.${Contributions.id.name} 
+                AND bc."${BlockedContributions.userId.name}" = '$userId'
             WHERE MY_SIMILARITY(${Contributions.name.name}, '$searchString') > 0.5
-            AND ${Contributions.type.name} IN $typeString
-            AND ${Contributions.element_id.name} = '$elementId'
+                AND c.${Contributions.type.name} IN $typeString 
+                AND bc.${BlockedContributions.id.name} IS NULL
             ORDER BY distance DESC
             OFFSET ${(page - 1) * limit} ROWS
             FETCH NEXT $limit ROWS ONLY

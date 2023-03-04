@@ -9,8 +9,8 @@ import uk.co.culturebook.modules.culture.data.models.Element
 import uk.co.culturebook.modules.culture.data.models.Location
 import java.util.*
 
-internal suspend fun getCulturesByLocation(location: Location) =
-    CultureState.Success.GetCultures(CultureRepository.getCulturesByLocation(location))
+internal suspend fun getCulturesByLocation(userId: String, location: Location) =
+    CultureState.Success.GetCultures(CultureRepository.getCulturesByLocation(userId, location))
 
 internal suspend fun getCultureById(id: UUID) =
     CultureRepository.getCulture(id)?.let { culture -> CultureState.Success.GetCulture(culture) }

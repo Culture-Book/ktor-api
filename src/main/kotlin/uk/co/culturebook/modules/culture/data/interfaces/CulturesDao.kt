@@ -7,9 +7,9 @@ import java.util.*
 interface CulturesDao {
     suspend fun getCulture(id: UUID): Culture?
 
-    suspend fun getCulturesByName(name: String): List<Culture>
+    suspend fun getCulturesByName(userId: String, name: String): List<Culture>
 
-    suspend fun getCulturesByLocation(location: Location, kmLimit: Double = 1.0): List<Culture>
+    suspend fun getCulturesByLocation(userId: String, location: Location, kmLimit: Double = 1.0): List<Culture>
 
     suspend fun insertCulture(culture: Culture): Culture?
 

@@ -8,6 +8,7 @@ import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import uk.co.culturebook.Constants
 import uk.co.culturebook.modules.culture.add_new.client
+import uk.co.culturebook.modules.culture.data.database.tables.BlockedElements
 import uk.co.culturebook.modules.culture.data.database.tables.Cultures
 import uk.co.culturebook.modules.culture.data.database.tables.element.Elements
 import uk.co.culturebook.modules.culture.data.database.tables.element.LinkedElements
@@ -98,6 +99,7 @@ object ElementRepository : ElementDao {
     }
 
     override suspend fun getPreviewElements(
+        userId: String,
         location: Location,
         types: List<ElementType>,
         kmLimit: Double,
@@ -107,9 +109,24 @@ object ElementRepository : ElementDao {
         val typeString = types.joinToString(prefix = "(\'", postfix = "\')", separator = "\',\'")
         val query =
             """
-            SELECT *, DISTANCE_IN_KM(${Cultures.lat.name}, ${Cultures.lon.name}, ${location.latitude}, ${location.longitude}) as distance
-            FROM ${Elements.tableName}
-            WHERE DISTANCE_IN_KM(${Elements.loc_lat.name}, ${Elements.loc_lon.name}, ${location.latitude}, ${location.longitude}) <= $kmLimit AND ${Elements.type.name} IN $typeString
+            SELECT e.${Elements.id.name}, 
+                    e.${Elements.culture_id.name},
+                    e.${Elements.name.name},
+                    e.${Elements.type.name},
+                    e.${Elements.loc_lat.name},
+                    e.${Elements.loc_lon.name},
+                    e.${Elements.event_start_date.name},
+                    e.${Elements.event_loc_lat.name},
+                    e.${Elements.event_loc_lon.name},
+                    e.${Elements.information.name},
+                    DISTANCE_IN_KM(${Cultures.lat.name}, ${Cultures.lon.name}, ${location.latitude}, ${location.longitude}) as distance
+            FROM ${Elements.tableName} e
+            LEFT JOIN ${BlockedElements.tableName} be
+            ON be.${BlockedElements.elementId.name} = e.${Elements.id.name} 
+                AND be."${BlockedElements.userId.name}" = '$userId'
+            WHERE DISTANCE_IN_KM(${Elements.loc_lat.name}, ${Elements.loc_lon.name}, ${location.latitude}, ${location.longitude}) <= $kmLimit 
+                AND ${Elements.type.name} IN $typeString 
+                AND be.${BlockedElements.id.name} IS NULL
             ORDER BY distance DESC
             OFFSET ${(page - 1) * limit} ROWS
             FETCH NEXT $limit ROWS ONLY
@@ -118,6 +135,7 @@ object ElementRepository : ElementDao {
     }
 
     override suspend fun getPreviewElements(
+        userId: String,
         searchString: String,
         types: List<ElementType>,
         kmLimit: Double,
@@ -127,9 +145,24 @@ object ElementRepository : ElementDao {
         val typeString = types.joinToString(prefix = "(\'", postfix = "\')", separator = "\',\'")
         val query =
             """
-            SELECT *, MY_SIMILARITY(${Elements.name.name}, '$searchString') as distance
-            FROM ${Elements.tableName}
-            WHERE MY_SIMILARITY(${Elements.name.name}, '$searchString') > 0.5 AND ${Elements.type.name} IN $typeString
+            SELECT e.${Elements.id.name}, 
+                    e.${Elements.culture_id.name},
+                    e.${Elements.name.name},
+                    e.${Elements.type.name},
+                    e.${Elements.loc_lat.name},
+                    e.${Elements.loc_lon.name},
+                    e.${Elements.event_start_date.name},
+                    e.${Elements.event_loc_lat.name},
+                    e.${Elements.event_loc_lon.name},
+                    e.${Elements.information.name},
+                    MY_SIMILARITY(${Elements.name.name}, '$searchString') as distance
+            FROM ${Elements.tableName} e
+            LEFT JOIN ${BlockedElements.tableName} be
+            ON be.${BlockedElements.elementId.name} = e.${Elements.id.name} 
+                AND be."${BlockedElements.userId.name}" = '$userId'
+            WHERE MY_SIMILARITY(${Elements.name.name}, '$searchString') > 0.5
+                AND e.${Elements.type.name} IN $typeString 
+                AND be.${BlockedElements.id.name} IS NULL
             ORDER BY distance DESC
             OFFSET ${(page - 1) * limit} ROWS
             FETCH NEXT $limit ROWS ONLY

@@ -8,8 +8,8 @@ import uk.co.culturebook.modules.culture.data.interfaces.ElementState
 import uk.co.culturebook.modules.culture.data.models.*
 import uk.co.culturebook.utils.fuzzySearchStrings
 
-internal suspend fun addCulture(culture: Culture, location: Location): CultureState {
-    val nearbyCultures = CultureRepository.getCulturesByLocation(location)
+internal suspend fun addCulture(userId: String, culture: Culture, location: Location): CultureState {
+    val nearbyCultures = CultureRepository.getCulturesByLocation(userId, location)
     val isNotDuplicate = nearbyCultures.map { it.name }.fuzzySearchStrings(culture.name, 0.5).isEmpty()
     return if (isNotDuplicate) {
         CultureRepository.insertCulture(culture)?.let { CultureState.Success.AddCulture(culture) }

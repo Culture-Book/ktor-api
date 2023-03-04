@@ -20,6 +20,7 @@ interface ElementDao {
     ): Boolean
 
     suspend fun getPreviewElements(
+        userId: String,
         location: Location,
         types: List<ElementType> = emptyList(),
         kmLimit: Double = 1.0,
@@ -28,6 +29,7 @@ interface ElementDao {
     ): List<Element>
 
     suspend fun getPreviewElements(
+        userId: String,
         searchString: String,
         types: List<ElementType> = emptyList(),
         kmLimit: Double = 1.0,

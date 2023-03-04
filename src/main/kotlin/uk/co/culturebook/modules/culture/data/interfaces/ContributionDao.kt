@@ -37,7 +37,16 @@ interface ContributionDao {
     suspend fun deleteContribution(elementId: UUID): Boolean
     suspend fun updateContribution(element: Contribution): Boolean
     suspend fun getContributions(
+        userId: String,
         elementId: UUID,
+        searchString: String,
+        types: List<ElementType>,
+        page: Int = 1,
+        limit: Int = 3
+    ): List<Contribution>
+
+    suspend fun getContributions(
+        userId: String,
         searchString: String,
         types: List<ElementType>,
         page: Int = 1,

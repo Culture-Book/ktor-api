@@ -2,8 +2,8 @@ package uk.co.culturebook.modules.culture.data.database.repositories
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
+import uk.co.culturebook.modules.culture.data.database.tables.BlockedCultures
+import uk.co.culturebook.modules.culture.data.database.tables.BlockedElements
 import uk.co.culturebook.modules.culture.data.database.tables.Cultures
 import uk.co.culturebook.modules.culture.data.interfaces.CulturesDao
 import uk.co.culturebook.modules.culture.data.models.Culture
@@ -41,20 +41,21 @@ object CultureRepository : CulturesDao {
 
     /** MY_SIMILARITY is a user defined function in [similarityFunction] currently only H2 and Postgres dialects have been defined, define your own dialect when needed
      * */
-    override suspend fun getCulturesByName(name: String): List<Culture> = dbQuery {
-        val query = if (currentDialect is PostgreSQLDialect) {
-            """
-            SELECT ${Cultures.id.name}, ${Cultures.name.name}, ${Cultures.lat.name}, ${Cultures.lon.name}, MY_SIMILARITY(${Cultures.name.name}, '$name') as distance
-            FROM ${Cultures.tableName}
-            WHERE ${Cultures.name.name} % '$name'
-            ORDER BY distance DESC""".trimIndent()
-        } else {
-            """
-            SELECT ${Cultures.id.name}, ${Cultures.name.name}, ${Cultures.lat.name}, ${Cultures.lon.name}, MY_SIMILARITY(${Cultures.name.name}, '$name') as distance
-            FROM ${Cultures.tableName}
+    override suspend fun getCulturesByName(userId: String, name: String): List<Culture> = dbQuery {
+        val query = """
+            SELECT c.${Cultures.id.name}, 
+                    c.${Cultures.name.name}, 
+                    c.${Cultures.lat.name}, 
+                    c.${Cultures.lon.name}, 
+                    MY_SIMILARITY(${Cultures.name.name}, '$name') as distance
+            FROM ${Cultures.tableName} c
+            LEFT JOIN ${BlockedCultures.tableName} bc
+                ON bc.${BlockedCultures.cultureId.name} = c.${Cultures.id.name} 
+                AND bc."${BlockedCultures.userId.name}" = '$userId'
             WHERE MY_SIMILARITY(${Cultures.name.name}, '$name') > 0.5
-            ORDER BY distance DESC""".trimIndent()
-        }
+                AND bc.${BlockedElements.id.name} IS NULL
+            ORDER BY distance DESC
+            """.trimIndent()
         rawQuery(query, CultureRepository::resultSetToCultures)?.map { it.first } ?: emptyList()
     }
 
@@ -62,12 +63,20 @@ object CultureRepository : CulturesDao {
     /** DISTANCE_IN_KM is a user defined function in [getDistanceFunction] currently only H2 and Postgres dialects have been defined, define your own dialect when needed
      *  TODO - DISTANCE_IN_KM is a potentially expensive operation and we are doing it twice, hence increasing the complexity of the query, in future optimisation we would find a way to use it once.
      * */
-    override suspend fun getCulturesByLocation(location: Location, kmLimit: Double): List<Culture> =
+    override suspend fun getCulturesByLocation(userId: String, location: Location, kmLimit: Double): List<Culture> =
         rawQuery(
             """
-            SELECT ${Cultures.id.name}, ${Cultures.name.name}, ${Cultures.lat.name}, ${Cultures.lon.name}, DISTANCE_IN_KM(${Cultures.lat.name}, ${Cultures.lon.name}, ${location.latitude}, ${location.longitude}) as distance
-            FROM ${Cultures.tableName}
+            SELECT c.${Cultures.id.name}, 
+                    c.${Cultures.name.name}, 
+                    c.${Cultures.lat.name}, 
+                    c.${Cultures.lon.name}, 
+                    DISTANCE_IN_KM(${Cultures.lat.name}, ${Cultures.lon.name}, ${location.latitude}, ${location.longitude}) as distance
+            FROM ${Cultures.tableName} c
+            LEFT JOIN ${BlockedCultures.tableName} bc
+                ON bc.${BlockedCultures.cultureId.name} = c.${Cultures.id.name} 
+                AND bc."${BlockedCultures.userId.name}" = '$userId'
             WHERE DISTANCE_IN_KM(${Cultures.lat.name}, ${Cultures.lon.name}, ${location.latitude}, ${location.longitude}) <= $kmLimit
+                AND bc.${BlockedElements.id.name} IS NULL
             ORDER BY distance ASC""".trimIndent(),
             transform = CultureRepository::resultSetToCultures
         )?.map { it.first } ?: emptyList()
