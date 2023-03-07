@@ -10,6 +10,7 @@ import uk.co.culturebook.Constants
 import uk.co.culturebook.modules.culture.add_new.client
 import uk.co.culturebook.modules.culture.data.database.tables.BlockedElements
 import uk.co.culturebook.modules.culture.data.database.tables.Cultures
+import uk.co.culturebook.modules.culture.data.database.tables.FavouriteElements
 import uk.co.culturebook.modules.culture.data.database.tables.element.Elements
 import uk.co.culturebook.modules.culture.data.database.tables.element.LinkedElements
 import uk.co.culturebook.modules.culture.data.interfaces.ElementDao
@@ -59,6 +60,7 @@ object ElementRepository : ElementDao {
                 location = location,
                 eventType = eventLocation?.let { EventType(eventStartDate!!, eventLocation) },
                 information = resultSet.getString(Elements.information.name),
+                favourite = resultSet.getBoolean(FavouriteRepository.Favourite)
             ) to resultSet.getDouble("distance")
         }
         elements.toList()
@@ -119,11 +121,15 @@ object ElementRepository : ElementDao {
                     e.${Elements.event_loc_lat.name},
                     e.${Elements.event_loc_lon.name},
                     e.${Elements.information.name},
+                    fe.${FavouriteElements.elementId.name} = e.${Elements.id.name} as ${FavouriteRepository.Favourite},
                     DISTANCE_IN_KM(${Cultures.lat.name}, ${Cultures.lon.name}, ${location.latitude}, ${location.longitude}) as distance
             FROM ${Elements.tableName} e
             LEFT JOIN ${BlockedElements.tableName} be
             ON be.${BlockedElements.elementId.name} = e.${Elements.id.name} 
                 AND be."${BlockedElements.userId.name}" = '$userId'
+            LEFT JOIN ${FavouriteElements.tableName} fe
+            ON fe.${FavouriteElements.elementId.name} = e.${Elements.id.name} 
+                AND fe."${FavouriteElements.userId.name}" = '$userId'
             WHERE DISTANCE_IN_KM(${Elements.loc_lat.name}, ${Elements.loc_lon.name}, ${location.latitude}, ${location.longitude}) <= $kmLimit 
                 AND ${Elements.type.name} IN $typeString 
                 AND be.${BlockedElements.id.name} IS NULL
@@ -155,11 +161,15 @@ object ElementRepository : ElementDao {
                     e.${Elements.event_loc_lat.name},
                     e.${Elements.event_loc_lon.name},
                     e.${Elements.information.name},
+                    fe.${FavouriteElements.elementId.name} = e.${Elements.id.name} as ${FavouriteRepository.Favourite},
                     MY_SIMILARITY(${Elements.name.name}, '$searchString') as distance
             FROM ${Elements.tableName} e
             LEFT JOIN ${BlockedElements.tableName} be
             ON be.${BlockedElements.elementId.name} = e.${Elements.id.name} 
                 AND be."${BlockedElements.userId.name}" = '$userId'
+            LEFT JOIN ${FavouriteElements.tableName} fe
+            ON fe.${FavouriteElements.elementId.name} = e.${Elements.id.name} 
+                AND fe."${FavouriteElements.userId.name}" = '$userId'
             WHERE MY_SIMILARITY(${Elements.name.name}, '$searchString') > 0.5
                 AND e.${Elements.type.name} IN $typeString 
                 AND be.${BlockedElements.id.name} IS NULL

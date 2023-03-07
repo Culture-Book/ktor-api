@@ -61,8 +61,16 @@ internal fun Route.getContributionRoute() {
 internal fun Route.getCulturesRoute() {
     post(NearbyRoute.Cultures.route) {
         val criteria = call.receive<SearchCriteria>()
-        val searchString = criteria.searchString.forceNotNull(call)
-        val contributions = getCultures(getUserId(), searchString)
-        call.respond(HttpStatusCode.OK, contributions)
+        val searchString = criteria.searchString
+        val location = criteria.location
+
+        val cultures = if (searchString != null) {
+            getCultures(getUserId(), searchString)
+        } else if (location != null) {
+            getCultures(getUserId(), location)
+        } else {
+            emptyList()
+        }
+        call.respond(HttpStatusCode.OK, cultures)
     }
 }

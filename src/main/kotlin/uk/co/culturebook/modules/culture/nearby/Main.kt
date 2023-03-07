@@ -5,10 +5,7 @@ import io.ktor.server.auth.*
 import io.ktor.server.routing.*
 import uk.co.culturebook.modules.authentication.data.interfaces.AuthRoute
 import uk.co.culturebook.modules.culture.data.data.interfaces.NearbyRoute
-import uk.co.culturebook.modules.culture.nearby.routes.blockRoutes
-import uk.co.culturebook.modules.culture.nearby.routes.getContributionRoute
-import uk.co.culturebook.modules.culture.nearby.routes.getCulturesRoute
-import uk.co.culturebook.modules.culture.nearby.routes.getElementsRoute
+import uk.co.culturebook.modules.culture.nearby.routes.*
 
 fun Application.nearbyModule() {
     routing {
@@ -18,6 +15,7 @@ fun Application.nearbyModule() {
                 getContributionRoute()
                 getCulturesRoute()
                 blockRoutes()
+                favRoutes()
             }
         }
     }

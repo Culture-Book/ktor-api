@@ -9,6 +9,7 @@ import org.jetbrains.exposed.sql.vendors.currentDialect
 import uk.co.culturebook.Constants
 import uk.co.culturebook.modules.culture.add_new.client
 import uk.co.culturebook.modules.culture.data.database.tables.BlockedContributions
+import uk.co.culturebook.modules.culture.data.database.tables.FavouriteContributions
 import uk.co.culturebook.modules.culture.data.database.tables.contribution.Contributions
 import uk.co.culturebook.modules.culture.data.database.tables.contribution.LinkedContributions
 import uk.co.culturebook.modules.culture.data.interfaces.ContributionDao
@@ -59,6 +60,7 @@ object ContributionRepository : ContributionDao {
                 location = location,
                 eventType = eventLocation?.let { EventType(eventStartDate!!, eventLocation) },
                 information = resultSet.getString(Contributions.information.name),
+                favourite = resultSet.getBoolean(FavouriteRepository.Favourite)
             ) to resultSet.getDouble("distance")
         }
         elements.toList()
@@ -212,11 +214,15 @@ object ContributionRepository : ContributionDao {
                     c.${Contributions.event_loc_lat.name},
                     c.${Contributions.event_loc_lon.name},
                     c.${Contributions.information.name},
+                    fc.${FavouriteContributions.contributionId.name} = c.${Contributions.id.name} as ${FavouriteRepository.Favourite},
                     MY_SIMILARITY(${Contributions.name.name}, '$searchString') as distance
             FROM ${Contributions.tableName} c
             LEFT JOIN ${BlockedContributions.tableName} bc
             ON bc.${BlockedContributions.contributionId.name} = c.${Contributions.id.name} 
                 AND bc."${BlockedContributions.userId.name}" = '$userId'
+            LEFT JOIN ${FavouriteContributions.tableName} fc
+            ON fc.${FavouriteContributions.contributionId.name} = c.${Contributions.id.name} 
+                AND fc."${FavouriteContributions.userId.name}" = '$userId'
             WHERE 
                 c.${Contributions.element_id} = '$elementId'
                 AND MY_SIMILARITY(${Contributions.name.name}, '$searchString') > 0.5
@@ -249,11 +255,15 @@ object ContributionRepository : ContributionDao {
                     c.${Contributions.event_loc_lat.name},
                     c.${Contributions.event_loc_lon.name},
                     c.${Contributions.information.name},
+                    fc.${FavouriteContributions.contributionId.name} = c.${Contributions.id.name} as ${FavouriteRepository.Favourite},
                     MY_SIMILARITY(${Contributions.name.name}, '$searchString') as distance
             FROM ${Contributions.tableName} c
             LEFT JOIN ${BlockedContributions.tableName} bc
             ON bc.${BlockedContributions.contributionId.name} = c.${Contributions.id.name} 
                 AND bc."${BlockedContributions.userId.name}" = '$userId'
+            LEFT JOIN ${FavouriteContributions.tableName} fc
+            ON fc.${FavouriteContributions.contributionId.name} = c.${Contributions.id.name} 
+                AND fc."${FavouriteContributions.userId.name}" = '$userId'
             WHERE MY_SIMILARITY(${Contributions.name.name}, '$searchString') > 0.5
                 AND c.${Contributions.type.name} IN $typeString 
                 AND bc.${BlockedContributions.id.name} IS NULL

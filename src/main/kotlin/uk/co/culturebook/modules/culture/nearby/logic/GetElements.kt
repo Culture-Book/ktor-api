@@ -39,3 +39,6 @@ internal suspend fun getContributions(userId: String, searchString: String, type
 
 internal suspend fun getCultures(userId: String, cultureName: String) =
     CultureRepository.getCulturesByName(userId, cultureName)
+
+internal suspend fun getCultures(userId: String, location: Location) =
+    CultureRepository.getCulturesByLocation(userId, location)

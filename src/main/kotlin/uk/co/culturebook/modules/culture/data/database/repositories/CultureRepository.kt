@@ -3,8 +3,8 @@ package uk.co.culturebook.modules.culture.data.database.repositories
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import uk.co.culturebook.modules.culture.data.database.tables.BlockedCultures
-import uk.co.culturebook.modules.culture.data.database.tables.BlockedElements
 import uk.co.culturebook.modules.culture.data.database.tables.Cultures
+import uk.co.culturebook.modules.culture.data.database.tables.FavouriteCultures
 import uk.co.culturebook.modules.culture.data.interfaces.CulturesDao
 import uk.co.culturebook.modules.culture.data.models.Culture
 import uk.co.culturebook.modules.culture.data.models.Location
@@ -29,7 +29,8 @@ object CultureRepository : CulturesDao {
             cultures += Culture(
                 id = resultSet.getString(Cultures.id.name).toUUID(),
                 name = resultSet.getString(Cultures.name.name),
-                location = Location(resultSet.getDouble(Cultures.lat.name), resultSet.getDouble(Cultures.lon.name))
+                location = Location(resultSet.getDouble(Cultures.lat.name), resultSet.getDouble(Cultures.lon.name)),
+                favourite = resultSet.getBoolean(FavouriteRepository.Favourite)
             ) to resultSet.getDouble("distance")
         }
         cultures.toList()
@@ -47,13 +48,17 @@ object CultureRepository : CulturesDao {
                     c.${Cultures.name.name}, 
                     c.${Cultures.lat.name}, 
                     c.${Cultures.lon.name}, 
+                    fc.${FavouriteCultures.cultureId.name} = c.${Cultures.id.name} as ${FavouriteRepository.Favourite},
                     MY_SIMILARITY(${Cultures.name.name}, '$name') as distance
             FROM ${Cultures.tableName} c
             LEFT JOIN ${BlockedCultures.tableName} bc
                 ON bc.${BlockedCultures.cultureId.name} = c.${Cultures.id.name} 
                 AND bc."${BlockedCultures.userId.name}" = '$userId'
+            LEFT JOIN ${FavouriteCultures.tableName} fc
+            ON fc.${FavouriteCultures.cultureId.name} = c.${Cultures.id.name} 
+                AND fc."${FavouriteCultures.userId.name}" = '$userId'
             WHERE MY_SIMILARITY(${Cultures.name.name}, '$name') > 0.5
-                AND bc.${BlockedElements.id.name} IS NULL
+                AND bc.${BlockedCultures.id.name} IS NULL
             ORDER BY distance DESC
             """.trimIndent()
         rawQuery(query, CultureRepository::resultSetToCultures)?.map { it.first } ?: emptyList()
@@ -70,13 +75,17 @@ object CultureRepository : CulturesDao {
                     c.${Cultures.name.name}, 
                     c.${Cultures.lat.name}, 
                     c.${Cultures.lon.name}, 
+                    fc.${FavouriteCultures.cultureId.name} = c.${Cultures.id.name} as ${FavouriteRepository.Favourite},
                     DISTANCE_IN_KM(${Cultures.lat.name}, ${Cultures.lon.name}, ${location.latitude}, ${location.longitude}) as distance
             FROM ${Cultures.tableName} c
             LEFT JOIN ${BlockedCultures.tableName} bc
                 ON bc.${BlockedCultures.cultureId.name} = c.${Cultures.id.name} 
                 AND bc."${BlockedCultures.userId.name}" = '$userId'
+            LEFT JOIN ${FavouriteCultures.tableName} fc
+            ON fc.${FavouriteCultures.cultureId.name} = c.${Cultures.id.name} 
+                AND fc."${FavouriteCultures.userId.name}" = '$userId'
             WHERE DISTANCE_IN_KM(${Cultures.lat.name}, ${Cultures.lon.name}, ${location.latitude}, ${location.longitude}) <= $kmLimit
-                AND bc.${BlockedElements.id.name} IS NULL
+                AND bc.${BlockedCultures.id.name} IS NULL
             ORDER BY distance ASC""".trimIndent(),
             transform = CultureRepository::resultSetToCultures
         )?.map { it.first } ?: emptyList()

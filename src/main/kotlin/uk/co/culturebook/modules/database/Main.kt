@@ -68,6 +68,7 @@ fun Application.databaseModule() =
             SchemaUtils.create(ContributionReactions)
             SchemaUtils.create(ContributionMedia)
             SchemaUtils.create(BlockedElements, BlockedCultures, BlockedContributions)
+            SchemaUtils.create(FavouriteElements, FavouriteCultures, FavouriteContributions)
 
             // Custom functions
             getDistanceFunction()

@@ -42,4 +42,16 @@ sealed interface NearbyRoute {
     object BlockCulture : NearbyRoute {
         override val route = "block/culture"
     }
+
+    object FavouriteElement : NearbyRoute {
+        override val route = "favourite/element"
+    }
+
+    object FavouriteContribution : NearbyRoute {
+        override val route = "favourite/contribution"
+    }
+
+    object FavouriteCulture : NearbyRoute {
+        override val route = "favourite/culture"
+    }
 }
