@@ -7,6 +7,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import uk.co.culturebook.modules.authentication.logic.authenticated.getUserId
 import uk.co.culturebook.modules.culture.data.data.interfaces.NearbyRoute
+import uk.co.culturebook.modules.culture.data.database.repositories.ElementRepository
 import uk.co.culturebook.modules.culture.data.database.repositories.MediaRepository
 import uk.co.culturebook.modules.culture.data.models.SearchCriteria
 import uk.co.culturebook.modules.culture.nearby.logic.getContributions
@@ -30,6 +31,15 @@ internal fun Route.getElementsRoute() {
         }
         call.respond(HttpStatusCode.OK, elements)
     }
+
+    get(NearbyRoute.Element.route) {
+        val userId = getUserId()
+        val elementId = call.request.queryParameters[NearbyRoute.Element.Id].forceNotNull(call).toUUID()
+        val element = ElementRepository.getElement(userId, elementId).forceNotNull(call)
+
+        call.respond(HttpStatusCode.OK, element)
+    }
+
     get(NearbyRoute.ElementsMedia.route) {
         val elementId = call.request.queryParameters[NearbyRoute.ElementsMedia.ElementId].forceNotNull(call).toUUID()
         val media = MediaRepository.getMediaByElement(elementId)
@@ -55,6 +65,14 @@ internal fun Route.getContributionRoute() {
             call.request.queryParameters[NearbyRoute.ContributionsMedia.ContributionId].forceNotNull(call).toUUID()
         val media = MediaRepository.getMediaByContribution(contributionId)
         call.respond(HttpStatusCode.OK, media)
+    }
+
+    get(NearbyRoute.Contribution.route) {
+        val userId = getUserId()
+        val elementId = call.request.queryParameters[NearbyRoute.Element.Id].forceNotNull(call).toUUID()
+        val element = ElementRepository.getElement(userId, elementId).forceNotNull(call)
+
+        call.respond(HttpStatusCode.OK, element)
     }
 }
 

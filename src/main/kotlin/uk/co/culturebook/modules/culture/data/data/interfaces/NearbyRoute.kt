@@ -13,6 +13,11 @@ sealed interface NearbyRoute {
         override val route = "elements"
     }
 
+    object Element : NearbyRoute {
+        override val route = "element"
+        const val Id = "element_id"
+    }
+
     object ElementsMedia : NearbyRoute {
         override val route = "elements/media"
         const val ElementId = "element_id"
@@ -20,6 +25,11 @@ sealed interface NearbyRoute {
 
     object Contributions : NearbyRoute {
         override val route = "contributions"
+    }
+
+    object Contribution : NearbyRoute {
+        override val route = "contribution"
+        const val Id = "contribution_id"
     }
 
     object Cultures : NearbyRoute {

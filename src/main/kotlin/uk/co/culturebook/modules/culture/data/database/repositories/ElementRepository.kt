@@ -8,21 +8,38 @@ import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import uk.co.culturebook.Constants
 import uk.co.culturebook.modules.culture.add_new.client
-import uk.co.culturebook.modules.culture.data.database.tables.BlockedElements
-import uk.co.culturebook.modules.culture.data.database.tables.Cultures
-import uk.co.culturebook.modules.culture.data.database.tables.FavouriteElements
-import uk.co.culturebook.modules.culture.data.database.tables.element.Elements
-import uk.co.culturebook.modules.culture.data.database.tables.element.LinkedElements
+import uk.co.culturebook.modules.culture.data.database.tables.*
+import uk.co.culturebook.modules.culture.data.database.tables.element.*
 import uk.co.culturebook.modules.culture.data.interfaces.ElementDao
 import uk.co.culturebook.modules.culture.data.interfaces.external.MediaRoute
 import uk.co.culturebook.modules.culture.data.models.*
 import uk.co.culturebook.modules.database.dbQuery
 import uk.co.culturebook.modules.database.rawQuery
 import uk.co.culturebook.utils.toUUID
+import uk.co.culturebook.utils.toUri
 import java.sql.ResultSet
 import java.util.*
+import uk.co.culturebook.modules.culture.data.database.tables.Media as MediaT
 
 object ElementRepository : ElementDao {
+
+    private fun rowToMedia(resultRow: ResultRow): Media = Media(
+        resultRow[MediaT.id],
+        resultRow[MediaT.uri].toUri()!!,
+        resultRow[MediaT.contentType]
+    )
+
+    private fun rowToComment(resultRow: ResultRow, isMine: Boolean = false): Comment = Comment(
+        resultRow[Comments.id],
+        resultRow[Comments.comment],
+        isMine
+    )
+
+    private fun rowToReaction(resultRow: ResultRow, isMine: Boolean = false): Reaction = Reaction(
+        resultRow[Reactions.id],
+        resultRow[Reactions.reaction],
+        isMine
+    )
 
     private fun rowToElement(resultRow: ResultRow): Element {
         val location = resultRow[Elements.event_loc_lat]?.let { Location(it, resultRow[Elements.event_loc_lon]!!) }
@@ -51,6 +68,11 @@ object ElementRepository : ElementDao {
             val eventLongitude =
                 resultSet.getDouble(Elements.event_loc_lon.name).takeIf { it != 0.0 && latitude != 0.0 }
             val eventLocation = eventLongitude?.let { Location(eventLatitude, eventLongitude) }
+            val distance = try {
+                resultSet.getDouble("distance")
+            } catch (e: Exception) {
+                0.0
+            }
 
             elements += Element(
                 id = resultSet.getString(Elements.id.name).toUUID(),
@@ -61,7 +83,7 @@ object ElementRepository : ElementDao {
                 eventType = eventLocation?.let { EventType(eventStartDate!!, eventLocation) },
                 information = resultSet.getString(Elements.information.name),
                 favourite = resultSet.getBoolean(FavouriteRepository.Favourite)
-            ) to resultSet.getDouble("distance")
+            ) to distance
         }
         elements.toList()
     }
@@ -182,6 +204,74 @@ object ElementRepository : ElementDao {
 
     override suspend fun getElement(id: UUID): Element? = dbQuery {
         Elements.select { Elements.id eq id }.singleOrNull()?.let(::rowToElement)
+    }
+
+    override suspend fun getElement(userId: String, id: UUID): Element? = dbQuery {
+        val mediaQuery = ElementMedia
+            .innerJoin(MediaT, { MediaT.id }, { ElementMedia.mediaId })
+            .select { ElementMedia.elementId eq id }
+        val media = mediaQuery.map(::rowToMedia)
+
+        val commentQuery = ElementComments
+            .innerJoin(Comments, { Comments.id }, { ElementComments.commentId })
+            .slice(
+                Comments.id,
+                Comments.comment,
+                (Comments.user_id eq userId).alias("isMine")
+            )
+            .select { ElementComments.elementId eq id }
+        val comments = commentQuery.map {
+            val isMine = it[Comments.user_id] == userId
+            rowToComment(it, isMine)
+        }
+
+        val reactionsQuery = ElementReactions
+            .innerJoin(Reactions, { Reactions.id }, { ElementReactions.reactionId })
+            .slice(
+                Reactions.id,
+                Reactions.reaction,
+                (Reactions.user_id eq userId).alias("isMine")
+            )
+            .select { ElementReactions.elementId eq id }
+
+        val reactions = reactionsQuery.map {
+            val isMine = it[Reactions.user_id] == userId
+            rowToReaction(it, isMine)
+        }
+
+        Elements
+            .leftJoin(
+                BlockedElements,
+                { BlockedElements.elementId },
+                { Elements.id },
+                { BlockedElements.userId eq userId })
+            .slice(
+                FavouriteElements.userId eq userId,
+                Elements.id,
+                Elements.culture_id,
+                Elements.name,
+                Elements.type,
+                Elements.loc_lat,
+                Elements.loc_lon,
+                Elements.event_start_date,
+                Elements.event_loc_lat,
+                Elements.event_loc_lon,
+                Elements.information
+            )
+            .select {
+                (Elements.id eq id) and BlockedElements.id.isNull()
+            }
+            .map {
+                val element = rowToElement(it)
+                val favourite = it.getOrNull(FavouriteElements.userId eq userId) ?: false
+                element.copy(
+                    media = media,
+                    reactions = reactions,
+                    comments = comments,
+                    favourite = favourite
+                )
+            }
+            .singleOrNull()
     }
 
     override suspend fun getDuplicateElement(name: String, type: String): List<Element> = dbQuery {

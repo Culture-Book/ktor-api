@@ -4,12 +4,14 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import uk.co.culturebook.Constants
 import uk.co.culturebook.modules.culture.add_new.client
 import uk.co.culturebook.modules.culture.data.database.tables.BlockedContributions
 import uk.co.culturebook.modules.culture.data.database.tables.FavouriteContributions
+import uk.co.culturebook.modules.culture.data.database.tables.contribution.ContributionMedia
 import uk.co.culturebook.modules.culture.data.database.tables.contribution.Contributions
 import uk.co.culturebook.modules.culture.data.database.tables.contribution.LinkedContributions
 import uk.co.culturebook.modules.culture.data.interfaces.ContributionDao
@@ -51,6 +53,11 @@ object ContributionRepository : ContributionDao {
             val eventLongitude =
                 resultSet.getDouble(Contributions.event_loc_lon.name).takeIf { it != 0.0 && latitude != 0.0 }
             val eventLocation = eventLongitude?.let { Location(eventLatitude, eventLongitude) }
+            val distance = try {
+                resultSet.getDouble("distance")
+            } catch (e: Exception) {
+                0.0
+            }
 
             elements += Contribution(
                 elementId = resultSet.getString(Contributions.element_id.name).toUUID(),
@@ -61,7 +68,7 @@ object ContributionRepository : ContributionDao {
                 eventType = eventLocation?.let { EventType(eventStartDate!!, eventLocation) },
                 information = resultSet.getString(Contributions.information.name),
                 favourite = resultSet.getBoolean(FavouriteRepository.Favourite)
-            ) to resultSet.getDouble("distance")
+            ) to distance
         }
         elements.toList()
     }
@@ -233,6 +240,42 @@ object ContributionRepository : ContributionDao {
             FETCH NEXT $limit ROWS ONLY
             """.trimIndent()
         rawQuery(query, ::resultSetToContributions)?.map { it.first } ?: emptyList()
+    }
+
+    suspend fun getContribution(userId: String, id: UUID) = dbQuery {
+        Contributions
+            .leftJoin(
+                BlockedContributions,
+                { Contributions.id },
+                { contributionId },
+                { BlockedContributions.userId eq userId })
+            .leftJoin(
+                FavouriteContributions,
+                { Contributions.id },
+                { contributionId },
+                { FavouriteContributions.userId eq userId })
+            .leftJoin(ContributionMedia, { Contributions.id }, { contributionId })
+            .slice(
+                Contributions.id,
+                Contributions.element_id,
+                Contributions.name,
+                Contributions.type,
+                Contributions.loc_lat,
+                Contributions.loc_lon,
+                Contributions.event_start_date,
+                Contributions.event_loc_lat,
+                Contributions.event_loc_lon,
+                Contributions.information,
+                (FavouriteContributions.contributionId eq Contributions.id).alias(FavouriteRepository.Favourite)
+            )
+            .select {
+                Contributions.id eq id
+                BlockedContributions.id.isNull()
+            }
+            .execute(TransactionManager.current())
+            ?.let(::resultSetToContributions)
+            ?.singleOrNull()
+            ?.first
     }
 
     override suspend fun getContributions(

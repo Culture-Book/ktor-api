@@ -38,6 +38,7 @@ interface ElementDao {
     ): List<Element>
 
     suspend fun getElement(id: UUID): Element?
+    suspend fun getElement(userId: String, id: UUID): Element?
     suspend fun getDuplicateElement(name: String, type: String): List<Element>
     suspend fun uploadMedia(apiKey: String, bearer: String, fileHost: String, files: List<MediaFile>): List<MediaFile>
     suspend fun linkElements(parentId: UUID, elementIds: List<UUID>): Boolean
