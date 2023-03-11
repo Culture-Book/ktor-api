@@ -10,7 +10,7 @@ import uk.co.culturebook.modules.culture.data.database.tables.BlockedElements
 import uk.co.culturebook.modules.database.dbQuery
 import java.util.*
 
-object BlockedElementsRepo {
+object BlockedElementsRepository {
 
     suspend fun blockElement(userId: String, uuid: UUID) = dbQuery {
         BlockedElements.insert {

@@ -4,21 +4,19 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.transactions.TransactionManager
 import uk.co.culturebook.Constants
 import uk.co.culturebook.modules.culture.add_new.client
-import uk.co.culturebook.modules.culture.data.database.tables.BlockedContributions
-import uk.co.culturebook.modules.culture.data.database.tables.FavouriteContributions
-import uk.co.culturebook.modules.culture.data.database.tables.contribution.ContributionMedia
-import uk.co.culturebook.modules.culture.data.database.tables.contribution.Contributions
-import uk.co.culturebook.modules.culture.data.database.tables.contribution.LinkedContributions
+import uk.co.culturebook.modules.culture.data.database.repositories.CommentRepository.rowToComment
+import uk.co.culturebook.modules.culture.data.database.repositories.MediaRepository.rowToMedia
+import uk.co.culturebook.modules.culture.data.database.repositories.ReactionRepository.rowToReaction
+import uk.co.culturebook.modules.culture.data.database.tables.*
+import uk.co.culturebook.modules.culture.data.database.tables.Media
+import uk.co.culturebook.modules.culture.data.database.tables.contribution.*
 import uk.co.culturebook.modules.culture.data.interfaces.ContributionDao
 import uk.co.culturebook.modules.culture.data.interfaces.external.MediaRoute
 import uk.co.culturebook.modules.culture.data.models.*
 import uk.co.culturebook.modules.database.dbQuery
 import uk.co.culturebook.modules.database.functions.Similarity
-import uk.co.culturebook.utils.toUUID
-import java.sql.ResultSet
 import java.util.*
 
 object ContributionRepository : ContributionDao {
@@ -38,38 +36,6 @@ object ContributionRepository : ContributionDao {
             information = resultRow[Contributions.information],
             favourite = resultRow.getOrNull(FavouriteContributions.id) != null
         )
-    }
-
-    private fun resultSetToContributions(rs: ResultSet) = rs.use { resultSet ->
-        val elements = arrayListOf<Pair<Contribution, Double>>()
-        while (resultSet.next()) {
-            val latitude = resultSet.getDouble(Contributions.loc_lat.name)
-            val longitude = resultSet.getDouble(Contributions.loc_lon.name)
-            val location = Location(latitude, longitude)
-
-            val eventStartDate = resultSet.getTimestamp(Contributions.event_start_date.name)?.toLocalDateTime()
-            val eventLatitude = resultSet.getDouble(Contributions.event_loc_lat.name)
-            val eventLongitude =
-                resultSet.getDouble(Contributions.event_loc_lon.name).takeIf { it != 0.0 && latitude != 0.0 }
-            val eventLocation = eventLongitude?.let { Location(eventLatitude, eventLongitude) }
-            val distance = try {
-                resultSet.getDouble("distance")
-            } catch (e: Exception) {
-                0.0
-            }
-
-            elements += Contribution(
-                elementId = resultSet.getString(Contributions.element_id.name).toUUID(),
-                id = resultSet.getString(Contributions.id.name).toUUID(),
-                name = resultSet.getString(Contributions.name.name),
-                type = resultSet.getString(Contributions.type.name).decodeElementType(),
-                location = location,
-                eventType = eventLocation?.let { EventType(eventStartDate!!, eventLocation) },
-                information = resultSet.getString(Contributions.information.name),
-                favourite = resultSet.getBoolean(FavouriteRepository.Favourite)
-            ) to distance
-        }
-        elements.toList()
     }
 
     override suspend fun createBucketForContribution(
@@ -220,39 +186,51 @@ object ContributionRepository : ContributionDao {
     }
 
     suspend fun getContribution(userId: String, id: UUID) = dbQuery {
+        val media = ContributionMedia
+            .innerJoin(Media, { Media.id }, { ContributionMedia.mediaId })
+            .select { ContributionMedia.contributionId eq id }
+            .map(::rowToMedia)
+
+        val comments = ContributionComments
+            .innerJoin(Comments, { Comments.id }, { ContributionComments.commentId })
+            .select { ContributionComments.contributionId eq id }
+            .map {
+                val isMine = it[Comments.user_id] == userId
+                rowToComment(it, isMine)
+            }
+
+        val reactions = ContributionReactions
+            .innerJoin(Reactions, { Reactions.id }, { ContributionReactions.reactionId })
+            .select { ContributionReactions.contributionId eq id }
+            .map {
+                val isMine = it[Reactions.user_id] == userId
+                rowToReaction(it, isMine)
+            }
+
         Contributions
             .leftJoin(
                 BlockedContributions,
+                { BlockedContributions.contributionId },
                 { Contributions.id },
-                { contributionId },
                 { BlockedContributions.userId eq userId })
             .leftJoin(
                 FavouriteContributions,
+                { FavouriteContributions.contributionId },
                 { Contributions.id },
-                { contributionId },
-                { FavouriteContributions.userId eq userId })
-            .leftJoin(ContributionMedia, { Contributions.id }, { contributionId })
-            .slice(
-                Contributions.id,
-                Contributions.element_id,
-                Contributions.name,
-                Contributions.type,
-                Contributions.loc_lat,
-                Contributions.loc_lon,
-                Contributions.event_start_date,
-                Contributions.event_loc_lat,
-                Contributions.event_loc_lon,
-                Contributions.information,
-                (FavouriteContributions.contributionId eq Contributions.id).alias(FavouriteRepository.Favourite)
+                { FavouriteContributions.userId eq userId }
             )
             .select {
-                Contributions.id eq id
-                BlockedContributions.id.isNull()
+                (Contributions.id eq id) and BlockedContributions.id.isNull()
             }
-            .execute(TransactionManager.current())
-            ?.let(::resultSetToContributions)
-            ?.singleOrNull()
-            ?.first
+            .map {
+                val contribution = rowToContribution(it)
+                contribution.copy(
+                    media = media,
+                    reactions = reactions,
+                    comments = comments
+                )
+            }
+            .singleOrNull()
     }
 
     override suspend fun getContributions(

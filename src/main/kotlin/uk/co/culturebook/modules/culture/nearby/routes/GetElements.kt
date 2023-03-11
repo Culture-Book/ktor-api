@@ -7,6 +7,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import uk.co.culturebook.modules.authentication.logic.authenticated.getUserId
 import uk.co.culturebook.modules.culture.data.data.interfaces.NearbyRoute
+import uk.co.culturebook.modules.culture.data.database.repositories.ContributionRepository
 import uk.co.culturebook.modules.culture.data.database.repositories.ElementRepository
 import uk.co.culturebook.modules.culture.data.database.repositories.MediaRepository
 import uk.co.culturebook.modules.culture.data.models.SearchCriteria
@@ -69,10 +70,10 @@ internal fun Route.getContributionRoute() {
 
     get(NearbyRoute.Contribution.route) {
         val userId = getUserId()
-        val elementId = call.request.queryParameters[NearbyRoute.Element.Id].forceNotNull(call).toUUID()
-        val element = ElementRepository.getElement(userId, elementId).forceNotNull(call)
+        val contributionId = call.request.queryParameters[NearbyRoute.Contribution.Id].forceNotNull(call).toUUID()
+        val contribution = ContributionRepository.getContribution(userId, contributionId).forceNotNull(call)
 
-        call.respond(HttpStatusCode.OK, element)
+        call.respond(HttpStatusCode.OK, contribution)
     }
 }
 

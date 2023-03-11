@@ -17,7 +17,7 @@ import java.util.*
 import uk.co.culturebook.modules.culture.data.database.tables.Media as MediaT
 
 object MediaRepository : MediaDao {
-    private fun rowToMedia(resultRow: ResultRow) = Media(
+    internal fun rowToMedia(resultRow: ResultRow) = Media(
         resultRow[MediaT.id],
         resultRow[MediaT.uri].toUri()!!,
         resultRow[MediaT.contentType]
