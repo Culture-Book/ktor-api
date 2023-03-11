@@ -4,20 +4,20 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
 import uk.co.culturebook.Constants
 import uk.co.culturebook.modules.culture.add_new.client
-import uk.co.culturebook.modules.culture.data.database.tables.*
+import uk.co.culturebook.modules.culture.data.database.tables.BlockedElements
+import uk.co.culturebook.modules.culture.data.database.tables.Comments
+import uk.co.culturebook.modules.culture.data.database.tables.FavouriteElements
+import uk.co.culturebook.modules.culture.data.database.tables.Reactions
 import uk.co.culturebook.modules.culture.data.database.tables.element.*
 import uk.co.culturebook.modules.culture.data.interfaces.ElementDao
 import uk.co.culturebook.modules.culture.data.interfaces.external.MediaRoute
 import uk.co.culturebook.modules.culture.data.models.*
 import uk.co.culturebook.modules.database.dbQuery
-import uk.co.culturebook.modules.database.rawQuery
-import uk.co.culturebook.utils.toUUID
+import uk.co.culturebook.modules.database.functions.Distance
+import uk.co.culturebook.modules.database.functions.Similarity
 import uk.co.culturebook.utils.toUri
-import java.sql.ResultSet
 import java.util.*
 import uk.co.culturebook.modules.culture.data.database.tables.Media as MediaT
 
@@ -53,39 +53,8 @@ object ElementRepository : ElementDao {
             location = Location(resultRow[Elements.loc_lat], resultRow[Elements.loc_lon]),
             eventType = location?.let { EventType(eventStartDate!!, location) },
             information = resultRow[Elements.information],
+            favourite = resultRow.getOrNull(FavouriteElements.id) != null
         )
-    }
-
-    private fun resultSetToElements(rs: ResultSet) = rs.use { resultSet ->
-        val elements = arrayListOf<Pair<Element, Double>>()
-        while (resultSet.next()) {
-            val latitude = resultSet.getDouble(Elements.loc_lat.name)
-            val longitude = resultSet.getDouble(Elements.loc_lon.name)
-            val location = Location(latitude, longitude)
-
-            val eventStartDate = resultSet.getTimestamp(Elements.event_start_date.name)?.toLocalDateTime()
-            val eventLatitude = resultSet.getDouble(Elements.event_loc_lat.name)
-            val eventLongitude =
-                resultSet.getDouble(Elements.event_loc_lon.name).takeIf { it != 0.0 && latitude != 0.0 }
-            val eventLocation = eventLongitude?.let { Location(eventLatitude, eventLongitude) }
-            val distance = try {
-                resultSet.getDouble("distance")
-            } catch (e: Exception) {
-                0.0
-            }
-
-            elements += Element(
-                id = resultSet.getString(Elements.id.name).toUUID(),
-                cultureId = resultSet.getString(Elements.culture_id.name).toUUID(),
-                name = resultSet.getString(Elements.name.name),
-                type = resultSet.getString(Elements.type.name).decodeElementType(),
-                location = location,
-                eventType = eventLocation?.let { EventType(eventStartDate!!, eventLocation) },
-                information = resultSet.getString(Elements.information.name),
-                favourite = resultSet.getBoolean(FavouriteRepository.Favourite)
-            ) to distance
-        }
-        elements.toList()
     }
 
     override suspend fun createBucketForElement(
@@ -130,36 +99,32 @@ object ElementRepository : ElementDao {
         page: Int,
         limit: Int
     ): List<Element> = dbQuery {
-        val typeString = types.joinToString(prefix = "(\'", postfix = "\')", separator = "\',\'")
-        val query =
-            """
-            SELECT e.${Elements.id.name}, 
-                    e.${Elements.culture_id.name},
-                    e.${Elements.name.name},
-                    e.${Elements.type.name},
-                    e.${Elements.loc_lat.name},
-                    e.${Elements.loc_lon.name},
-                    e.${Elements.event_start_date.name},
-                    e.${Elements.event_loc_lat.name},
-                    e.${Elements.event_loc_lon.name},
-                    e.${Elements.information.name},
-                    fe.${FavouriteElements.elementId.name} = e.${Elements.id.name} as ${FavouriteRepository.Favourite},
-                    DISTANCE_IN_KM(${Cultures.lat.name}, ${Cultures.lon.name}, ${location.latitude}, ${location.longitude}) as distance
-            FROM ${Elements.tableName} e
-            LEFT JOIN ${BlockedElements.tableName} be
-            ON be.${BlockedElements.elementId.name} = e.${Elements.id.name} 
-                AND be."${BlockedElements.userId.name}" = '$userId'
-            LEFT JOIN ${FavouriteElements.tableName} fe
-            ON fe.${FavouriteElements.elementId.name} = e.${Elements.id.name} 
-                AND fe."${FavouriteElements.userId.name}" = '$userId'
-            WHERE DISTANCE_IN_KM(${Elements.loc_lat.name}, ${Elements.loc_lon.name}, ${location.latitude}, ${location.longitude}) <= $kmLimit 
-                AND ${Elements.type.name} IN $typeString 
-                AND be.${BlockedElements.id.name} IS NULL
-            ORDER BY distance DESC
-            OFFSET ${(page - 1) * limit} ROWS
-            FETCH NEXT $limit ROWS ONLY
-            """.trimIndent()
-        rawQuery(query, transform = ::resultSetToElements)?.map { it.first } ?: emptyList()
+        Elements
+            .leftJoin(
+                BlockedElements,
+                { BlockedElements.elementId },
+                { Elements.id },
+                { BlockedElements.userId eq userId })
+            .leftJoin(
+                FavouriteElements,
+                { FavouriteElements.elementId },
+                { Elements.id },
+                { FavouriteElements.userId eq userId }
+            )
+            .select {
+                (Distance(
+                    Elements.loc_lat,
+                    Elements.loc_lon,
+                    location.latitude,
+                    location.longitude
+                ) lessEq kmLimit and BlockedElements.id.isNull()) and (Elements.type inList types.map { it.toString() })
+            }
+            .orderBy(
+                Distance(Elements.loc_lat, Elements.loc_lon, location.latitude, location.longitude),
+                SortOrder.DESC
+            )
+            .limit(limit, (page - 1L) * limit)
+            .map(::rowToElement)
     }
 
     override suspend fun getPreviewElements(
@@ -170,36 +135,27 @@ object ElementRepository : ElementDao {
         page: Int,
         limit: Int
     ): List<Element> = dbQuery {
-        val typeString = types.joinToString(prefix = "(\'", postfix = "\')", separator = "\',\'")
-        val query =
-            """
-            SELECT e.${Elements.id.name}, 
-                    e.${Elements.culture_id.name},
-                    e.${Elements.name.name},
-                    e.${Elements.type.name},
-                    e.${Elements.loc_lat.name},
-                    e.${Elements.loc_lon.name},
-                    e.${Elements.event_start_date.name},
-                    e.${Elements.event_loc_lat.name},
-                    e.${Elements.event_loc_lon.name},
-                    e.${Elements.information.name},
-                    fe.${FavouriteElements.elementId.name} = e.${Elements.id.name} as ${FavouriteRepository.Favourite},
-                    MY_SIMILARITY(${Elements.name.name}, '$searchString') as distance
-            FROM ${Elements.tableName} e
-            LEFT JOIN ${BlockedElements.tableName} be
-            ON be.${BlockedElements.elementId.name} = e.${Elements.id.name} 
-                AND be."${BlockedElements.userId.name}" = '$userId'
-            LEFT JOIN ${FavouriteElements.tableName} fe
-            ON fe.${FavouriteElements.elementId.name} = e.${Elements.id.name} 
-                AND fe."${FavouriteElements.userId.name}" = '$userId'
-            WHERE MY_SIMILARITY(${Elements.name.name}, '$searchString') > 0.5
-                AND e.${Elements.type.name} IN $typeString 
-                AND be.${BlockedElements.id.name} IS NULL
-            ORDER BY distance DESC
-            OFFSET ${(page - 1) * limit} ROWS
-            FETCH NEXT $limit ROWS ONLY
-            """.trimIndent()
-        rawQuery(query, ::resultSetToElements)?.map { it.first } ?: emptyList()
+        Elements
+            .leftJoin(
+                BlockedElements,
+                { BlockedElements.elementId },
+                { Elements.id },
+                { BlockedElements.userId eq userId })
+            .leftJoin(
+                FavouriteElements,
+                { FavouriteElements.elementId },
+                { Elements.id },
+                { FavouriteElements.userId eq userId }
+            )
+            .select {
+                (Similarity(
+                    Elements.name,
+                    searchString
+                ) greaterEq 0.25 and BlockedElements.id.isNull()) and (Elements.type inList types.map { it.toString() })
+            }
+            .orderBy(Similarity(Elements.name, searchString), SortOrder.DESC)
+            .limit(limit, (page - 1L) * limit)
+            .map(::rowToElement)
     }
 
     override suspend fun getElement(id: UUID): Element? = dbQuery {
@@ -239,56 +195,38 @@ object ElementRepository : ElementDao {
             rowToReaction(it, isMine)
         }
 
+        val isFavourite = FavouriteElements
+            .select { (FavouriteElements.userId eq userId) and (FavouriteElements.elementId eq id) }
+            .singleOrNull() != null
+
         Elements
             .leftJoin(
                 BlockedElements,
                 { BlockedElements.elementId },
                 { Elements.id },
                 { BlockedElements.userId eq userId })
-            .slice(
-                FavouriteElements.userId eq userId,
-                Elements.id,
-                Elements.culture_id,
-                Elements.name,
-                Elements.type,
-                Elements.loc_lat,
-                Elements.loc_lon,
-                Elements.event_start_date,
-                Elements.event_loc_lat,
-                Elements.event_loc_lon,
-                Elements.information
-            )
             .select {
                 (Elements.id eq id) and BlockedElements.id.isNull()
             }
             .map {
                 val element = rowToElement(it)
-                val favourite = it.getOrNull(FavouriteElements.userId eq userId) ?: false
                 element.copy(
                     media = media,
                     reactions = reactions,
                     comments = comments,
-                    favourite = favourite
+                    favourite = isFavourite
                 )
             }
             .singleOrNull()
     }
 
     override suspend fun getDuplicateElement(name: String, type: String): List<Element> = dbQuery {
-        val query = if (currentDialect is PostgreSQLDialect) {
-            """
-            SELECT *, MY_SIMILARITY(${Elements.name.name}, '$name') as distance
-            FROM ${Elements.tableName} 
-            WHERE ${Elements.name.name} % '$name' AND ${Elements.type.name} = '$type'
-            ORDER BY distance DESC""".trimIndent()
-        } else {
-            """
-            SELECT *, MY_SIMILARITY(${Elements.name.name}, '$name') as distance
-            FROM ${Elements.tableName}
-            WHERE MY_SIMILARITY(${Elements.name.name}, '$name') > 0.5 AND ${Elements.type.name} = '$type'
-            ORDER BY distance DESC""".trimIndent()
-        }
-        rawQuery(query, ::resultSetToElements)?.map { it.first } ?: emptyList()
+        Elements
+            .select {
+                (Similarity(Elements.name, name) greaterEq 0.25) and (Elements.type eq type)
+            }
+            .orderBy(Similarity(Elements.name, name), SortOrder.DESC)
+            .map(::rowToElement)
     }
 
     override suspend fun uploadMedia(

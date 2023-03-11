@@ -5,8 +5,6 @@ import io.ktor.http.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
 import uk.co.culturebook.Constants
 import uk.co.culturebook.modules.culture.add_new.client
 import uk.co.culturebook.modules.culture.data.database.tables.BlockedContributions
@@ -18,7 +16,7 @@ import uk.co.culturebook.modules.culture.data.interfaces.ContributionDao
 import uk.co.culturebook.modules.culture.data.interfaces.external.MediaRoute
 import uk.co.culturebook.modules.culture.data.models.*
 import uk.co.culturebook.modules.database.dbQuery
-import uk.co.culturebook.modules.database.rawQuery
+import uk.co.culturebook.modules.database.functions.Similarity
 import uk.co.culturebook.utils.toUUID
 import java.sql.ResultSet
 import java.util.*
@@ -38,6 +36,7 @@ object ContributionRepository : ContributionDao {
             location = Location(resultRow[Contributions.loc_lat], resultRow[Contributions.loc_lon]),
             eventType = location?.let { EventType(eventStartDate!!, location) },
             information = resultRow[Contributions.information],
+            favourite = resultRow.getOrNull(FavouriteContributions.id) != null
         )
     }
 
@@ -96,23 +95,12 @@ object ContributionRepository : ContributionDao {
     }
 
     override suspend fun getDuplicateContribution(name: String, type: String): List<Contribution> = dbQuery {
-        val query = if (currentDialect is PostgreSQLDialect) {
-            """
-            SELECT *, MY_SIMILARITY(${Contributions.name.name}, '$name') as distance
-            FROM ${Contributions.tableName} 
-            WHERE ${Contributions.name.name} % '$name' AND ${Contributions.type.name} = '$type'
-            ORDER BY distance DESC""".trimIndent()
-        } else {
-            """
-            SELECT *, MY_SIMILARITY(${Contributions.name.name}, '$name') as distance
-            FROM ${Contributions.tableName}
-            WHERE MY_SIMILARITY(${Contributions.name.name}, '$name') > 0.5 AND ${Contributions.type.name} = '$type'
-            ORDER BY distance DESC""".trimIndent()
-        }
-        rawQuery(
-            query,
-            ContributionRepository::resultSetToContributions
-        )?.map { it.first } ?: emptyList()
+        Contributions
+            .select {
+                (Similarity(Contributions.name, name) greaterEq 0.25) and (Contributions.type eq type)
+            }
+            .orderBy(Similarity(Contributions.name, name), SortOrder.DESC)
+            .map(::rowToContribution)
     }
 
     override suspend fun uploadMedia(
@@ -208,38 +196,27 @@ object ContributionRepository : ContributionDao {
         page: Int,
         limit: Int
     ): List<Contribution> = dbQuery {
-        val typeString = types.joinToString(prefix = "(\'", postfix = "\')", separator = "\',\'")
-        val query =
-            """
-            SELECT c.${Contributions.id.name}, 
-                    c.${Contributions.element_id.name},
-                    c.${Contributions.name.name},
-                    c.${Contributions.type.name},
-                    c.${Contributions.loc_lat.name},
-                    c.${Contributions.loc_lon.name},
-                    c.${Contributions.event_start_date.name},
-                    c.${Contributions.event_loc_lat.name},
-                    c.${Contributions.event_loc_lon.name},
-                    c.${Contributions.information.name},
-                    fc.${FavouriteContributions.contributionId.name} = c.${Contributions.id.name} as ${FavouriteRepository.Favourite},
-                    MY_SIMILARITY(${Contributions.name.name}, '$searchString') as distance
-            FROM ${Contributions.tableName} c
-            LEFT JOIN ${BlockedContributions.tableName} bc
-            ON bc.${BlockedContributions.contributionId.name} = c.${Contributions.id.name} 
-                AND bc."${BlockedContributions.userId.name}" = '$userId'
-            LEFT JOIN ${FavouriteContributions.tableName} fc
-            ON fc.${FavouriteContributions.contributionId.name} = c.${Contributions.id.name} 
-                AND fc."${FavouriteContributions.userId.name}" = '$userId'
-            WHERE 
-                c.${Contributions.element_id} = '$elementId'
-                AND MY_SIMILARITY(${Contributions.name.name}, '$searchString') > 0.5
-                AND c.${Contributions.type.name} IN $typeString 
-                AND bc.${BlockedContributions.id.name} IS NULL
-            ORDER BY distance DESC
-            OFFSET ${(page - 1) * limit} ROWS
-            FETCH NEXT $limit ROWS ONLY
-            """.trimIndent()
-        rawQuery(query, ::resultSetToContributions)?.map { it.first } ?: emptyList()
+        Contributions
+            .leftJoin(
+                BlockedContributions,
+                { BlockedContributions.contributionId },
+                { Contributions.id },
+                { BlockedContributions.userId eq userId })
+            .leftJoin(
+                FavouriteContributions,
+                { FavouriteContributions.contributionId },
+                { Contributions.id },
+                { FavouriteContributions.userId eq userId }
+            )
+            .select {
+                Similarity(Contributions.name, searchString) greaterEq 0.25 and
+                        BlockedContributions.id.isNull() and
+                        (Contributions.type inList types.map { it.toString() }) and
+                        (Contributions.element_id eq elementId)
+            }
+            .orderBy(Similarity(Contributions.name, searchString), SortOrder.DESC)
+            .limit(limit, (page - 1L) * limit)
+            .map(::rowToContribution)
     }
 
     suspend fun getContribution(userId: String, id: UUID) = dbQuery {
@@ -285,35 +262,25 @@ object ContributionRepository : ContributionDao {
         page: Int,
         limit: Int
     ): List<Contribution> = dbQuery {
-        val typeString = types.joinToString(prefix = "(\'", postfix = "\')", separator = "\',\'")
-        val query =
-            """
-            SELECT c.${Contributions.id.name}, 
-                    c.${Contributions.element_id.name},
-                    c.${Contributions.name.name},
-                    c.${Contributions.type.name},
-                    c.${Contributions.loc_lat.name},
-                    c.${Contributions.loc_lon.name},
-                    c.${Contributions.event_start_date.name},
-                    c.${Contributions.event_loc_lat.name},
-                    c.${Contributions.event_loc_lon.name},
-                    c.${Contributions.information.name},
-                    fc.${FavouriteContributions.contributionId.name} = c.${Contributions.id.name} as ${FavouriteRepository.Favourite},
-                    MY_SIMILARITY(${Contributions.name.name}, '$searchString') as distance
-            FROM ${Contributions.tableName} c
-            LEFT JOIN ${BlockedContributions.tableName} bc
-            ON bc.${BlockedContributions.contributionId.name} = c.${Contributions.id.name} 
-                AND bc."${BlockedContributions.userId.name}" = '$userId'
-            LEFT JOIN ${FavouriteContributions.tableName} fc
-            ON fc.${FavouriteContributions.contributionId.name} = c.${Contributions.id.name} 
-                AND fc."${FavouriteContributions.userId.name}" = '$userId'
-            WHERE MY_SIMILARITY(${Contributions.name.name}, '$searchString') > 0.5
-                AND c.${Contributions.type.name} IN $typeString 
-                AND bc.${BlockedContributions.id.name} IS NULL
-            ORDER BY distance DESC
-            OFFSET ${(page - 1) * limit} ROWS
-            FETCH NEXT $limit ROWS ONLY
-            """.trimIndent()
-        rawQuery(query, ::resultSetToContributions)?.map { it.first } ?: emptyList()
+        Contributions
+            .leftJoin(
+                BlockedContributions,
+                { BlockedContributions.contributionId },
+                { Contributions.id },
+                { BlockedContributions.userId eq userId })
+            .leftJoin(
+                FavouriteContributions,
+                { FavouriteContributions.contributionId },
+                { Contributions.id },
+                { FavouriteContributions.userId eq userId }
+            )
+            .select {
+                Similarity(Contributions.name, searchString) greaterEq 0.25 and
+                        BlockedContributions.id.isNull() and
+                        (Contributions.type inList types.map { it.toString() })
+            }
+            .orderBy(Similarity(Contributions.name, searchString), SortOrder.DESC)
+            .limit(limit, (page - 1L) * limit)
+            .map(::rowToContribution)
     }
 }

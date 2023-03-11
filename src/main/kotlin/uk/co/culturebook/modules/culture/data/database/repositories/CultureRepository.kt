@@ -9,86 +9,67 @@ import uk.co.culturebook.modules.culture.data.interfaces.CulturesDao
 import uk.co.culturebook.modules.culture.data.models.Culture
 import uk.co.culturebook.modules.culture.data.models.Location
 import uk.co.culturebook.modules.database.dbQuery
-import uk.co.culturebook.modules.database.getDistanceFunction
-import uk.co.culturebook.modules.database.rawQuery
-import uk.co.culturebook.modules.database.similarityFunction
-import uk.co.culturebook.utils.toUUID
-import java.sql.ResultSet
+import uk.co.culturebook.modules.database.functions.Distance
+import uk.co.culturebook.modules.database.functions.Similarity
 import java.util.*
 
 object CultureRepository : CulturesDao {
     private fun rowToCulture(row: ResultRow) = Culture(
         id = row[Cultures.id],
         name = row[Cultures.name],
-        location = Location(row[Cultures.lat], row[Cultures.lon])
+        location = Location(row[Cultures.lat], row[Cultures.lon]),
+        favourite = row.getOrNull(FavouriteCultures.id) != null
     )
-
-    private fun resultSetToCultures(resultSet: ResultSet) = resultSet.use {
-        val cultures = arrayListOf<Pair<Culture, Double>>()
-        while (it.next()) {
-            cultures += Culture(
-                id = resultSet.getString(Cultures.id.name).toUUID(),
-                name = resultSet.getString(Cultures.name.name),
-                location = Location(resultSet.getDouble(Cultures.lat.name), resultSet.getDouble(Cultures.lon.name)),
-                favourite = resultSet.getBoolean(FavouriteRepository.Favourite)
-            ) to resultSet.getDouble("distance")
-        }
-        cultures.toList()
-    }
 
     override suspend fun getCulture(id: UUID): Culture? = dbQuery {
         Cultures.select { Cultures.id eq id }.singleOrNull()?.let(CultureRepository::rowToCulture)
     }
 
-    /** MY_SIMILARITY is a user defined function in [similarityFunction] currently only H2 and Postgres dialects have been defined, define your own dialect when needed
-     * */
     override suspend fun getCulturesByName(userId: String, name: String): List<Culture> = dbQuery {
-        val query = """
-            SELECT c.${Cultures.id.name}, 
-                    c.${Cultures.name.name}, 
-                    c.${Cultures.lat.name}, 
-                    c.${Cultures.lon.name}, 
-                    fc.${FavouriteCultures.cultureId.name} = c.${Cultures.id.name} as ${FavouriteRepository.Favourite},
-                    MY_SIMILARITY(${Cultures.name.name}, '$name') as distance
-            FROM ${Cultures.tableName} c
-            LEFT JOIN ${BlockedCultures.tableName} bc
-                ON bc.${BlockedCultures.cultureId.name} = c.${Cultures.id.name} 
-                AND bc."${BlockedCultures.userId.name}" = '$userId'
-            LEFT JOIN ${FavouriteCultures.tableName} fc
-            ON fc.${FavouriteCultures.cultureId.name} = c.${Cultures.id.name} 
-                AND fc."${FavouriteCultures.userId.name}" = '$userId'
-            WHERE MY_SIMILARITY(${Cultures.name.name}, '$name') > 0.5
-                AND bc.${BlockedCultures.id.name} IS NULL
-            ORDER BY distance DESC
-            """.trimIndent()
-        rawQuery(query, CultureRepository::resultSetToCultures)?.map { it.first } ?: emptyList()
+        Cultures
+            .leftJoin(
+                BlockedCultures,
+                { BlockedCultures.cultureId },
+                { Cultures.id },
+                { BlockedCultures.userId eq userId })
+            .leftJoin(
+                FavouriteCultures,
+                { FavouriteCultures.cultureId },
+                { Cultures.id },
+                { FavouriteCultures.userId eq userId }
+            )
+            .select {
+                Similarity(Cultures.name, name) greaterEq 0.25 and BlockedCultures.id.isNull()
+            }
+            .orderBy(Similarity(Cultures.name, name), SortOrder.DESC)
+            .map(::rowToCulture)
     }
 
-
-    /** DISTANCE_IN_KM is a user defined function in [getDistanceFunction] currently only H2 and Postgres dialects have been defined, define your own dialect when needed
-     *  TODO - DISTANCE_IN_KM is a potentially expensive operation and we are doing it twice, hence increasing the complexity of the query, in future optimisation we would find a way to use it once.
-     * */
     override suspend fun getCulturesByLocation(userId: String, location: Location, kmLimit: Double): List<Culture> =
-        rawQuery(
-            """
-            SELECT c.${Cultures.id.name}, 
-                    c.${Cultures.name.name}, 
-                    c.${Cultures.lat.name}, 
-                    c.${Cultures.lon.name}, 
-                    fc.${FavouriteCultures.cultureId.name} = c.${Cultures.id.name} as ${FavouriteRepository.Favourite},
-                    DISTANCE_IN_KM(${Cultures.lat.name}, ${Cultures.lon.name}, ${location.latitude}, ${location.longitude}) as distance
-            FROM ${Cultures.tableName} c
-            LEFT JOIN ${BlockedCultures.tableName} bc
-                ON bc.${BlockedCultures.cultureId.name} = c.${Cultures.id.name} 
-                AND bc."${BlockedCultures.userId.name}" = '$userId'
-            LEFT JOIN ${FavouriteCultures.tableName} fc
-            ON fc.${FavouriteCultures.cultureId.name} = c.${Cultures.id.name} 
-                AND fc."${FavouriteCultures.userId.name}" = '$userId'
-            WHERE DISTANCE_IN_KM(${Cultures.lat.name}, ${Cultures.lon.name}, ${location.latitude}, ${location.longitude}) <= $kmLimit
-                AND bc.${BlockedCultures.id.name} IS NULL
-            ORDER BY distance ASC""".trimIndent(),
-            transform = CultureRepository::resultSetToCultures
-        )?.map { it.first } ?: emptyList()
+        dbQuery {
+            Cultures
+                .leftJoin(
+                    BlockedCultures,
+                    { BlockedCultures.cultureId },
+                    { Cultures.id },
+                    { BlockedCultures.userId eq userId })
+                .leftJoin(
+                    FavouriteCultures,
+                    { FavouriteCultures.cultureId },
+                    { Cultures.id },
+                    { FavouriteCultures.userId eq userId }
+                )
+                .select {
+                    (Distance(
+                        Cultures.lat,
+                        Cultures.lon,
+                        location.latitude,
+                        location.longitude
+                    ) lessEq kmLimit and BlockedCultures.id.isNull())
+                }
+                .orderBy(Distance(Cultures.lat, Cultures.lon, location.latitude, location.longitude), SortOrder.DESC)
+                .map(::rowToCulture)
+        }
 
     override suspend fun insertCulture(culture: Culture): Culture? = dbQuery {
         val statement = Cultures.insert {
