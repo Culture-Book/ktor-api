@@ -118,7 +118,7 @@ internal fun Route.submitElement() {
                 call.respond(HttpStatusCode.BadRequest, uploadFilesState)
             }
         } else {
-            call.respond(HttpStatusCode.OK, listOf(element.id.toString()))
+            call.respond(HttpStatusCode.OK, element)
         }
     }
 }

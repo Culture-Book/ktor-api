@@ -119,7 +119,7 @@ internal fun Route.uploadContributionRoute() {
                 call.respond(HttpStatusCode.BadRequest, uploadFilesState)
             }
         } else {
-            call.respond(HttpStatusCode.OK, listOf(contribution.id.toString()))
+            call.respond(HttpStatusCode.OK, contribution)
         }
     }
 }
