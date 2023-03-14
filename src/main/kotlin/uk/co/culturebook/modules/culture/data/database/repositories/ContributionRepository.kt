@@ -207,6 +207,10 @@ object ContributionRepository : ContributionDao {
                 rowToReaction(it, isMine)
             }
 
+        val linkedElements = LinkedContributions
+            .select { LinkedContributions.parent_element_id eq id }
+            .map { it[LinkedContributions.child_element_id] }
+
         Contributions
             .leftJoin(
                 BlockedContributions,
@@ -227,7 +231,8 @@ object ContributionRepository : ContributionDao {
                 contribution.copy(
                     media = media,
                     reactions = reactions,
-                    comments = comments
+                    comments = comments,
+                    linkElements = linkedElements
                 )
             }
             .singleOrNull()

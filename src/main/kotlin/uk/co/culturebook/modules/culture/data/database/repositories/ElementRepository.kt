@@ -25,9 +25,14 @@ import uk.co.culturebook.modules.culture.data.database.tables.Media as MediaT
 
 object ElementRepository : ElementDao {
 
-    private fun rowToElement(resultRow: ResultRow): Element {
+    private fun rowToElement(resultRow: ResultRow, minify: Boolean = false): Element {
         val location = resultRow[Elements.event_loc_lat]?.let { Location(it, resultRow[Elements.event_loc_lon]!!) }
         val eventStartDate = resultRow[Elements.event_start_date]
+        val information = if (minify) {
+            resultRow[Elements.information].substring(0, minOf(40, resultRow[Elements.information].length))
+        } else {
+            resultRow[Elements.information]
+        }
 
         return Element(
             id = resultRow[Elements.id],
@@ -36,7 +41,7 @@ object ElementRepository : ElementDao {
             type = resultRow[Elements.type].decodeElementType(),
             location = Location(resultRow[Elements.loc_lat], resultRow[Elements.loc_lon]),
             eventType = location?.let { EventType(eventStartDate!!, location) },
-            information = resultRow[Elements.information],
+            information = information,
             favourite = resultRow.getOrNull(FavouriteElements.id) != null
         )
     }
@@ -108,7 +113,7 @@ object ElementRepository : ElementDao {
                 SortOrder.DESC
             )
             .limit(limit, (page - 1L) * limit)
-            .map(::rowToElement)
+            .map { rowToElement(it, true) }
     }
 
     override suspend fun getPreviewElements(
@@ -139,7 +144,7 @@ object ElementRepository : ElementDao {
             }
             .orderBy(Similarity(Elements.name, searchString), SortOrder.DESC)
             .limit(limit, (page - 1L) * limit)
-            .map(::rowToElement)
+            .map { rowToElement(it, true) }
     }
 
     override suspend fun getElement(id: UUID): Element? = dbQuery {
@@ -168,6 +173,10 @@ object ElementRepository : ElementDao {
                 rowToReaction(it, isMine)
             }
 
+        val linkedElements = LinkedElements
+            .select { LinkedElements.parent_element_id eq id }
+            .map { it[LinkedElements.child_element_id] }
+
         Elements
             .leftJoin(
                 BlockedElements,
@@ -188,7 +197,8 @@ object ElementRepository : ElementDao {
                 element.copy(
                     media = media,
                     reactions = reactions,
-                    comments = comments
+                    comments = comments,
+                    linkElements = linkedElements
                 )
             }
             .singleOrNull()
