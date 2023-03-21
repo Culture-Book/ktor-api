@@ -42,7 +42,7 @@ interface ElementDao {
     suspend fun getDuplicateElement(name: String, type: String): List<Element>
     suspend fun uploadMedia(apiKey: String, bearer: String, fileHost: String, files: List<MediaFile>): List<MediaFile>
     suspend fun linkElements(parentId: UUID, elementIds: List<UUID>): Boolean
-    suspend fun insertElement(element: Element): Element?
+    suspend fun insertElement(element: Element, userId: String): Element?
     suspend fun deleteElement(elementId: UUID): Boolean
     suspend fun updateElement(element: Element): Boolean
 }

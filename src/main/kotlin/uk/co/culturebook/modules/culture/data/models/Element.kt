@@ -19,5 +19,6 @@ data class Element(
     val media: List<Media> = emptyList(),
     val comments: List<Comment> = emptyList(),
     val reactions: List<Reaction> = emptyList(),
-    val favourite: Boolean = false
+    val favourite: Boolean = false,
+    val isVerified: Boolean = false
 )

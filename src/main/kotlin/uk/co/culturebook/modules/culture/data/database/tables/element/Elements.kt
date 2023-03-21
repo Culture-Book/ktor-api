@@ -3,12 +3,14 @@ package uk.co.culturebook.modules.culture.data.database.tables.element
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.javatime.datetime
+import uk.co.culturebook.modules.authentication.data.database.tables.Users
 import uk.co.culturebook.modules.culture.data.database.tables.Cultures
 
 object Elements : Table() {
     val id = uuid("element_id").autoGenerate()
-    val culture_id = uuid("culture_id").references(
-        Cultures.id,
+    val culture_id = uuid("culture_id").references(Cultures.id)
+    val user_id = text("userId").references(
+        Users.userId,
         onDelete = ReferenceOption.CASCADE,
         onUpdate = ReferenceOption.CASCADE
     )

@@ -6,12 +6,14 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import uk.co.culturebook.Constants
 import uk.co.culturebook.modules.culture.add_new.client
-import uk.co.culturebook.modules.culture.data.database.repositories.CommentRepository.rowToComment
 import uk.co.culturebook.modules.culture.data.database.repositories.MediaRepository.rowToMedia
-import uk.co.culturebook.modules.culture.data.database.repositories.ReactionRepository.rowToReaction
-import uk.co.culturebook.modules.culture.data.database.tables.*
+import uk.co.culturebook.modules.culture.data.database.tables.BlockedContributions
+import uk.co.culturebook.modules.culture.data.database.tables.FavouriteContributions
 import uk.co.culturebook.modules.culture.data.database.tables.Media
-import uk.co.culturebook.modules.culture.data.database.tables.contribution.*
+import uk.co.culturebook.modules.culture.data.database.tables.contribution.ContributionMedia
+import uk.co.culturebook.modules.culture.data.database.tables.contribution.ContributionReactions
+import uk.co.culturebook.modules.culture.data.database.tables.contribution.Contributions
+import uk.co.culturebook.modules.culture.data.database.tables.contribution.LinkedContributions
 import uk.co.culturebook.modules.culture.data.interfaces.ContributionDao
 import uk.co.culturebook.modules.culture.data.interfaces.external.MediaRoute
 import uk.co.culturebook.modules.culture.data.models.*
@@ -63,7 +65,7 @@ object ContributionRepository : ContributionDao {
     override suspend fun getDuplicateContribution(name: String, type: String): List<Contribution> = dbQuery {
         Contributions
             .select {
-                (Similarity(Contributions.name, name) greaterEq 0.25) and (Contributions.type eq type)
+                (Similarity(Contributions.name, name) greaterEq 0.75) and (Contributions.type eq type)
             }
             .orderBy(Similarity(Contributions.name, name), SortOrder.DESC)
             .map(::rowToContribution)
@@ -119,7 +121,7 @@ object ContributionRepository : ContributionDao {
         }.isNotEmpty()
     }
 
-    override suspend fun insertContribution(contribution: Contribution): Contribution? = dbQuery {
+    override suspend fun insertContribution(contribution: Contribution, userId: String): Contribution? = dbQuery {
         val statement = Contributions.insert {
             it[id] = contribution.id
             it[name] = contribution.name
@@ -131,6 +133,7 @@ object ContributionRepository : ContributionDao {
             it[event_loc_lat] = if (contribution.eventType != null) contribution.eventType.location.latitude else null
             it[event_loc_lon] = if (contribution.eventType != null) contribution.eventType.location.longitude else null
             it[information] = contribution.information
+            it[user_id] = userId
         }
         statement.resultedValues?.singleOrNull()
             ?.let(ContributionRepository::rowToContribution)
@@ -175,10 +178,12 @@ object ContributionRepository : ContributionDao {
                 { FavouriteContributions.userId eq userId }
             )
             .select {
-                Similarity(Contributions.name, searchString) greaterEq 0.25 and
-                        BlockedContributions.id.isNull() and
-                        (Contributions.type inList types.map { it.toString() }) and
-                        (Contributions.element_id eq elementId)
+                val similarity = if (searchString.isNotBlank()) Similarity(Contributions.name, searchString) greaterEq 0.25 else null
+                val blocked = BlockedContributions.id.isNull()
+                val inType = Contributions.type inList types.map { it.toString() }
+                val inElement = Contributions.element_id eq elementId
+
+                ((similarity?.and(blocked) ?: blocked) and inType and inElement)
             }
             .orderBy(Similarity(Contributions.name, searchString), SortOrder.DESC)
             .limit(limit, (page - 1L) * limit)
@@ -191,20 +196,11 @@ object ContributionRepository : ContributionDao {
             .select { ContributionMedia.contributionId eq id }
             .map(::rowToMedia)
 
-        val comments = ContributionComments
-            .innerJoin(Comments, { Comments.id }, { ContributionComments.commentId })
-            .select { ContributionComments.contributionId eq id }
-            .map {
-                val isMine = it[Comments.user_id] == userId
-                rowToComment(it, isMine)
-            }
-
         val reactions = ContributionReactions
-            .innerJoin(Reactions, { Reactions.id }, { ContributionReactions.reactionId })
             .select { ContributionReactions.contributionId eq id }
             .map {
-                val isMine = it[Reactions.user_id] == userId
-                rowToReaction(it, isMine)
+                val isMine = it[ContributionReactions.user_id] == userId
+                ReactionRepository.rowToContributionReaction(it, isMine)
             }
 
         val linkedElements = LinkedContributions
@@ -231,7 +227,6 @@ object ContributionRepository : ContributionDao {
                 contribution.copy(
                     media = media,
                     reactions = reactions,
-                    comments = comments,
                     linkElements = linkedElements
                 )
             }

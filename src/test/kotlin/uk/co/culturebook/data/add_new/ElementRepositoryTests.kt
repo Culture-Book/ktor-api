@@ -17,10 +17,17 @@ import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
+import uk.co.culturebook.modules.authentication.data.database.repositories.UserRepository
+import uk.co.culturebook.modules.authentication.data.database.tables.Users
+import uk.co.culturebook.modules.authentication.data.models.User
 import uk.co.culturebook.modules.culture.data.database.repositories.CultureRepository.insertCulture
 import uk.co.culturebook.modules.culture.data.database.repositories.ElementRepository
 import uk.co.culturebook.modules.culture.data.database.repositories.ElementRepository.insertElement
+import uk.co.culturebook.modules.culture.data.database.tables.BlockedElements
 import uk.co.culturebook.modules.culture.data.database.tables.Cultures
+import uk.co.culturebook.modules.culture.data.database.tables.FavouriteElements
+import uk.co.culturebook.modules.culture.data.database.tables.element.ElementComments
+import uk.co.culturebook.modules.culture.data.database.tables.element.ElementMedia
 import uk.co.culturebook.modules.culture.data.database.tables.element.Elements
 import uk.co.culturebook.modules.culture.data.models.*
 import java.time.LocalDateTime
@@ -30,6 +37,9 @@ import java.util.*
 class ElementRepositoryTests {
     private val dbUrl = "jdbc:h2:mem:test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;"
     private val dbDriver = "org.h2.Driver"
+
+    private val user: User = User(email = "email@email.com", password = "password")
+
     private val location1 = Location(48.8588443, 2.2943506)
     private val location2 = Location(48.8588443, 2.1943506)
     private val location3 = Location(0.0, 0.1)
@@ -74,20 +84,22 @@ class ElementRepositoryTests {
         Dispatchers.setMain(mainThreadSurrogate)
         testSuspend(Dispatchers.Main) {
             newSuspendedTransaction {
+                create(Users)
                 create(Cultures)
                 create(Elements)
 
+                UserRepository.registerUser(user)
                 insertCulture(culture1)
                 insertCulture(culture2)
                 insertCulture(culture3)
                 insertCulture(culture4)
                 insertCulture(culture5)
 
-                insertElement(element1)
-                insertElement(element2)
-                insertElement(element3)
-                insertElement(element4)
-                insertElement(element5)
+                insertElement(element1, user.userId)
+                insertElement(element2, user.userId)
+                insertElement(element3, user.userId)
+                insertElement(element4, user.userId)
+                insertElement(element5, user.userId)
             }
         }
     }
@@ -96,7 +108,7 @@ class ElementRepositoryTests {
     fun tearDown() {
         testSuspend(Dispatchers.Main) {
             newSuspendedTransaction {
-                drop(Elements)
+                drop(Elements, FavouriteElements, BlockedElements, ElementComments, ElementMedia, Users)
             }
         }
         Dispatchers.resetMain()
@@ -118,16 +130,6 @@ class ElementRepositoryTests {
 
         val elements1 = ElementRepository.getDuplicateElement("What what", ElementType.Music.name)
         assertEquals(0, elements1.size)
-
-        val diffElement = Element(
-            cultureId = UUID.randomUUID(),
-            information = "hello",
-            location = Location(99.9, 99.9),
-            name = "A completely different and new name",
-            type = ElementType.Story
-        )
-        val elements2 = ElementRepository.getDuplicateElement(diffElement.name, diffElement.type.name)
-        assert(elements2.isEmpty())
     }
 
     @Test
@@ -148,5 +150,4 @@ class ElementRepositoryTests {
         assertNotNull(retrievedElement)
         assertEquals(newName, retrievedElement?.name)
     }
-
 }

@@ -50,9 +50,9 @@ fun Application.databaseModule() =
             // Element Tables
             SchemaUtils.create(Elements)
             SchemaUtils.create(Contributions)
-            SchemaUtils.create(Comments)
-            SchemaUtils.create(Reactions)
             SchemaUtils.create(Media)
+            SchemaUtils.create(BlockedElementComments)
+            SchemaUtils.create(BlockedContributionComments)
 
             // M-M tables
             SchemaUtils.create(LinkedElements)

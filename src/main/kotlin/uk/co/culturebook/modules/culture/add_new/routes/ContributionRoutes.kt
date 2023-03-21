@@ -9,6 +9,7 @@ import io.ktor.server.routing.*
 import io.ktor.util.*
 import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.serialization.json.Json
+import uk.co.culturebook.modules.authentication.logic.authenticated.getUserId
 import uk.co.culturebook.modules.culture.add_new.logic.addContribution
 import uk.co.culturebook.modules.culture.add_new.logic.getDuplicateContributions
 import uk.co.culturebook.modules.culture.add_new.logic.uploadContributionMedia
@@ -61,7 +62,8 @@ internal fun Route.uploadContributionRoute() {
                 apiKey = config.hostApiKey,
                 bearer = config.hostToken,
                 fileHost = config.fileHost,
-                contribution = contribution
+                contribution = contribution,
+                getUserId()
             )
             if (state is ContributionState.Error) {
                 ContributionRepository.deleteContribution(contribution.id)

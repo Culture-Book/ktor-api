@@ -9,6 +9,7 @@ import io.ktor.server.routing.*
 import io.ktor.util.*
 import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.serialization.json.Json
+import uk.co.culturebook.modules.authentication.logic.authenticated.getUserId
 import uk.co.culturebook.modules.culture.add_new.logic.addElement
 import uk.co.culturebook.modules.culture.add_new.logic.getDuplicateElements
 import uk.co.culturebook.modules.culture.add_new.logic.uploadElementMedia
@@ -61,7 +62,8 @@ internal fun Route.submitElement() {
                 apiKey = config.hostApiKey,
                 bearer = config.hostToken,
                 fileHost = config.fileHost,
-                element = element
+                element = element,
+                getUserId()
             )
             if (state is ElementState.Error) {
                 deleteElement(element.id)

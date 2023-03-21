@@ -5,15 +5,16 @@ import io.ktor.http.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import uk.co.culturebook.Constants
+import uk.co.culturebook.modules.authentication.data.database.tables.Users
+import uk.co.culturebook.modules.authentication.data.enums.VerificationStatus
 import uk.co.culturebook.modules.culture.add_new.client
-import uk.co.culturebook.modules.culture.data.database.repositories.CommentRepository.rowToComment
 import uk.co.culturebook.modules.culture.data.database.repositories.MediaRepository.rowToMedia
-import uk.co.culturebook.modules.culture.data.database.repositories.ReactionRepository.rowToReaction
 import uk.co.culturebook.modules.culture.data.database.tables.BlockedElements
-import uk.co.culturebook.modules.culture.data.database.tables.Comments
 import uk.co.culturebook.modules.culture.data.database.tables.FavouriteElements
-import uk.co.culturebook.modules.culture.data.database.tables.Reactions
-import uk.co.culturebook.modules.culture.data.database.tables.element.*
+import uk.co.culturebook.modules.culture.data.database.tables.element.ElementMedia
+import uk.co.culturebook.modules.culture.data.database.tables.element.ElementReactions
+import uk.co.culturebook.modules.culture.data.database.tables.element.Elements
+import uk.co.culturebook.modules.culture.data.database.tables.element.LinkedElements
 import uk.co.culturebook.modules.culture.data.interfaces.ElementDao
 import uk.co.culturebook.modules.culture.data.interfaces.external.MediaRoute
 import uk.co.culturebook.modules.culture.data.models.*
@@ -42,7 +43,8 @@ object ElementRepository : ElementDao {
             location = Location(resultRow[Elements.loc_lat], resultRow[Elements.loc_lon]),
             eventType = location?.let { EventType(eventStartDate!!, location) },
             information = information,
-            favourite = resultRow.getOrNull(FavouriteElements.id) != null
+            favourite = resultRow.getOrNull(FavouriteElements.id) != null,
+            isVerified = resultRow.getOrNull(Users.verificationStatus) == VerificationStatus.Verified.ordinal
         )
     }
 
@@ -136,6 +138,11 @@ object ElementRepository : ElementDao {
                 { Elements.id },
                 { FavouriteElements.userId eq userId }
             )
+            .leftJoin(
+                Users,
+                { Users.userId },
+                { Elements.user_id },
+            )
             .select {
                 (Similarity(
                     Elements.name,
@@ -157,20 +164,11 @@ object ElementRepository : ElementDao {
             .select { ElementMedia.elementId eq id }
             .map(::rowToMedia)
 
-        val comments = ElementComments
-            .innerJoin(Comments, { Comments.id }, { ElementComments.commentId })
-            .select { ElementComments.elementId eq id }
-            .map {
-                val isMine = it[Comments.user_id] == userId
-                rowToComment(it, isMine)
-            }
-
         val reactions = ElementReactions
-            .innerJoin(Reactions, { Reactions.id }, { ElementReactions.reactionId })
             .select { ElementReactions.elementId eq id }
             .map {
-                val isMine = it[Reactions.user_id] == userId
-                rowToReaction(it, isMine)
+                val isMine = it[ElementReactions.user_id] == userId
+                ReactionRepository.rowToElementReaction(it, isMine)
             }
 
         val linkedElements = LinkedElements
@@ -189,6 +187,11 @@ object ElementRepository : ElementDao {
                 { Elements.id },
                 { FavouriteElements.userId eq userId }
             )
+            .leftJoin(
+                Users,
+                { Users.userId },
+                { Elements.user_id },
+            )
             .select {
                 (Elements.id eq id) and BlockedElements.id.isNull()
             }
@@ -197,8 +200,7 @@ object ElementRepository : ElementDao {
                 element.copy(
                     media = media,
                     reactions = reactions,
-                    comments = comments,
-                    linkElements = linkedElements
+                    linkElements = linkedElements,
                 )
             }
             .singleOrNull()
@@ -245,7 +247,7 @@ object ElementRepository : ElementDao {
         }.isNotEmpty()
     }
 
-    override suspend fun insertElement(element: Element): Element? = dbQuery {
+    override suspend fun insertElement(element: Element, userId: String): Element? = dbQuery {
         val statement = Elements.insert {
             it[id] = element.id
             it[culture_id] = element.cultureId
@@ -257,6 +259,7 @@ object ElementRepository : ElementDao {
             it[event_loc_lat] = if (element.eventType != null) element.eventType.location.latitude else null
             it[event_loc_lon] = if (element.eventType != null) element.eventType.location.longitude else null
             it[information] = element.information
+            it[user_id] = userId
         }
         statement.resultedValues?.singleOrNull()?.let(::rowToElement)
     }

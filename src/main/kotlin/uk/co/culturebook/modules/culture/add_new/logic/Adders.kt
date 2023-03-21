@@ -23,13 +23,14 @@ internal suspend fun addElement(
     apiKey: String,
     bearer: String,
     fileHost: String,
-    element: Element
+    element: Element,
+    userId: String
 ): ElementState {
     val isDuplicate = ElementRepository.getDuplicateElement(element.name, element.type.name).isNotEmpty()
 
     if (isDuplicate) return ElementState.Error.DuplicateElement
 
-    val insertElement = ElementRepository.insertElement(element) ?: return ElementState.Error.FailedToAddElement
+    val insertElement = ElementRepository.insertElement(element, userId) ?: return ElementState.Error.FailedToAddElement
 
     val linkedElements = ElementRepository.linkElements(insertElement.id, element.linkElements)
 
@@ -68,7 +69,8 @@ internal suspend fun addContribution(
     apiKey: String,
     bearer: String,
     fileHost: String,
-    contribution: Contribution
+    contribution: Contribution,
+    userId: String
 ): ContributionState {
     val isDuplicate =
         uk.co.culturebook.modules.culture.data.database.repositories.ContributionRepository.getDuplicateContribution(
@@ -80,7 +82,7 @@ internal suspend fun addContribution(
 
     val insertedContribution =
         uk.co.culturebook.modules.culture.data.database.repositories.ContributionRepository.insertContribution(
-            contribution
+            contribution, userId
         )
             ?: return ContributionState.Error.FailedToAddContribution
 

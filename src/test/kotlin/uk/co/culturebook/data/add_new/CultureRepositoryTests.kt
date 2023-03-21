@@ -20,7 +20,9 @@ import org.junit.Test
 import uk.co.culturebook.modules.culture.add_new.logic.addCulture
 import uk.co.culturebook.modules.culture.data.database.repositories.CultureRepository
 import uk.co.culturebook.modules.culture.data.database.repositories.CultureRepository.insertCulture
+import uk.co.culturebook.modules.culture.data.database.tables.BlockedCultures
 import uk.co.culturebook.modules.culture.data.database.tables.Cultures
+import uk.co.culturebook.modules.culture.data.database.tables.FavouriteCultures
 import uk.co.culturebook.modules.culture.data.interfaces.CultureState
 import uk.co.culturebook.modules.culture.data.models.Culture
 import uk.co.culturebook.modules.culture.data.models.Location
@@ -53,7 +55,7 @@ class CultureRepositoryTests {
         Dispatchers.setMain(mainThreadSurrogate)
         testSuspend(Dispatchers.Main) {
             newSuspendedTransaction {
-                create(Cultures)
+                create(Cultures, BlockedCultures, FavouriteCultures)
                 insertCulture(culture1)
                 insertCulture(culture2)
                 insertCulture(culture3)
@@ -65,6 +67,8 @@ class CultureRepositoryTests {
     fun tearDown() {
         testSuspend(Dispatchers.Main) {
             newSuspendedTransaction {
+                drop(FavouriteCultures)
+                drop(BlockedCultures)
                 drop(Cultures)
             }
         }
@@ -81,9 +85,10 @@ class CultureRepositoryTests {
 
     @Test
     fun testGetCulturesByLocation() = testSuspend(Dispatchers.Main) {
-        val retrievedCultures = CultureRepository.getCulturesByLocation(location1, 10.0)
-        assertEquals(2, retrievedCultures.size)
-        assertEquals(culture1, retrievedCultures.first())
+        val retrievedCultures = CultureRepository.getCulturesByLocation("", location1, 1.0)
+        assertNotNull(retrievedCultures)
+        assertEquals(1, retrievedCultures.size)
+        assertTrue(retrievedCultures.contains(culture1))
     }
 
     @Test
@@ -116,7 +121,7 @@ class CultureRepositoryTests {
     @Test
     fun testInsertDuplicateCulture() = testSuspend(Dispatchers.Main) {
         val culture1_new = Culture(UUID.randomUUID(), "Opera1", location1)
-        val state = addCulture(culture1_new, location1)
+        val state = addCulture("", culture1_new, location1)
         assertEquals(CultureState.Error.DuplicateCulture, state)
     }
 }

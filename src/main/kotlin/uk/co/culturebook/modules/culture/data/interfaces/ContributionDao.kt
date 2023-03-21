@@ -33,7 +33,7 @@ interface ContributionDao {
     ): Boolean
 
     suspend fun linkContributions(parentId: UUID, elementIds: List<UUID>): Boolean
-    suspend fun insertContribution(contribution: Contribution): Contribution?
+    suspend fun insertContribution(contribution: Contribution, userId: String): Contribution?
     suspend fun deleteContribution(elementId: UUID): Boolean
     suspend fun updateContribution(element: Contribution): Boolean
     suspend fun getContributions(
