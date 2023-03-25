@@ -21,6 +21,7 @@ sealed interface DetailsRoute {
         const val route = "comments"
         const val commentId = "commentId"
         const val isContribution = "isContribution"
+
         object BlockComment : DetailsRoute {
             const val route = "comments/block"
         }

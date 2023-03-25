@@ -11,6 +11,10 @@ import uk.co.culturebook.modules.authentication.generateAccessJwt
 import uk.co.culturebook.modules.authentication.logic.utils.generateUserToken
 import uk.co.culturebook.modules.authentication.logic.utils.isProperEmail
 import uk.co.culturebook.modules.authentication.logic.utils.isProperPassword
+import uk.co.culturebook.modules.culture.data.AddNewConfig.fileHost
+import uk.co.culturebook.modules.culture.data.AddNewConfig.hostApiKey
+import uk.co.culturebook.modules.culture.data.AddNewConfig.hostToken
+import uk.co.culturebook.modules.culture.data.models.BucketRequest
 import uk.co.culturebook.utils.toUUIDOrRandom
 
 suspend fun registerUser(config: ApplicationConfig, callUser: User): AuthState {
@@ -45,6 +49,17 @@ suspend fun registerUser(config: ApplicationConfig, callUser: User): AuthState {
     val jwt = generateAccessJwt(config, user.userId, userToken.accessToken) ?: return AuthState.Error.Generic
     UserTokenRepository.insertToken(userToken) ?: return AuthState.Error.Generic
 
-    return AuthState.Success(jwt, userToken.refreshToken!!)
+    val generateBucket = UserRepository.createBucketForUser(
+        request = BucketRequest(id = user.userId, name = user.userId),
+        apiKey = config.hostApiKey,
+        bearer = config.hostToken,
+        fileHost = config.fileHost
+    )
+
+    return if (generateBucket) {
+        AuthState.Success(jwt, userToken.refreshToken!!)
+    } else {
+        AuthState.Error.Generic
+    }
 }
 

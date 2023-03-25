@@ -18,6 +18,7 @@ sealed interface MediaRoute {
     object BucketRoute {
         fun getBucket(fileHost: String) = "${fileHost}/${V1_STORAGE}/bucket"
         fun getBucket(fileHost: String, id: String) = "${fileHost}/${V1_STORAGE}/bucket/$id"
+        fun emptyBucket(fileHost: String, id: String) = "${fileHost}/${V1_STORAGE}/bucket/$id/empty"
         fun getMedia(fileHost: String, bucketName: String) =
             "${fileHost}/${V1_STORAGE}/object/list/$bucketName"
     }

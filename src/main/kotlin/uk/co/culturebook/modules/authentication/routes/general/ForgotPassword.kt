@@ -9,8 +9,11 @@ import io.ktor.server.routing.*
 import uk.co.culturebook.modules.authentication.data.interfaces.AuthRoute
 import uk.co.culturebook.modules.authentication.data.models.PasswordReset
 import uk.co.culturebook.modules.authentication.data.models.PasswordResetRequest
+import uk.co.culturebook.modules.authentication.data.models.PasswordUpdateRequest
+import uk.co.culturebook.modules.authentication.logic.authenticated.getUserId
 import uk.co.culturebook.modules.authentication.logic.general.forgotPassword
 import uk.co.culturebook.modules.authentication.logic.general.resetPassword
+import uk.co.culturebook.modules.authentication.logic.general.updatePassword
 
 internal fun Route.resetPassword(config: ApplicationConfig) {
     post(AuthRoute.ResetPassword.route) {
@@ -28,5 +31,14 @@ internal fun Route.forgotPasswordRoute(config: ApplicationConfig) {
         val passwordResetRequest = call.receive<PasswordResetRequest>()
         val passwordReset = forgotPassword(config, passwordResetRequest)
         if (passwordReset) call.respond(HttpStatusCode.OK) else call.respond(HttpStatusCode.BadRequest)
+    }
+}
+
+internal fun Route.updatePasswordRoute(config: ApplicationConfig) {
+    post(AuthRoute.User.UpdatePassword.route) {
+        val passwordUpdate = call.receive<PasswordUpdateRequest>()
+        if (updatePassword(config, passwordUpdate, getUserId())) call.respond(HttpStatusCode.OK) else call.respond(
+            HttpStatusCode.BadRequest
+        )
     }
 }

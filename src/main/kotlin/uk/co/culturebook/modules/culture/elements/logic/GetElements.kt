@@ -1,4 +1,4 @@
-package uk.co.culturebook.modules.culture.nearby.logic
+package uk.co.culturebook.modules.culture.elements.logic
 
 import uk.co.culturebook.modules.culture.data.database.repositories.ContributionRepository
 import uk.co.culturebook.modules.culture.data.database.repositories.CultureRepository

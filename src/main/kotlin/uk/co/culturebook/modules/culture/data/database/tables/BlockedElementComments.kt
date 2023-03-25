@@ -11,6 +11,10 @@ object BlockedElementComments : Table() {
     val user_id =
         text("user_id").references(Users.userId, onDelete = ReferenceOption.CASCADE, onUpdate = ReferenceOption.CASCADE)
     val comment_id =
-        uuid("comment_id").references(ElementComments.id, onDelete = ReferenceOption.CASCADE, onUpdate = ReferenceOption.CASCADE)
+        uuid("comment_id").references(
+            ElementComments.id,
+            onDelete = ReferenceOption.CASCADE,
+            onUpdate = ReferenceOption.CASCADE
+        )
     override val primaryKey = PrimaryKey(id)
 }

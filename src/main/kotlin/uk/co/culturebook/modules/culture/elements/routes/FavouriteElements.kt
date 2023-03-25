@@ -1,4 +1,4 @@
-package uk.co.culturebook.modules.culture.nearby.routes
+package uk.co.culturebook.modules.culture.elements.routes
 
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -6,13 +6,13 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import uk.co.culturebook.modules.authentication.logic.authenticated.getUserId
-import uk.co.culturebook.modules.culture.data.data.interfaces.NearbyRoute
+import uk.co.culturebook.modules.culture.data.data.interfaces.ElementsRoute
 import uk.co.culturebook.modules.culture.data.database.repositories.FavouriteRepository
 import uk.co.culturebook.modules.culture.data.models.FavouriteElement
 import uk.co.culturebook.utils.forceNotNull
 
 internal fun Route.favRoutes() {
-    post(NearbyRoute.FavouriteElement.route) {
+    post(ElementsRoute.FavouriteElement.route) {
         val favouriteElement = call.receive<FavouriteElement>()
             .forceNotNull(call)
             .uuid
@@ -27,7 +27,7 @@ internal fun Route.favRoutes() {
 
         call.respond(HttpStatusCode.OK)
     }
-    post(NearbyRoute.FavouriteContribution.route) {
+    post(ElementsRoute.FavouriteContribution.route) {
         val favouriteElement = call.receive<FavouriteElement>()
             .forceNotNull(call)
             .uuid
@@ -41,7 +41,7 @@ internal fun Route.favRoutes() {
         }
         call.respond(HttpStatusCode.OK)
     }
-    post(NearbyRoute.FavouriteCulture.route) {
+    post(ElementsRoute.FavouriteCulture.route) {
         val favouriteElement = call.receive<FavouriteElement>()
             .forceNotNull(call)
             .uuid

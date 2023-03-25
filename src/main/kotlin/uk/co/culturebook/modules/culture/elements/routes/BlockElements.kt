@@ -1,4 +1,4 @@
-package uk.co.culturebook.modules.culture.nearby.routes
+package uk.co.culturebook.modules.culture.elements.routes
 
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -6,13 +6,13 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import uk.co.culturebook.modules.authentication.logic.authenticated.getUserId
-import uk.co.culturebook.modules.culture.data.data.interfaces.NearbyRoute
+import uk.co.culturebook.modules.culture.data.data.interfaces.ElementsRoute
 import uk.co.culturebook.modules.culture.data.database.repositories.BlockedElementsRepository
 import uk.co.culturebook.modules.culture.data.models.BlockedElement
 import uk.co.culturebook.utils.forceNotNull
 
 internal fun Route.blockRoutes() {
-    post(NearbyRoute.BlockElement.route) {
+    post(ElementsRoute.BlockElement.route) {
         val blockedElement = call.receive<BlockedElement>()
             .forceNotNull(call)
             .uuid
@@ -21,7 +21,7 @@ internal fun Route.blockRoutes() {
         BlockedElementsRepository.blockElement(getUserId(), blockedElement)
         call.respond(HttpStatusCode.OK)
     }
-    post(NearbyRoute.BlockContribution.route) {
+    post(ElementsRoute.BlockContribution.route) {
         val blockedElement = call.receive<BlockedElement>()
             .forceNotNull(call)
             .uuid
@@ -30,7 +30,7 @@ internal fun Route.blockRoutes() {
         BlockedElementsRepository.blockContribution(getUserId(), blockedElement)
         call.respond(HttpStatusCode.OK)
     }
-    post(NearbyRoute.BlockCulture.route) {
+    post(ElementsRoute.BlockCulture.route) {
         val blockedElement = call.receive<BlockedElement>()
             .forceNotNull(call)
             .uuid
@@ -40,7 +40,7 @@ internal fun Route.blockRoutes() {
         call.respond(HttpStatusCode.OK)
     }
 
-    delete(NearbyRoute.BlockElement.route) {
+    delete(ElementsRoute.BlockElement.route) {
         val blockedElement = call.receive<BlockedElement>()
             .forceNotNull(call)
             .uuid
@@ -49,7 +49,7 @@ internal fun Route.blockRoutes() {
         BlockedElementsRepository.unblockElement(getUserId(), blockedElement)
         call.respond(HttpStatusCode.OK)
     }
-    delete(NearbyRoute.BlockContribution.route) {
+    delete(ElementsRoute.BlockContribution.route) {
         val blockedElement = call.receive<BlockedElement>()
             .forceNotNull(call)
             .uuid
@@ -58,7 +58,7 @@ internal fun Route.blockRoutes() {
         BlockedElementsRepository.unblockContribution(getUserId(), blockedElement)
         call.respond(HttpStatusCode.OK)
     }
-    delete(NearbyRoute.BlockCulture.route) {
+    delete(ElementsRoute.BlockCulture.route) {
         val blockedElement = call.receive<BlockedElement>()
             .forceNotNull(call)
             .uuid

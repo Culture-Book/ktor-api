@@ -17,6 +17,7 @@ object ReactionRepository {
         resultRow[ElementReactions.reaction],
         isMine
     )
+
     internal fun rowToContributionReaction(resultRow: ResultRow, isMine: Boolean = false): Reaction = Reaction(
         resultRow[ContributionReactions.id],
         resultRow[ContributionReactions.reaction],
@@ -24,18 +25,18 @@ object ReactionRepository {
     )
 
     // TODO: This is a bit of a hack, but it works for now
-    internal suspend fun toggleElementReaction(elementId:UUID, reaction: Reaction, userId: String) = dbQuery {
+    internal suspend fun toggleElementReaction(elementId: UUID, reaction: Reaction, userId: String) = dbQuery {
         val deletedSame = ElementReactions.deleteWhere {
             (ElementReactions.elementId eq elementId) and
-            (ElementReactions.user_id eq userId) and
-            (ElementReactions.reaction eq reaction.reaction)
+                    (ElementReactions.user_id eq userId) and
+                    (ElementReactions.reaction eq reaction.reaction)
         } > 0
 
         if (deletedSame) return@dbQuery false
 
         ElementReactions.deleteWhere {
             (ElementReactions.elementId eq elementId) and
-            (ElementReactions.user_id eq userId)
+                    (ElementReactions.user_id eq userId)
         }
 
         ElementReactions.insertIgnore {
@@ -46,18 +47,18 @@ object ReactionRepository {
     }
 
     // TODO: This is a bit of a hack, but it works for now
-    internal suspend fun toggleContributionReaction(elementId:UUID, reaction: Reaction, userId: String) = dbQuery {
+    internal suspend fun toggleContributionReaction(elementId: UUID, reaction: Reaction, userId: String) = dbQuery {
         val deletedSame = ContributionReactions.deleteWhere {
             (ContributionReactions.contributionId eq elementId) and
-            (ContributionReactions.user_id eq userId) and
-            (ContributionReactions.reaction eq reaction.reaction)
+                    (ContributionReactions.user_id eq userId) and
+                    (ContributionReactions.reaction eq reaction.reaction)
         }
 
         if (deletedSame > 0) return@dbQuery false
 
         ContributionReactions.deleteWhere {
             (ContributionReactions.contributionId eq elementId) and
-            (ContributionReactions.user_id eq userId)
+                    (ContributionReactions.user_id eq userId)
         }
 
         ContributionReactions.insertIgnore {

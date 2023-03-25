@@ -46,7 +46,8 @@ private fun Route.elementRoutes() {
 
     delete(DetailsRoute.Comments.route) {
         val commentId = call.request.queryParameters[DetailsRoute.Comments.commentId].forceNotNull(call).toUUID()
-        val isContribution = call.request.queryParameters[DetailsRoute.Comments.isContribution].forceNotNull(call).toBoolean()
+        val isContribution =
+            call.request.queryParameters[DetailsRoute.Comments.isContribution].forceNotNull(call).toBoolean()
         val deleted = deleteComment(commentId, isContribution, getUserId()).forceNotNull(call)
         if (deleted) call.respond(HttpStatusCode.OK) else call.respond(HttpStatusCode.BadRequest)
     }
@@ -66,7 +67,8 @@ private fun Route.elementRoutes() {
 
 private fun Route.contributionRoutes() {
     get(DetailsRoute.Comments.route) {
-        val contributionId = call.request.queryParameters[DetailsRoute.Contributions.contributionId].forceNotNull(call).toUUID()
+        val contributionId =
+            call.request.queryParameters[DetailsRoute.Contributions.contributionId].forceNotNull(call).toUUID()
         val comments = getComments(contributionId = contributionId, userId = getUserId()).forceNotNull(call)
         call.respond(HttpStatusCode.OK, comments)
     }
@@ -85,8 +87,9 @@ private fun Route.contributionRoutes() {
 
     delete(DetailsRoute.Comments.route) {
         val commentId = call.request.queryParameters[DetailsRoute.Comments.commentId].forceNotNull(call).toUUID()
-        val isContribution = call.request.queryParameters[DetailsRoute.Comments.isContribution].forceNotNull(call).toBoolean()
-        val deleted = deleteComment(commentId,isContribution, getUserId()).forceNotNull(call)
+        val isContribution =
+            call.request.queryParameters[DetailsRoute.Comments.isContribution].forceNotNull(call).toBoolean()
+        val deleted = deleteComment(commentId, isContribution, getUserId()).forceNotNull(call)
         if (deleted) call.respond(HttpStatusCode.OK) else call.respond(HttpStatusCode.BadRequest)
     }
 

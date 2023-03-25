@@ -33,6 +33,18 @@ sealed interface AuthRoute {
         object Privacy : AuthRoute {
             override val route: String = "privacy"
         }
+
+        object UpdatePassword : AuthRoute {
+            override val route = "${User.route}/password"
+        }
+
+        object ProfilePicture : AuthRoute {
+            override val route = "${User.route}/profile_picture"
+        }
+
+        object VerificationStatus : AuthRoute {
+            override val route = "${User.route}/verification_status"
+        }
     }
 
     object OauthPublicKey : AuthRoute {

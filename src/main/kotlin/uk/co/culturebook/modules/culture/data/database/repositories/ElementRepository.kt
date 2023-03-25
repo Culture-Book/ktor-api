@@ -71,6 +71,15 @@ object ElementRepository : ElementDao {
         bearer: String,
         fileHost: String
     ): Boolean {
+        val emptyResponse = client.post(MediaRoute.BucketRoute.emptyBucket(fileHost, request.id)) {
+            headers {
+                append(Constants.Headers.Authorization, "Bearer $bearer")
+                append(Constants.Headers.ApiKey, apiKey)
+            }
+            contentType(ContentType.Application.Json)
+            setBody(request)
+        }.status == HttpStatusCode.OK
+        if (!emptyResponse) return false
         val response = client.delete(MediaRoute.BucketRoute.getBucket(fileHost, request.id)) {
             headers {
                 append(Constants.Headers.Authorization, "Bearer $bearer")

@@ -9,7 +9,7 @@ data class Contribution(
     @Serializable(with = UUIDSerializer::class)
     val id: UUID = UUID.randomUUID(),
     @Serializable(with = UUIDSerializer::class)
-    val elementId: UUID,
+    val elementId: UUID? = null,
     val name: String,
     val type: ElementType,
     val location: Location,

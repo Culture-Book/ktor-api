@@ -1,4 +1,4 @@
-package uk.co.culturebook.modules.culture.nearby.routes
+package uk.co.culturebook.modules.culture.elements.routes
 
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -6,20 +6,20 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import uk.co.culturebook.modules.authentication.logic.authenticated.getUserId
-import uk.co.culturebook.modules.culture.data.data.interfaces.NearbyRoute
+import uk.co.culturebook.modules.culture.data.data.interfaces.ElementsRoute
 import uk.co.culturebook.modules.culture.data.database.repositories.ContributionRepository
 import uk.co.culturebook.modules.culture.data.database.repositories.ElementRepository
 import uk.co.culturebook.modules.culture.data.database.repositories.MediaRepository
 import uk.co.culturebook.modules.culture.data.models.SearchCriteria
-import uk.co.culturebook.modules.culture.nearby.logic.getContributions
-import uk.co.culturebook.modules.culture.nearby.logic.getCultures
-import uk.co.culturebook.modules.culture.nearby.logic.getElements
-import uk.co.culturebook.modules.culture.nearby.logic.getNearbyElements
+import uk.co.culturebook.modules.culture.elements.logic.getContributions
+import uk.co.culturebook.modules.culture.elements.logic.getCultures
+import uk.co.culturebook.modules.culture.elements.logic.getElements
+import uk.co.culturebook.modules.culture.elements.logic.getNearbyElements
 import uk.co.culturebook.utils.forceNotNull
 import uk.co.culturebook.utils.toUUID
 
 internal fun Route.getElementsRoute() {
-    post(NearbyRoute.Elements.route) {
+    post(ElementsRoute.Elements.route) {
         val criteria = call.receive<SearchCriteria>()
         val elements = with(criteria) {
             if (!criteria.searchString.isNullOrEmpty()) {
@@ -33,23 +33,23 @@ internal fun Route.getElementsRoute() {
         call.respond(HttpStatusCode.OK, elements)
     }
 
-    get(NearbyRoute.Element.route) {
+    get(ElementsRoute.Element.route) {
         val userId = getUserId()
-        val elementId = call.request.queryParameters[NearbyRoute.Element.Id].forceNotNull(call).toUUID()
+        val elementId = call.request.queryParameters[ElementsRoute.Element.Id].forceNotNull(call).toUUID()
         val element = ElementRepository.getElement(userId, elementId).forceNotNull(call)
 
         call.respond(HttpStatusCode.OK, element)
     }
 
-    get(NearbyRoute.ElementsMedia.route) {
-        val elementId = call.request.queryParameters[NearbyRoute.ElementsMedia.ElementId].forceNotNull(call).toUUID()
+    get(ElementsRoute.ElementsMedia.route) {
+        val elementId = call.request.queryParameters[ElementsRoute.ElementsMedia.ElementId].forceNotNull(call).toUUID()
         val media = MediaRepository.getMediaByElement(elementId)
         call.respond(HttpStatusCode.OK, media)
     }
 }
 
 internal fun Route.getContributionRoute() {
-    post(NearbyRoute.Contributions.route) {
+    post(ElementsRoute.Contributions.route) {
         val criteria = call.receive<SearchCriteria>()
         val elementId = criteria.elementId
         val searchString = criteria.searchString ?: ""
@@ -61,16 +61,16 @@ internal fun Route.getContributionRoute() {
             }
         call.respond(HttpStatusCode.OK, contributions)
     }
-    get(NearbyRoute.ContributionsMedia.route) {
+    get(ElementsRoute.ContributionsMedia.route) {
         val contributionId =
-            call.request.queryParameters[NearbyRoute.ContributionsMedia.ContributionId].forceNotNull(call).toUUID()
+            call.request.queryParameters[ElementsRoute.ContributionsMedia.ContributionId].forceNotNull(call).toUUID()
         val media = MediaRepository.getMediaByContribution(contributionId)
         call.respond(HttpStatusCode.OK, media)
     }
 
-    get(NearbyRoute.Contribution.route) {
+    get(ElementsRoute.Contribution.route) {
         val userId = getUserId()
-        val contributionId = call.request.queryParameters[NearbyRoute.Contribution.Id].forceNotNull(call).toUUID()
+        val contributionId = call.request.queryParameters[ElementsRoute.Contribution.Id].forceNotNull(call).toUUID()
         val contribution = ContributionRepository.getContribution(userId, contributionId).forceNotNull(call)
 
         call.respond(HttpStatusCode.OK, contribution)
@@ -78,7 +78,7 @@ internal fun Route.getContributionRoute() {
 }
 
 internal fun Route.getCulturesRoute() {
-    post(NearbyRoute.Cultures.route) {
+    post(ElementsRoute.Cultures.route) {
         val criteria = call.receive<SearchCriteria>()
         val searchString = criteria.searchString
         val location = criteria.location

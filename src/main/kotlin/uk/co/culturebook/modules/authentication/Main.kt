@@ -4,7 +4,7 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.routing.*
 import uk.co.culturebook.modules.authentication.data.interfaces.AuthRoute
-import uk.co.culturebook.modules.authentication.logic.general.configureJwt
+import uk.co.culturebook.modules.authentication.logic.general.*
 import uk.co.culturebook.modules.authentication.routes.authenticated.getUserDetailsRoute
 import uk.co.culturebook.modules.authentication.routes.authenticated.updateTos
 import uk.co.culturebook.modules.authentication.routes.general.*
@@ -31,7 +31,13 @@ fun Application.authenticationModule() {
             refreshJwt(config)
 
             authenticate(AuthRoute.JwtAuth.route) {
+                removeProfileUri()
+                updateDisplayNameAndEmail()
+                requestVerificationStatus()
+                uploadProfileImage(config)
+                updatePasswordRoute(config)
                 getUserDetailsRoute(config)
+                deleteUser()
                 updateTos()
             }
         }
