@@ -108,7 +108,7 @@ object UserRepository : UserDao {
 
     override suspend fun updateProfileUri(userId: String, profileURI: URI): Boolean = dbQuery {
         Users.update({ Users.userId eq userId }) {
-            it[Users.profileUri] = profileURI.toString()
+            it[profileUri] = profileURI.toString()
         } > 0
     }
 
@@ -163,13 +163,17 @@ object UserRepository : UserDao {
         profileImage: MediaFile
     ): MediaFile? {
         // what happens if it doesn't exit?
-        val removeResponse = client.delete(profileImage.getUri(fileHost).toURL()) {
-            headers {
-                append(Constants.Headers.Authorization, "Bearer $bearer")
-                append(Constants.Headers.ApiKey, apiKey)
+        try {
+            client.delete(profileImage.getUri(fileHost).toURL()) {
+                headers {
+                    append(Constants.Headers.Authorization, "Bearer $bearer")
+                    append(Constants.Headers.ApiKey, apiKey)
+                }
+                contentType(ContentType.parse(profileImage.contentType))
+                setBody(profileImage.dataStream)
             }
-            contentType(ContentType.parse(profileImage.contentType))
-            setBody(profileImage.dataStream)
+        } catch (e: Exception) {
+            println(e)
         }
 
         val response = client.post(profileImage.getUri(fileHost).toURL()) {
@@ -189,14 +193,14 @@ object UserRepository : UserDao {
 
     override suspend fun removeProfileUri(userId: String): Boolean = dbQuery {
         Users.update({ Users.userId eq userId }) {
-            it[Users.profileUri] = ""
+            it[profileUri] = ""
         } > 0
     }
 
     override suspend fun updateDisplayNameAndEmail(userId: String, user: User): Boolean = dbQuery {
         Users.update({ Users.userId eq userId }) {
-            it[Users.displayName] = user.displayName
-            it[Users.email] = user.email
+            it[displayName] = user.displayName
+            it[email] = user.email
         } > 0
     }
 
@@ -212,7 +216,7 @@ object UserRepository : UserDao {
                 password = config.emailPassword
             )
             Users.update({ Users.userId eq userId }) {
-                it[Users.verificationStatus] = VerificationStatus.Pending.ordinal
+                it[verificationStatus] = VerificationStatus.Pending.ordinal
             } > 0
         }
 
