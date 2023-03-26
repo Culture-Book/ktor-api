@@ -11,9 +11,9 @@ object Elements : Table() {
     val culture_id = uuid("culture_id").references(Cultures.id)
     val user_id = text("userId").references(
         Users.userId,
-        onDelete = ReferenceOption.CASCADE,
+        onDelete = ReferenceOption.SET_NULL,
         onUpdate = ReferenceOption.CASCADE
-    )
+    ).nullable()
     val name = text("name")
     val type = text("type")
     val loc_lat = double("loc_lat")

@@ -71,12 +71,13 @@ object CultureRepository : CulturesDao {
                 .map(::rowToCulture)
         }
 
-    override suspend fun insertCulture(culture: Culture): Culture? = dbQuery {
+    override suspend fun insertCulture(culture: Culture, userId: String): Culture? = dbQuery {
         val statement = Cultures.insert {
             it[id] = culture.id ?: UUID.randomUUID()
             it[name] = culture.name
             it[lat] = culture.location.latitude
             it[lon] = culture.location.longitude
+            it[user_id] = userId
         }
         statement.resultedValues?.singleOrNull()?.let(CultureRepository::rowToCulture)
     }
@@ -91,5 +92,18 @@ object CultureRepository : CulturesDao {
             it[lat] = culture.location.latitude
             it[lon] = culture.location.longitude
         } > 0
+    }
+
+    override suspend fun getUserCultures(userId: String): List<Culture> = dbQuery {
+        Cultures
+            .select { Cultures.user_id eq userId }
+            .map(::rowToCulture)
+    }
+
+    override suspend fun getFavouriteCultures(userId: String): List<Culture> = dbQuery {
+        Cultures
+            .innerJoin(FavouriteCultures, { Cultures.id }, { FavouriteCultures.cultureId })
+            .select { FavouriteCultures.userId eq userId }
+            .map(::rowToCulture)
     }
 }

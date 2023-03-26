@@ -52,4 +52,18 @@ interface ContributionDao {
         page: Int = 1,
         limit: Int = 3
     ): List<Contribution>
+
+    suspend fun getUserContributions(
+        userId: String,
+        types: List<ElementType>,
+        page: Int = 1,
+        limit: Int = 3
+    ): List<Contribution>
+
+    suspend fun getFavouriteContributions(
+        userId: String,
+        types: List<ElementType>,
+        page: Int = 1,
+        limit: Int = 3
+    ): List<Contribution>
 }

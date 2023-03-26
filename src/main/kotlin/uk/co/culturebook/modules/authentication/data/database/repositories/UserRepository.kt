@@ -162,6 +162,16 @@ object UserRepository : UserDao {
         fileHost: String,
         profileImage: MediaFile
     ): MediaFile? {
+        // what happens if it doesn't exit?
+        val removeResponse = client.delete(profileImage.getUri(fileHost).toURL()) {
+            headers {
+                append(Constants.Headers.Authorization, "Bearer $bearer")
+                append(Constants.Headers.ApiKey, apiKey)
+            }
+            contentType(ContentType.parse(profileImage.contentType))
+            setBody(profileImage.dataStream)
+        }
+
         val response = client.post(profileImage.getUri(fileHost).toURL()) {
             headers {
                 append(Constants.Headers.Authorization, "Bearer $bearer")

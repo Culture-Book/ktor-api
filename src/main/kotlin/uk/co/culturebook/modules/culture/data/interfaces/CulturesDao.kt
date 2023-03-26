@@ -11,9 +11,13 @@ interface CulturesDao {
 
     suspend fun getCulturesByLocation(userId: String, location: Location, kmLimit: Double = 1.0): List<Culture>
 
-    suspend fun insertCulture(culture: Culture): Culture?
+    suspend fun insertCulture(culture: Culture, userId: String): Culture?
 
     suspend fun deleteCulture(id: UUID): Boolean
 
     suspend fun updateCulture(culture: Culture): Boolean
+
+    suspend fun getUserCultures(userId: String): List<Culture>
+
+    suspend fun getFavouriteCultures(userId: String): List<Culture>
 }

@@ -28,6 +28,23 @@ interface ElementDao {
         limit: Int = 3
     ): List<Element>
 
+    suspend fun getUserElements(
+        userId: String,
+        types: List<ElementType> = emptyList(),
+        kmLimit: Double = 1.0,
+        page: Int = 1,
+        limit: Int = 3
+    ): List<Element>
+
+    suspend fun getFavouriteElements(
+        userId: String,
+        types: List<ElementType> = emptyList(),
+        kmLimit: Double = 1.0,
+        page: Int = 1,
+        limit: Int = 3
+    ): List<Element>
+
+
     suspend fun getPreviewElements(
         userId: String,
         searchString: String,

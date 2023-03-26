@@ -271,4 +271,39 @@ object ContributionRepository : ContributionDao {
             .limit(limit, (page - 1L) * limit)
             .map(::rowToContribution)
     }
+
+    override suspend fun getUserContributions(
+        userId: String,
+        types: List<ElementType>,
+        page: Int,
+        limit: Int
+    ): List<Contribution> = dbQuery {
+        Contributions
+            .select { Contributions.user_id eq userId and (Contributions.type inList types.map { it.toString() }) }
+            .limit(limit, (page - 1L) * limit)
+            .map(::rowToContribution)
+    }
+
+    override suspend fun getFavouriteContributions(
+        userId: String,
+        types: List<ElementType>,
+        page: Int,
+        limit: Int
+    ): List<Contribution> = dbQuery {
+        Contributions
+            .innerJoin(
+                FavouriteContributions,
+                { Contributions.id },
+                { FavouriteContributions.contributionId },
+                { FavouriteContributions.userId eq userId }
+            )
+            .leftJoin(
+                BlockedContributions,
+                { BlockedContributions.contributionId },
+                { Contributions.id },
+                { BlockedContributions.userId eq userId })
+            .select { (Contributions.type inList types.map { it.toString() }) and BlockedContributions.id.isNull() }
+            .limit(limit, (page - 1L) * limit)
+            .map(::rowToContribution)
+    }
 }

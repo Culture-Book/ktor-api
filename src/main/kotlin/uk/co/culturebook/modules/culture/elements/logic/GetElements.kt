@@ -25,6 +25,22 @@ internal suspend fun getElements(
 ) =
     ElementRepository.getPreviewElements(userId, searchString, types, radius, page)
 
+internal suspend fun getUserElements(
+    userId: String,
+    types: List<ElementType>,
+    radius: Double,
+    page: Int
+) =
+    ElementRepository.getUserElements(userId, types, radius, page)
+
+internal suspend fun getFavouriteElements(
+    userId: String,
+    types: List<ElementType>,
+    radius: Double,
+    page: Int
+) =
+    ElementRepository.getFavouriteElements(userId, types, radius, page)
+
 internal suspend fun getContributions(
     userId: String,
     elementId: UUID,

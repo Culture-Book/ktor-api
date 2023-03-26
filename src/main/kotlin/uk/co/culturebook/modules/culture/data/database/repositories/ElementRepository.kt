@@ -163,6 +163,43 @@ object ElementRepository : ElementDao {
             .map { rowToElement(it, true) }
     }
 
+    override suspend fun getUserElements(
+        userId: String,
+        types: List<ElementType>,
+        kmLimit: Double,
+        page: Int,
+        limit: Int
+    ): List<Element> = dbQuery {
+        Elements
+            .select { Elements.user_id eq userId }
+            .limit(limit, (page - 1L) * limit)
+            .map { rowToElement(it, true) }
+    }
+
+    override suspend fun getFavouriteElements(
+        userId: String,
+        types: List<ElementType>,
+        kmLimit: Double,
+        page: Int,
+        limit: Int
+    ): List<Element> = dbQuery {
+        Elements
+            .innerJoin(
+                FavouriteElements,
+                { FavouriteElements.elementId },
+                { Elements.id },
+                { FavouriteElements.userId eq userId }
+            )
+            .leftJoin(
+                BlockedElements,
+                { BlockedElements.elementId },
+                { Elements.id },
+                { BlockedElements.userId eq userId })
+            .select { (Elements.type inList types.map { it.toString() }) and BlockedElements.id.isNull() }
+            .limit(limit, (page - 1L) * limit)
+            .map { rowToElement(it, true) }
+    }
+
     override suspend fun getElement(id: UUID): Element? = dbQuery {
         Elements.select { Elements.id eq id }.singleOrNull()?.let(::rowToElement)
     }

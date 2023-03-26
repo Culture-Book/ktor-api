@@ -38,8 +38,13 @@ sealed interface ElementsRoute {
 
     object Cultures : ElementsRoute {
         const val UserCultures = "cultures/user"
-        const val FavouriteCultures = "contributions/favourite"
+        const val FavouriteCultures = "cultures/favourite"
         override val route = "cultures"
+    }
+
+    object Culture : ElementsRoute {
+        override val route = "cultures"
+        const val Id = "culture_id"
     }
 
     object ContributionsMedia : ElementsRoute {

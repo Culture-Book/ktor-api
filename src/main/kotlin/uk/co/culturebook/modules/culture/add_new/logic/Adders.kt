@@ -12,7 +12,7 @@ internal suspend fun addCulture(userId: String, culture: Culture, location: Loca
     val nearbyCultures = CultureRepository.getCulturesByLocation(userId, location)
     val isNotDuplicate = nearbyCultures.map { it.name }.fuzzySearchStrings(culture.name, 0.5).isEmpty()
     return if (isNotDuplicate) {
-        CultureRepository.insertCulture(culture)?.let { CultureState.Success.AddCulture(culture) }
+        CultureRepository.insertCulture(culture, userId)?.let { CultureState.Success.AddCulture(culture) }
             ?: CultureState.Error.Generic
     } else {
         CultureState.Error.DuplicateCulture

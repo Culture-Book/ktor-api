@@ -8,13 +8,15 @@ import io.ktor.server.routing.*
 import uk.co.culturebook.modules.authentication.logic.authenticated.getUserId
 import uk.co.culturebook.modules.culture.data.data.interfaces.ElementsRoute
 import uk.co.culturebook.modules.culture.data.database.repositories.ContributionRepository
+import uk.co.culturebook.modules.culture.data.database.repositories.ContributionRepository.getFavouriteContributions
+import uk.co.culturebook.modules.culture.data.database.repositories.ContributionRepository.getUserContributions
+import uk.co.culturebook.modules.culture.data.database.repositories.CultureRepository
+import uk.co.culturebook.modules.culture.data.database.repositories.CultureRepository.getFavouriteCultures
+import uk.co.culturebook.modules.culture.data.database.repositories.CultureRepository.getUserCultures
 import uk.co.culturebook.modules.culture.data.database.repositories.ElementRepository
 import uk.co.culturebook.modules.culture.data.database.repositories.MediaRepository
 import uk.co.culturebook.modules.culture.data.models.SearchCriteria
-import uk.co.culturebook.modules.culture.elements.logic.getContributions
-import uk.co.culturebook.modules.culture.elements.logic.getCultures
-import uk.co.culturebook.modules.culture.elements.logic.getElements
-import uk.co.culturebook.modules.culture.elements.logic.getNearbyElements
+import uk.co.culturebook.modules.culture.elements.logic.*
 import uk.co.culturebook.utils.forceNotNull
 import uk.co.culturebook.utils.toUUID
 
@@ -33,12 +35,30 @@ internal fun Route.getElementsRoute() {
         call.respond(HttpStatusCode.OK, elements)
     }
 
+    post(ElementsRoute.Elements.UserElements) {
+        val criteria = call.receive<SearchCriteria>()
+        val elements = getUserElements(getUserId(), criteria.types, criteria.radius, criteria.page)
+        call.respond(HttpStatusCode.OK, elements)
+    }
+
+    post(ElementsRoute.Elements.FavouriteElements) {
+        val criteria = call.receive<SearchCriteria>()
+        val elements = getFavouriteElements(getUserId(), criteria.types, criteria.radius, criteria.page)
+        call.respond(HttpStatusCode.OK, elements)
+    }
+
     get(ElementsRoute.Element.route) {
         val userId = getUserId()
         val elementId = call.request.queryParameters[ElementsRoute.Element.Id].forceNotNull(call).toUUID()
         val element = ElementRepository.getElement(userId, elementId).forceNotNull(call)
 
         call.respond(HttpStatusCode.OK, element)
+    }
+
+    delete(ElementsRoute.Element.route) {
+        val elementId = call.request.queryParameters[ElementsRoute.Element.Id].forceNotNull(call).toUUID()
+        ElementRepository.deleteElement(elementId)
+        call.respond(HttpStatusCode.OK)
     }
 
     get(ElementsRoute.ElementsMedia.route) {
@@ -75,6 +95,25 @@ internal fun Route.getContributionRoute() {
 
         call.respond(HttpStatusCode.OK, contribution)
     }
+
+    post(ElementsRoute.Contributions.UserContributions) {
+        val criteria = call.receive<SearchCriteria>()
+        val contributions = getUserContributions(getUserId(), criteria.types, criteria.page)
+        call.respond(HttpStatusCode.OK, contributions)
+    }
+
+    post(ElementsRoute.Contributions.FavouriteContributions) {
+        val criteria = call.receive<SearchCriteria>()
+        val contributions = getFavouriteContributions(getUserId(), criteria.types, criteria.page)
+        call.respond(HttpStatusCode.OK, contributions)
+    }
+
+    delete(ElementsRoute.Contribution.route) {
+        val contributionId = call.request.queryParameters[ElementsRoute.Contribution.Id].forceNotNull(call).toUUID()
+        ContributionRepository.deleteContribution(contributionId)
+        call.respond(HttpStatusCode.OK)
+    }
+
 }
 
 internal fun Route.getCulturesRoute() {
@@ -91,5 +130,21 @@ internal fun Route.getCulturesRoute() {
             emptyList()
         }
         call.respond(HttpStatusCode.OK, cultures)
+    }
+
+    post(ElementsRoute.Cultures.UserCultures) {
+        val cultures = getUserCultures(getUserId())
+        call.respond(HttpStatusCode.OK, cultures)
+    }
+
+    post(ElementsRoute.Cultures.FavouriteCultures) {
+        val cultures = getFavouriteCultures(getUserId())
+        call.respond(HttpStatusCode.OK, cultures)
+    }
+
+    delete(ElementsRoute.Cultures.route) {
+        val cultureId = call.request.queryParameters[ElementsRoute.Culture.Id].forceNotNull(call).toUUID()
+        CultureRepository.deleteCulture(cultureId)
+        call.respond(HttpStatusCode.OK)
     }
 }

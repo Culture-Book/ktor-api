@@ -5,8 +5,8 @@ import uk.co.culturebook.modules.serialization.serializers.UUIDSerializer
 import java.util.*
 
 @Serializable
-data class BlockedElement(
+data class BlockedCulture(
     @Serializable(with = UUIDSerializer::class)
     val uuid: UUID,
-    val name: String = ""
+    val name: String
 )
