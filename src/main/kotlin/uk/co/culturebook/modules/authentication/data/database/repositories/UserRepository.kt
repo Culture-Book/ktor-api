@@ -169,8 +169,6 @@ object UserRepository : UserDao {
                     append(Constants.Headers.Authorization, "Bearer $bearer")
                     append(Constants.Headers.ApiKey, apiKey)
                 }
-                contentType(ContentType.parse(profileImage.contentType))
-                setBody(profileImage.dataStream)
             }
         } catch (e: Exception) {
             println(e)
