@@ -16,7 +16,7 @@ class FuzzySearchTests {
     fun `getCosine should return correct similarity score`() {
         val vectorA = mapOf('a' to 2, 'b' to 1, 'c' to 1)
         val vectorB = mapOf('a' to 1, 'b' to 2, 'c' to 1)
-        val expected = 0.5
+        val expected = 0.8
         val result = getCosine(vectorA, vectorB)
         assertEquals(expected, result, 0.1)
     }
@@ -25,7 +25,7 @@ class FuzzySearchTests {
     fun `matchStrings should return correct similarity score`() {
         val a = "hello world"
         val b = "hello"
-        val expected = 0.5
+        val expected = 0.8
         val result = matchStrings(a, b)
         assertEquals(expected, result, 0.15)
     }
@@ -34,7 +34,7 @@ class FuzzySearchTests {
     fun `fuzzySearchStrings should return correct list of matches`() {
         val input = listOf("hello", "world", "hell", "worl", "helo")
         val search = "hello"
-        val expected = listOf(Pair("hello", 1.0), Pair("helo", 0.9), Pair("hell", 0.5))
+        val expected = listOf(Pair("hello", 1.0), Pair("helo", 0.9), Pair("hell", 0.9))
         val results = input.fuzzySearchStrings(search)
         expected.forEachIndexed { i, pair ->
             assertEquals(results[i].first, pair.first)

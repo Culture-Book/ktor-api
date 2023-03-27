@@ -17,6 +17,9 @@ import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
+import uk.co.culturebook.modules.authentication.data.database.repositories.UserRepository
+import uk.co.culturebook.modules.authentication.data.database.tables.Users
+import uk.co.culturebook.modules.authentication.data.models.User
 import uk.co.culturebook.modules.culture.add_new.logic.addCulture
 import uk.co.culturebook.modules.culture.data.database.repositories.CultureRepository
 import uk.co.culturebook.modules.culture.data.database.repositories.CultureRepository.insertCulture
@@ -32,6 +35,7 @@ import java.util.*
 class CultureRepositoryTests {
     private val dbUrl = "jdbc:h2:mem:test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;"
     private val dbDriver = "org.h2.Driver"
+    private val user: User = User(email = "email@email.com", password = "password")
     private val location1 = Location(48.8588443, 2.2943506)
     private val location2 = Location(48.8588443, 2.1943506)
     private val location3 = Location(0.0, 0.0)
@@ -55,10 +59,12 @@ class CultureRepositoryTests {
         Dispatchers.setMain(mainThreadSurrogate)
         testSuspend(Dispatchers.Main) {
             newSuspendedTransaction {
+                create(Users)
                 create(Cultures, BlockedCultures, FavouriteCultures)
-                insertCulture(culture1)
-                insertCulture(culture2)
-                insertCulture(culture3)
+                UserRepository.registerUser(user)
+                insertCulture(culture1, "")
+                insertCulture(culture2, "")
+                insertCulture(culture3, "")
             }
         }
     }
@@ -70,6 +76,7 @@ class CultureRepositoryTests {
                 drop(FavouriteCultures)
                 drop(BlockedCultures)
                 drop(Cultures)
+                drop(Users)
             }
         }
         Dispatchers.resetMain()
@@ -94,7 +101,7 @@ class CultureRepositoryTests {
     @Test
     fun testInsertCulture() = testSuspend(Dispatchers.Main) {
         val newCulture = Culture(UUID.randomUUID(), "Opera in the Park", location1)
-        val insertedCulture = insertCulture(newCulture)
+        val insertedCulture = insertCulture(newCulture, user.userId)
         assertNotNull(insertedCulture)
         assertEquals(newCulture, insertedCulture)
     }

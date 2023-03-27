@@ -89,11 +89,11 @@ class ElementRepositoryTests {
                 create(Elements)
 
                 UserRepository.registerUser(user)
-                insertCulture(culture1)
-                insertCulture(culture2)
-                insertCulture(culture3)
-                insertCulture(culture4)
-                insertCulture(culture5)
+                insertCulture(culture1, user.userId)
+                insertCulture(culture2, user.userId)
+                insertCulture(culture3, user.userId)
+                insertCulture(culture4, user.userId)
+                insertCulture(culture5, user.userId)
 
                 insertElement(element1, user.userId)
                 insertElement(element2, user.userId)
@@ -108,7 +108,9 @@ class ElementRepositoryTests {
     fun tearDown() {
         testSuspend(Dispatchers.Main) {
             newSuspendedTransaction {
-                drop(Elements, FavouriteElements, BlockedElements, ElementComments, ElementMedia, Users)
+                drop(Elements, FavouriteElements, BlockedElements, ElementComments, ElementMedia)
+                drop(Cultures)
+                drop(Users)
             }
         }
         Dispatchers.resetMain()
