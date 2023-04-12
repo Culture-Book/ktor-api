@@ -133,7 +133,8 @@ internal fun Route.getCulturesRoute() {
     }
 
     post(ElementsRoute.Cultures.UserCultures) {
-        val cultures = getUserCultures(getUserId())
+        val searchCriteria = call.receive<SearchCriteria>()
+        val cultures = getUserCultures(getUserId(), searchCriteria.page)
         call.respond(HttpStatusCode.OK, cultures)
     }
 
