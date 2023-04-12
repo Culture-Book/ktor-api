@@ -26,8 +26,8 @@ data class MediaFile(
     fun getParentUri(fileHost: String, parent: String): URI =
         URI.create(
             fileHost + MediaRoute.Version.V1_STORAGE + MediaRoute.FileRoute.getParentRoute(
-                bucketName,
                 parent,
+                bucketName,
                 fileName
             )
         )

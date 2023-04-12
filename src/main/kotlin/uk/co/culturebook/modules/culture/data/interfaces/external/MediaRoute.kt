@@ -11,8 +11,8 @@ sealed interface MediaRoute {
 
     object FileRoute {
         fun getRoute(bucketName: String, fileName: String) = "/object/$bucketName/$fileName"
-        fun getParentRoute(bucketName: String, parent: String, fileName: String) =
-            "/object/$bucketName/$parent/$fileName"
+        fun getParentRoute(parent: String, name: String, fileName: String) =
+            "/object/$parent/$name/$fileName"
     }
 
     object BucketRoute {
