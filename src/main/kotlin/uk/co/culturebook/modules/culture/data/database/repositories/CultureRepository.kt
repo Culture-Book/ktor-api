@@ -94,9 +94,10 @@ object CultureRepository : CulturesDao {
         } > 0
     }
 
-    override suspend fun getUserCultures(userId: String): List<Culture> = dbQuery {
+    override suspend fun getUserCultures(userId: String, page: Int, limit: Int): List<Culture> = dbQuery {
         Cultures
             .select { Cultures.user_id eq userId }
+            .limit(limit, (page - 1L) * limit)
             .map(::rowToCulture)
     }
 

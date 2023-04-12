@@ -17,7 +17,7 @@ interface CulturesDao {
 
     suspend fun updateCulture(culture: Culture): Boolean
 
-    suspend fun getUserCultures(userId: String): List<Culture>
+    suspend fun getUserCultures(userId: String, page: Int = 1, limit: Int = 3): List<Culture>
 
     suspend fun getFavouriteCultures(userId: String): List<Culture>
 }
