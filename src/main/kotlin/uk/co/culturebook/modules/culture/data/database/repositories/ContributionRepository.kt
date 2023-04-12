@@ -252,9 +252,9 @@ object ContributionRepository : ContributionDao {
             }
             .map {
                 val contribution = rowToContribution(
-                        it,
-                        it.getOrNull(Users.verificationStatus) == VerificationStatus.Verified.ordinal
-                    )
+                    it,
+                    it.getOrNull(Users.verificationStatus) == VerificationStatus.Verified.ordinal
+                )
                 contribution.copy(
                     media = media,
                     reactions = reactions,
