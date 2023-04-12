@@ -9,5 +9,6 @@ data class Culture(
     @Serializable(with = UUIDSerializer::class) val id: UUID? = null,
     val name: String,
     val location: Location,
-    val favourite: Boolean = false
+    val favourite: Boolean = false,
+    val isVerified: Boolean = false
 )

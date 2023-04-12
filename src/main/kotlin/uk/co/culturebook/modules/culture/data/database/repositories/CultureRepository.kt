@@ -2,6 +2,8 @@ package uk.co.culturebook.modules.culture.data.database.repositories
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import uk.co.culturebook.modules.authentication.data.database.tables.Users
+import uk.co.culturebook.modules.authentication.data.enums.VerificationStatus
 import uk.co.culturebook.modules.culture.data.database.tables.BlockedCultures
 import uk.co.culturebook.modules.culture.data.database.tables.Cultures
 import uk.co.culturebook.modules.culture.data.database.tables.FavouriteCultures
@@ -14,11 +16,12 @@ import uk.co.culturebook.modules.database.functions.Similarity
 import java.util.*
 
 object CultureRepository : CulturesDao {
-    private fun rowToCulture(row: ResultRow) = Culture(
+    private fun rowToCulture(row: ResultRow, isVerified: Boolean = false) = Culture(
         id = row[Cultures.id],
         name = row[Cultures.name],
         location = Location(row[Cultures.lat], row[Cultures.lon]),
-        favourite = row.getOrNull(FavouriteCultures.id) != null
+        favourite = row.getOrNull(FavouriteCultures.id) != null,
+        isVerified = isVerified
     )
 
     override suspend fun getCulture(id: UUID): Culture? = dbQuery {
@@ -38,11 +41,18 @@ object CultureRepository : CulturesDao {
                 { Cultures.id },
                 { FavouriteCultures.userId eq userId }
             )
+            .leftJoin(
+                Users,
+                { Users.userId },
+                { Cultures.user_id }
+            )
             .select {
                 Similarity(Cultures.name, name) greaterEq 0.25 and BlockedCultures.id.isNull()
             }
             .orderBy(Similarity(Cultures.name, name), SortOrder.DESC)
-            .map(::rowToCulture)
+            .map {
+                rowToCulture(it, it.getOrNull(Users.verificationStatus) == VerificationStatus.Verified.ordinal)
+            }
     }
 
     override suspend fun getCulturesByLocation(userId: String, location: Location, kmLimit: Double): List<Culture> =
@@ -59,6 +69,11 @@ object CultureRepository : CulturesDao {
                     { Cultures.id },
                     { FavouriteCultures.userId eq userId }
                 )
+                .leftJoin(
+                    Users,
+                    { Users.userId },
+                    { Cultures.user_id }
+                )
                 .select {
                     (Distance(
                         Cultures.lat,
@@ -68,7 +83,9 @@ object CultureRepository : CulturesDao {
                     ) lessEq kmLimit and BlockedCultures.id.isNull())
                 }
                 .orderBy(Distance(Cultures.lat, Cultures.lon, location.latitude, location.longitude), SortOrder.DESC)
-                .map(::rowToCulture)
+                .map {
+                    rowToCulture(it, it.getOrNull(Users.verificationStatus) == VerificationStatus.Verified.ordinal)
+                }
         }
 
     override suspend fun insertCulture(culture: Culture, userId: String): Culture? = dbQuery {
@@ -103,8 +120,14 @@ object CultureRepository : CulturesDao {
 
     override suspend fun getFavouriteCultures(userId: String): List<Culture> = dbQuery {
         Cultures
-            .innerJoin(FavouriteCultures, { Cultures.id }, { FavouriteCultures.cultureId })
+            .innerJoin(FavouriteCultures, { id }, { cultureId })
+            .leftJoin(
+                Users,
+                { Users.userId },
+                { Cultures.user_id })
             .select { FavouriteCultures.userId eq userId }
-            .map(::rowToCulture)
+            .map {
+                rowToCulture(it, it.getOrNull(Users.verificationStatus) == VerificationStatus.Verified.ordinal)
+            }
     }
 }

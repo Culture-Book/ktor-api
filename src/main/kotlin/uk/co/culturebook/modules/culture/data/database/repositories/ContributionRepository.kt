@@ -5,6 +5,8 @@ import io.ktor.http.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import uk.co.culturebook.Constants
+import uk.co.culturebook.modules.authentication.data.database.tables.Users
+import uk.co.culturebook.modules.authentication.data.enums.VerificationStatus
 import uk.co.culturebook.modules.culture.add_new.client
 import uk.co.culturebook.modules.culture.data.database.repositories.MediaRepository.rowToMedia
 import uk.co.culturebook.modules.culture.data.database.tables.BlockedContributions
@@ -23,7 +25,7 @@ import java.util.*
 
 object ContributionRepository : ContributionDao {
 
-    private fun rowToContribution(resultRow: ResultRow): Contribution {
+    private fun rowToContribution(resultRow: ResultRow, isVerified: Boolean = false): Contribution {
         val location =
             resultRow[Contributions.event_loc_lat]?.let { Location(it, resultRow[Contributions.event_loc_lon]!!) }
         val eventStartDate = resultRow[Contributions.event_start_date]
@@ -36,7 +38,8 @@ object ContributionRepository : ContributionDao {
             location = Location(resultRow[Contributions.loc_lat], resultRow[Contributions.loc_lon]),
             eventType = location?.let { EventType(eventStartDate!!, location) },
             information = resultRow[Contributions.information],
-            favourite = resultRow.getOrNull(FavouriteContributions.id) != null
+            favourite = resultRow.getOrNull(FavouriteContributions.id) != null,
+            isVerified = isVerified
         )
     }
 
@@ -186,6 +189,11 @@ object ContributionRepository : ContributionDao {
                 { Contributions.id },
                 { FavouriteContributions.userId eq userId }
             )
+            .leftJoin(
+                Users,
+                { Users.userId },
+                { Contributions.user_id }
+            )
             .select {
                 val similarity =
                     if (searchString.isNotBlank()) Similarity(Contributions.name, searchString) greaterEq 0.25 else null
@@ -197,7 +205,12 @@ object ContributionRepository : ContributionDao {
             }
             .orderBy(Similarity(Contributions.name, searchString), SortOrder.DESC)
             .limit(limit, (page - 1L) * limit)
-            .map(::rowToContribution)
+            .map {
+                rowToContribution(
+                    it,
+                    it.getOrNull(Users.verificationStatus) == VerificationStatus.Verified.ordinal
+                )
+            }
     }
 
     suspend fun getContribution(userId: String, id: UUID) = dbQuery {
@@ -229,11 +242,19 @@ object ContributionRepository : ContributionDao {
                 { Contributions.id },
                 { FavouriteContributions.userId eq userId }
             )
+            .leftJoin(
+                Users,
+                { Users.userId },
+                { Contributions.user_id }
+            )
             .select {
                 (Contributions.id eq id) and BlockedContributions.id.isNull()
             }
             .map {
-                val contribution = rowToContribution(it)
+                val contribution = rowToContribution(
+                        it,
+                        it.getOrNull(Users.verificationStatus) == VerificationStatus.Verified.ordinal
+                    )
                 contribution.copy(
                     media = media,
                     reactions = reactions,
@@ -262,6 +283,11 @@ object ContributionRepository : ContributionDao {
                 { Contributions.id },
                 { FavouriteContributions.userId eq userId }
             )
+            .leftJoin(
+                Users,
+                { Users.userId },
+                { Contributions.user_id }
+            )
             .select {
                 Similarity(Contributions.name, searchString) greaterEq 0.25 and
                         BlockedContributions.id.isNull() and
@@ -269,7 +295,12 @@ object ContributionRepository : ContributionDao {
             }
             .orderBy(Similarity(Contributions.name, searchString), SortOrder.DESC)
             .limit(limit, (page - 1L) * limit)
-            .map(::rowToContribution)
+            .map {
+                rowToContribution(
+                    it,
+                    it.getOrNull(Users.verificationStatus) == VerificationStatus.Verified.ordinal
+                )
+            }
     }
 
     override suspend fun getUserContributions(
@@ -302,8 +333,18 @@ object ContributionRepository : ContributionDao {
                 { BlockedContributions.contributionId },
                 { Contributions.id },
                 { BlockedContributions.userId eq userId })
+            .leftJoin(
+                Users,
+                { Contributions.user_id },
+                { Users.userId }
+            )
             .select { (Contributions.type inList types.map { it.toString() }) and BlockedContributions.id.isNull() }
             .limit(limit, (page - 1L) * limit)
-            .map(::rowToContribution)
+            .map {
+                rowToContribution(
+                    it,
+                    it.getOrNull(Users.verificationStatus) == VerificationStatus.Verified.ordinal
+                )
+            }
     }
 }

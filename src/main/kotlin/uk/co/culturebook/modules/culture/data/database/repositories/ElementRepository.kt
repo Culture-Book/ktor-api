@@ -26,7 +26,7 @@ import uk.co.culturebook.modules.culture.data.database.tables.Media as MediaT
 
 object ElementRepository : ElementDao {
 
-    private fun rowToElement(resultRow: ResultRow, minify: Boolean = false): Element {
+    private fun rowToElement(resultRow: ResultRow, minify: Boolean = false, isVerified: Boolean = false): Element {
         val location = resultRow[Elements.event_loc_lat]?.let { Location(it, resultRow[Elements.event_loc_lon]!!) }
         val eventStartDate = resultRow[Elements.event_start_date]
         val information = if (minify) {
@@ -44,7 +44,7 @@ object ElementRepository : ElementDao {
             eventType = location?.let { EventType(eventStartDate!!, location) },
             information = information,
             favourite = resultRow.getOrNull(FavouriteElements.id) != null,
-            isVerified = resultRow.getOrNull(Users.verificationStatus) == VerificationStatus.Verified.ordinal
+            isVerified = isVerified
         )
     }
 
@@ -111,6 +111,11 @@ object ElementRepository : ElementDao {
                 { Elements.id },
                 { FavouriteElements.userId eq userId }
             )
+            .leftJoin(
+                Users,
+                { Users.userId },
+                { Elements.user_id }
+            )
             .select {
                 (Distance(
                     Elements.loc_lat,
@@ -124,7 +129,13 @@ object ElementRepository : ElementDao {
                 SortOrder.DESC
             )
             .limit(limit, (page - 1L) * limit)
-            .map { rowToElement(it, true) }
+            .map {
+                rowToElement(
+                    it,
+                    true,
+                    it.getOrNull(Users.verificationStatus) == VerificationStatus.Verified.ordinal
+                )
+            }
     }
 
     override suspend fun getPreviewElements(
@@ -160,7 +171,13 @@ object ElementRepository : ElementDao {
             }
             .orderBy(Similarity(Elements.name, searchString), SortOrder.DESC)
             .limit(limit, (page - 1L) * limit)
-            .map { rowToElement(it, true) }
+            .map {
+                rowToElement(
+                    it,
+                    true,
+                    it.getOrNull(Users.verificationStatus) == VerificationStatus.Verified.ordinal
+                )
+            }
     }
 
     override suspend fun getUserElements(
@@ -195,9 +212,20 @@ object ElementRepository : ElementDao {
                 { BlockedElements.elementId },
                 { Elements.id },
                 { BlockedElements.userId eq userId })
+            .leftJoin(
+                Users,
+                { Users.userId },
+                { Elements.user_id },
+            )
             .select { (Elements.type inList types.map { it.toString() }) and BlockedElements.id.isNull() }
             .limit(limit, (page - 1L) * limit)
-            .map { rowToElement(it, true) }
+            .map {
+                rowToElement(
+                    it,
+                    true,
+                    it.getOrNull(Users.verificationStatus) == VerificationStatus.Verified.ordinal
+                )
+            }
     }
 
     override suspend fun getElement(id: UUID): Element? = dbQuery {
