@@ -270,7 +270,11 @@ object ElementRepository : ElementDao {
                 (Elements.id eq id) and BlockedElements.id.isNull()
             }
             .map {
-                val element = rowToElement(it)
+                val element = rowToElement(
+                    it,
+                    false,
+                    it.getOrNull(Users.verificationStatus) == VerificationStatus.Verified.ordinal
+                )
                 element.copy(
                     media = media,
                     reactions = reactions,
