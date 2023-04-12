@@ -1,5 +1,6 @@
 package uk.co.culturebook.modules.culture.add_new.logic
 
+import uk.co.culturebook.modules.culture.data.database.repositories.ContributionRepository
 import uk.co.culturebook.modules.culture.data.database.repositories.CultureRepository
 import uk.co.culturebook.modules.culture.data.database.repositories.ElementRepository
 import uk.co.culturebook.modules.culture.data.interfaces.ContributionState
@@ -73,7 +74,7 @@ internal suspend fun addContribution(
     userId: String
 ): ContributionState {
     val isDuplicate =
-        uk.co.culturebook.modules.culture.data.database.repositories.ContributionRepository.getDuplicateContribution(
+        ContributionRepository.getDuplicateContribution(
             contribution.name,
             contribution.type.name
         ).isNotEmpty()
@@ -81,13 +82,13 @@ internal suspend fun addContribution(
     if (isDuplicate) return ContributionState.Error.DuplicateContribution
 
     val insertedContribution =
-        uk.co.culturebook.modules.culture.data.database.repositories.ContributionRepository.insertContribution(
+        ContributionRepository.insertContribution(
             contribution, userId
         )
             ?: return ContributionState.Error.FailedToAddContribution
 
     val linkedElements =
-        uk.co.culturebook.modules.culture.data.database.repositories.ContributionRepository.linkContributions(
+        ContributionRepository.linkContributions(
             insertedContribution.id,
             contribution.linkElements
         )
@@ -95,7 +96,7 @@ internal suspend fun addContribution(
     if (!linkedElements) return ContributionState.Error.FailedToLinkContributions
 
     val bucketCreated =
-        uk.co.culturebook.modules.culture.data.database.repositories.ContributionRepository.createBucketForContribution(
+        ContributionRepository.createBucketForContribution(
             apiKey = apiKey,
             bearer = bearer,
             fileHost = fileHost,
@@ -115,7 +116,7 @@ internal suspend fun uploadContributionMedia(
     fileHost: String,
     mediaFiles: List<MediaFile>
 ): ContributionState {
-    val files = uk.co.culturebook.modules.culture.data.database.repositories.ContributionRepository.uploadMedia(
+    val files = ContributionRepository.uploadMedia(
         parent = parentElement,
         apiKey = apiKey,
         bearer = bearer,
@@ -123,5 +124,5 @@ internal suspend fun uploadContributionMedia(
         files = mediaFiles,
     )
     if (files.isEmpty()) return ContributionState.Error.FailedToUploadFiles
-    return ContributionState.Success.UploadSuccess(files.map { it.getUri(fileHost).toString() to it.contentType })
+    return ContributionState.Success.UploadSuccess(files.map { it.getParentUri(fileHost, parentElement).toString() to it.contentType })
 }
