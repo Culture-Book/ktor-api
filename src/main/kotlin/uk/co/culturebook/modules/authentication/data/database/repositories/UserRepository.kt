@@ -16,11 +16,11 @@ import uk.co.culturebook.modules.authentication.data.interfaces.UserDao
 import uk.co.culturebook.modules.authentication.data.models.User
 import uk.co.culturebook.modules.authentication.decodeOAuth
 import uk.co.culturebook.modules.authentication.logic.general.sendEmail
-import uk.co.culturebook.modules.culture.add_new.client
 import uk.co.culturebook.modules.culture.data.interfaces.external.MediaRoute
 import uk.co.culturebook.modules.culture.data.models.BucketRequest
 import uk.co.culturebook.modules.culture.data.models.MediaFile
 import uk.co.culturebook.modules.database.dbQuery
+import uk.co.culturebook.modules.http.client
 import uk.co.culturebook.utils.toUri
 import java.net.URI
 import java.time.LocalDateTime

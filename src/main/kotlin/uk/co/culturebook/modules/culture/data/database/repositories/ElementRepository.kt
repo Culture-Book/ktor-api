@@ -7,7 +7,7 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import uk.co.culturebook.Constants
 import uk.co.culturebook.modules.authentication.data.database.tables.Users
 import uk.co.culturebook.modules.authentication.data.enums.VerificationStatus
-import uk.co.culturebook.modules.culture.add_new.client
+import uk.co.culturebook.modules.http.client
 import uk.co.culturebook.modules.culture.data.database.repositories.MediaRepository.rowToMedia
 import uk.co.culturebook.modules.culture.data.database.tables.BlockedElements
 import uk.co.culturebook.modules.culture.data.database.tables.FavouriteElements

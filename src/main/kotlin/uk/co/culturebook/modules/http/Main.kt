@@ -1,5 +1,6 @@
 package uk.co.culturebook.modules.http
 
+import io.ktor.client.engine.cio.*
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.server.application.*
@@ -7,6 +8,8 @@ import io.ktor.server.plugins.cachingheaders.*
 import io.ktor.server.plugins.compression.*
 import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.plugins.defaultheaders.*
+
+val client by lazy { ClientFactory.getInstance(CIO) }
 
 fun Application.httpModule() {
     install(DefaultHeaders) {
@@ -37,5 +40,4 @@ fun Application.httpModule() {
             }
         }
     }
-
 }

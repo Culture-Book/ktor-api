@@ -1,43 +1,24 @@
 package uk.co.culturebook.data.add_new
 
-import com.zaxxer.hikari.HikariConfig
-import com.zaxxer.hikari.HikariDataSource
 import io.ktor.test.dispatcher.*
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.newSingleThreadContext
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils.create
-import org.jetbrains.exposed.sql.SchemaUtils.drop
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
+import uk.co.culturebook.base.BaseTest
 import uk.co.culturebook.modules.authentication.data.database.repositories.UserRepository
-import uk.co.culturebook.modules.authentication.data.database.tables.Users
 import uk.co.culturebook.modules.authentication.data.models.User
 import uk.co.culturebook.modules.culture.data.database.repositories.CultureRepository.insertCulture
 import uk.co.culturebook.modules.culture.data.database.repositories.ElementRepository
 import uk.co.culturebook.modules.culture.data.database.repositories.ElementRepository.insertElement
-import uk.co.culturebook.modules.culture.data.database.tables.BlockedElements
-import uk.co.culturebook.modules.culture.data.database.tables.Cultures
-import uk.co.culturebook.modules.culture.data.database.tables.FavouriteElements
-import uk.co.culturebook.modules.culture.data.database.tables.element.ElementComments
-import uk.co.culturebook.modules.culture.data.database.tables.element.ElementMedia
-import uk.co.culturebook.modules.culture.data.database.tables.element.Elements
 import uk.co.culturebook.modules.culture.data.models.*
 import java.time.LocalDateTime
 import java.util.*
 
-@OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
-class ElementRepositoryTests {
-    private val dbUrl = "jdbc:h2:mem:test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;"
-    private val dbDriver = "org.h2.Driver"
-
+@OptIn(ExperimentalCoroutinesApi::class)
+class ElementRepositoryTests : BaseTest() {
     private val user: User = User(email = "email@email.com", password = "password")
 
     private val location1 = Location(48.8588443, 2.2943506)
@@ -69,25 +50,11 @@ class ElementRepositoryTests {
         EventType(LocalDateTime.parse("2019-01-21T05:47:20.949"), location3),
     )
 
-    private val mainThreadSurrogate = newSingleThreadContext("UI thread")
-    private val dbConfig = HikariDataSource(HikariConfig().apply {
-        jdbcUrl = dbUrl
-        driverClassName = dbDriver
-        connectionInitSql =
-            "CREATE ALIAS IF NOT EXISTS MY_SIMILARITY DETERMINISTIC FOR 'uk.co.culturebook.utils.SearchUtilsKt.matchStrings';"
-        validate()
-    })
-    private val db = Database.connect(datasource = dbConfig)
-
     @Before
-    fun setUp() {
-        Dispatchers.setMain(mainThreadSurrogate)
+    override fun setUp() {
+        super.setUp()
         testSuspend(Dispatchers.Main) {
             newSuspendedTransaction {
-                create(Users)
-                create(Cultures)
-                create(Elements)
-
                 UserRepository.registerUser(user)
                 insertCulture(culture1, user.userId)
                 insertCulture(culture2, user.userId)
@@ -102,19 +69,6 @@ class ElementRepositoryTests {
                 insertElement(element5, user.userId)
             }
         }
-    }
-
-    @After
-    fun tearDown() {
-        testSuspend(Dispatchers.Main) {
-            newSuspendedTransaction {
-                drop(Elements, FavouriteElements, BlockedElements, ElementComments, ElementMedia)
-                drop(Cultures)
-                drop(Users)
-            }
-        }
-        Dispatchers.resetMain()
-        mainThreadSurrogate.close()
     }
 
     @Test

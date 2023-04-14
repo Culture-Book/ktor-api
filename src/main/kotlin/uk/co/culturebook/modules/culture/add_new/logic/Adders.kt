@@ -124,5 +124,7 @@ internal suspend fun uploadContributionMedia(
         files = mediaFiles,
     )
     if (files.isEmpty()) return ContributionState.Error.FailedToUploadFiles
-    return ContributionState.Success.UploadSuccess(files.map { it.getParentUri(fileHost, parentElement).toString() to it.contentType })
+    return ContributionState.Success.UploadSuccess(files.map {
+        it.getParentUri(fileHost, parentElement).toString() to it.contentType
+    })
 }

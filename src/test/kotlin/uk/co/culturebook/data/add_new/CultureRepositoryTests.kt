@@ -1,40 +1,23 @@
 package uk.co.culturebook.data.add_new
 
-import com.zaxxer.hikari.HikariConfig
-import com.zaxxer.hikari.HikariDataSource
 import io.ktor.test.dispatcher.*
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.newSingleThreadContext
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils.create
-import org.jetbrains.exposed.sql.SchemaUtils.drop
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
+import uk.co.culturebook.base.BaseTest
 import uk.co.culturebook.modules.authentication.data.database.repositories.UserRepository
-import uk.co.culturebook.modules.authentication.data.database.tables.Users
 import uk.co.culturebook.modules.authentication.data.models.User
 import uk.co.culturebook.modules.culture.add_new.logic.addCulture
 import uk.co.culturebook.modules.culture.data.database.repositories.CultureRepository
 import uk.co.culturebook.modules.culture.data.database.repositories.CultureRepository.insertCulture
-import uk.co.culturebook.modules.culture.data.database.tables.BlockedCultures
-import uk.co.culturebook.modules.culture.data.database.tables.Cultures
-import uk.co.culturebook.modules.culture.data.database.tables.FavouriteCultures
 import uk.co.culturebook.modules.culture.data.interfaces.CultureState
 import uk.co.culturebook.modules.culture.data.models.Culture
 import uk.co.culturebook.modules.culture.data.models.Location
 import java.util.*
 
-@OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
-class CultureRepositoryTests {
-    private val dbUrl = "jdbc:h2:mem:test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;"
-    private val dbDriver = "org.h2.Driver"
+class CultureRepositoryTests : BaseTest() {
     private val user: User = User(email = "email@email.com", password = "password")
     private val location1 = Location(48.8588443, 2.2943506)
     private val location2 = Location(48.8588443, 2.1943506)
@@ -43,44 +26,17 @@ class CultureRepositoryTests {
     private val culture2 = Culture(UUID.randomUUID(), "Opera2", location2)
     private val culture3 = Culture(UUID.randomUUID(), "Opera3", location3)
 
-    private val mainThreadSurrogate = newSingleThreadContext("UI thread")
-    private val dbConfig = HikariDataSource(HikariConfig().apply {
-        jdbcUrl = dbUrl
-        driverClassName = dbDriver
-        connectionInitSql =
-            "CREATE ALIAS IF NOT EXISTS DISTANCE_IN_KM DETERMINISTIC FOR 'uk.co.culturebook.utils.DistanceUtilsKt.getDistanceInKm';" +
-                    "CREATE ALIAS IF NOT EXISTS MY_SIMILARITY DETERMINISTIC FOR 'uk.co.culturebook.utils.SearchUtilsKt.matchStrings';"
-        validate()
-    })
-    private val db = Database.connect(datasource = dbConfig)
-
     @Before
-    fun setUp() {
-        Dispatchers.setMain(mainThreadSurrogate)
+    override fun setUp() {
+        super.setUp()
         testSuspend(Dispatchers.Main) {
             newSuspendedTransaction {
-                create(Users)
-                create(Cultures, BlockedCultures, FavouriteCultures)
                 UserRepository.registerUser(user)
-                insertCulture(culture1, "")
-                insertCulture(culture2, "")
-                insertCulture(culture3, "")
+                insertCulture(culture1, user.userId)
+                insertCulture(culture2, user.userId)
+                insertCulture(culture3, user.userId)
             }
         }
-    }
-
-    @After
-    fun tearDown() {
-        testSuspend(Dispatchers.Main) {
-            newSuspendedTransaction {
-                drop(FavouriteCultures)
-                drop(BlockedCultures)
-                drop(Cultures)
-                drop(Users)
-            }
-        }
-        Dispatchers.resetMain()
-        mainThreadSurrogate.close()
     }
 
     @Test

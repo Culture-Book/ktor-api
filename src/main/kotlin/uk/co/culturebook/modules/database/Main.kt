@@ -17,6 +17,7 @@ import uk.co.culturebook.modules.culture.data.database.tables.contribution.*
 import uk.co.culturebook.modules.culture.data.database.tables.element.*
 import uk.co.culturebook.modules.database.DatabaseConfig.driver
 import uk.co.culturebook.modules.database.DatabaseConfig.idleTimeout
+import uk.co.culturebook.modules.database.DatabaseConfig.initSqlString
 import uk.co.culturebook.modules.database.DatabaseConfig.password
 import uk.co.culturebook.modules.database.DatabaseConfig.poolSize
 import uk.co.culturebook.modules.database.DatabaseConfig.url
@@ -30,8 +31,9 @@ private val ApplicationConfig.hikariConfig
             it.jdbcUrl = url
             it.username = username
             it.password = password
-            it.idleTimeout = idleTimeout.toLong()
-            it.maximumPoolSize = poolSize.toInt()
+            it.connectionInitSql = initSqlString
+            it.idleTimeout = idleTimeout?.toLong() ?: 600000
+            it.maximumPoolSize = poolSize?.toInt() ?: 10
             it.isAutoCommit = false
             it.transactionIsolation = "TRANSACTION_REPEATABLE_READ"
             it.validate()
@@ -75,5 +77,12 @@ fun Application.databaseModule() =
         throw DatabaseNotInitialised(e.message)
     }
 
-suspend fun <T> dbQuery(coroutineContext: CoroutineContext? = null, block: suspend () -> T): T =
-    newSuspendedTransaction(context = coroutineContext ?: Dispatchers.IO) { block() }
+suspend fun <T> dbQuery(
+    coroutineContext: CoroutineContext? = null,
+    block: suspend () -> T
+): T =
+    newSuspendedTransaction(
+        context = coroutineContext ?: Dispatchers.IO
+    ) {
+        block()
+    }

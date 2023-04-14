@@ -7,7 +7,7 @@ val logbackVersion: String by project
 
 val exposedVersion: String = "0.40.1"
 val hikariVersion: String = "5.0.1"
-val postgresVersion: String = "42.5.0"
+val postgresVersion: String = "42.6.0"
 val bouncyCastleVersion: String = "1.72.3"
 val firebaseVersion: String = "9.1.1"
 val h2Version: String = "2.1.214"
@@ -62,7 +62,6 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
     implementation("com.zaxxer:HikariCP:$hikariVersion")
     implementation("org.postgresql:postgresql:$postgresVersion")
-    implementation("com.h2database:h2:$h2Version")
 
     // Authentication dependencies
     implementation("org.bouncycastle:bcpg-jdk15to18:$bouncyCastleVersion")
@@ -100,6 +99,8 @@ dependencies {
     implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
 
     // Test implementations
+    testImplementation("com.h2database:h2:$h2Version")
+    testImplementation("io.ktor:ktor-client-mock:$ktorVersion")
     testImplementation("io.ktor:ktor-client-java:$ktorVersion")
     testImplementation("io.ktor:ktor-client-core-jvm:$ktorVersion")
     testImplementation("io.ktor:ktor-client-apache-jvm:$ktorVersion")
