@@ -7,8 +7,9 @@ import io.ktor.server.config.*
 import uk.co.culturebook.modules.culture.data.AddNewConfig.fileHost
 import uk.co.culturebook.modules.culture.data.interfaces.external.MediaRoute
 
-class TestHttpEngine(private val testConfig: ApplicationConfig): HttpClientEngineFactory<TestHttpEngine.Config> {
-    class Config: HttpClientEngineConfig()
+class TestHttpEngine(private val testConfig: ApplicationConfig) : HttpClientEngineFactory<TestHttpEngine.Config> {
+    class Config : HttpClientEngineConfig()
+
     private val responseHeaders = headersOf("Content-Type" to listOf(ContentType.Application.Json.toString()))
 
     override fun create(block: Config.() -> Unit): HttpClientEngine {
@@ -17,6 +18,7 @@ class TestHttpEngine(private val testConfig: ApplicationConfig): HttpClientEngin
                 when {
                     request.url.fullPath.contains(MediaRoute.BucketRoute.getBucket(testConfig.fileHost)) ->
                         respond("", HttpStatusCode.OK, responseHeaders)
+
                     else -> error("Unhandled ${request.url}")
                 }
             }

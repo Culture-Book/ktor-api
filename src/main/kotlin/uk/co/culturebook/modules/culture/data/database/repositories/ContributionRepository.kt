@@ -7,7 +7,6 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import uk.co.culturebook.Constants
 import uk.co.culturebook.modules.authentication.data.database.tables.Users
 import uk.co.culturebook.modules.authentication.data.enums.VerificationStatus
-import uk.co.culturebook.modules.http.client
 import uk.co.culturebook.modules.culture.data.database.repositories.MediaRepository.rowToMedia
 import uk.co.culturebook.modules.culture.data.database.tables.BlockedContributions
 import uk.co.culturebook.modules.culture.data.database.tables.FavouriteContributions
@@ -21,6 +20,7 @@ import uk.co.culturebook.modules.culture.data.interfaces.external.MediaRoute
 import uk.co.culturebook.modules.culture.data.models.*
 import uk.co.culturebook.modules.database.dbQuery
 import uk.co.culturebook.modules.database.functions.Similarity
+import uk.co.culturebook.modules.http.client
 import java.util.*
 
 object ContributionRepository : ContributionDao {
@@ -324,8 +324,8 @@ object ContributionRepository : ContributionDao {
         Contributions
             .innerJoin(
                 FavouriteContributions,
-                { Contributions.id },
-                { FavouriteContributions.contributionId },
+                { id },
+                { contributionId },
                 { FavouriteContributions.userId eq userId }
             )
             .leftJoin(
