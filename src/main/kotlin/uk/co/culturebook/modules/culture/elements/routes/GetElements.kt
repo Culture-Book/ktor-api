@@ -6,6 +6,9 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import uk.co.culturebook.modules.authentication.logic.authenticated.getUserId
+import uk.co.culturebook.modules.culture.data.AddNewConfig.fileHost
+import uk.co.culturebook.modules.culture.data.AddNewConfig.hostApiKey
+import uk.co.culturebook.modules.culture.data.AddNewConfig.hostToken
 import uk.co.culturebook.modules.culture.data.data.interfaces.ElementsRoute
 import uk.co.culturebook.modules.culture.data.database.repositories.ContributionRepository
 import uk.co.culturebook.modules.culture.data.database.repositories.ContributionRepository.getFavouriteContributions
@@ -15,6 +18,7 @@ import uk.co.culturebook.modules.culture.data.database.repositories.CultureRepos
 import uk.co.culturebook.modules.culture.data.database.repositories.CultureRepository.getUserCultures
 import uk.co.culturebook.modules.culture.data.database.repositories.ElementRepository
 import uk.co.culturebook.modules.culture.data.database.repositories.MediaRepository
+import uk.co.culturebook.modules.culture.data.models.BucketRequest
 import uk.co.culturebook.modules.culture.data.models.SearchCriteria
 import uk.co.culturebook.modules.culture.elements.logic.*
 import uk.co.culturebook.utils.forceNotNull
@@ -57,8 +61,15 @@ internal fun Route.getElementsRoute() {
 
     delete(ElementsRoute.Element.route) {
         val elementId = call.request.queryParameters[ElementsRoute.Element.Id].forceNotNull(call).toUUID()
-        ElementRepository.deleteElement(elementId)
-        call.respond(HttpStatusCode.OK)
+        val config = call.application.environment.config
+        val bucketDeleted = ElementRepository.deleteBucketForElement(
+            BucketRequest(elementId.toString(), elementId.toString()),
+            apiKey = config.hostApiKey,
+            bearer = config.hostToken,
+            fileHost = config.fileHost
+        )
+        val elementDeleted = if (bucketDeleted) ElementRepository.deleteElement(elementId) else false
+        if (elementDeleted) call.respond(HttpStatusCode.OK) else call.respond(HttpStatusCode.InternalServerError)
     }
 
     get(ElementsRoute.ElementsMedia.route) {
@@ -110,7 +121,15 @@ internal fun Route.getContributionRoute() {
 
     delete(ElementsRoute.Contribution.route) {
         val contributionId = call.request.queryParameters[ElementsRoute.Contribution.Id].forceNotNull(call).toUUID()
-        ContributionRepository.deleteContribution(contributionId)
+        val config = call.application.environment.config
+        val bucketDeleted = ContributionRepository.deleteBucketForContribution(
+            BucketRequest(contributionId.toString(), contributionId.toString()),
+            apiKey = config.hostApiKey,
+            bearer = config.hostToken,
+            fileHost = config.fileHost
+        )
+        val deleted = if (bucketDeleted) ContributionRepository.deleteContribution(contributionId) else false
+        if (deleted) call.respond(HttpStatusCode.OK) else call.respond(HttpStatusCode.InternalServerError)
         call.respond(HttpStatusCode.OK)
     }
 
